@@ -10,7 +10,9 @@ import { Suspense } from "react"
 export const metadata: Metadata = {
   title: "DailyNote - Daily Notes & Tasks",
   description: "A modern productivity app for daily notes and task management",
-  generator: "v0.app",
+  icons: {
+    icon: "/logo.png",
+  },
 }
 
 export default function RootLayout({

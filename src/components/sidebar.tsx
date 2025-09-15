@@ -3,9 +3,9 @@
 import { useState } from "react"
 import { usePathname } from "next/navigation"
 import Link from "next/link"
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { ScrollArea } from "@/components/ui/scroll-area"
+import { cn } from "../lib/utils"
+import { Button } from "./ui/button"
+import { ScrollArea } from "./ui/scroll-area"
 import { Calendar, CheckSquare, BarChart3, FileText, Settings, Home, ChevronLeft, ChevronRight } from "lucide-react"
 
 interface SidebarProps {

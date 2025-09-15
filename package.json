@@ -1,5 +1,5 @@
 {
-  "name": "my-v0-project",
+  "name": "my-daily-note-project",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -41,6 +41,7 @@
     "@sveltejs/kit": "latest",
     "@vercel/analytics": "latest",
     "autoprefixer": "^10.4.20",
+    "bcryptjs": "^3.0.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "1.0.4",
@@ -49,8 +50,10 @@
     "geist": "latest",
     "input-otp": "1.4.1",
     "lucide-react": "^0.454.0",
+    "mongoose": "^8.18.1",
     "next": "14.2.16",
     "next-themes": "latest",
+    "nodemailer": "^7.0.6",
     "react": "^18",
     "react-day-picker": "9.8.0",
     "react-dom": "^18",

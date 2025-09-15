@@ -53,7 +53,65 @@ A modern, responsive productivity application built with Next.js that combines d
 - **Accessibility**: ARIA labels, keyboard navigation, screen reader support
 - **Dark Mode**: Seamless theme switching with system preference detection
 
-## 🛠️ Tech Stack
+
+## �️ User Authentication & Security
+
+### User Model Enhancements
+- **Password Hashing:** User passwords are securely hashed using `bcryptjs`.
+- **Forgot Password:**  
+	- Fields added: `resetPasswordToken`, `resetPasswordExpires` for secure password reset.
+- **Email Verification:**  
+	- Fields added: `emailVerificationToken`, `emailVerificationExpires` for verifying user email addresses.
+- **Account Security:**  
+	- Tracks login attempts and account lockout (`loginAttempts`, `lockedUntil`).
+- **Soft Delete:**  
+	- Users can be soft-deleted with a `deletedAt` timestamp.
+
+### Example User Model Fields
+```js
+email: String,
+passwordHash: String,
+username: String,
+avatarUrl: String,
+emailVerified: Boolean,
+resetPasswordToken: String,
+resetPasswordExpires: Date,
+emailVerificationToken: String,
+emailVerificationExpires: Date,
+loginAttempts: Number,
+lockedUntil: Date,
+preferences: { theme: String, timezone: String },
+deletedAt: Date,
+```
+
+### API Route Example (Signup)
+- **Database Connection:** Uses a centralized `connect()` function for MongoDB.
+- **User Model Import:**  
+	```js
+	import User from "../../../../models/userModel.js";
+	```
+- **Password Hashing:**  
+	```js
+	import bcryptjs from 'bcryptjs';
+	```
+- **Signup Logic:**  
+	- Checks for existing user by email.
+	- Hashes password before saving.
+	- Returns error if user exists.
+
+### Example Signup Route Snippet
+```js
+import { connect } from "../../../../dbConfig/dbConfig.js";
+import User from "../../../../models/userModel.js";
+import bcryptjs from 'bcryptjs';
+
+connect();
+
+export async function POST() {
+	// ...parse request, check user, hash password, save user
+}
+```
+
 
 ### Core Framework
 - **Next.js 15** - React framework with App Router
