@@ -9,7 +9,7 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
     },
-    passwordHash: {
+    password: {
       type: String,
       required: true,
     },
@@ -74,10 +74,6 @@ const userSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
-
-// index for faster queries
-userSchema.index({ email: 1 });
-userSchema.index({ username: 1 });
 
 // Avoid model overwrite error in Next.js hot reload
 const User = mongoose.models.Users || mongoose.model("Users", userSchema);
