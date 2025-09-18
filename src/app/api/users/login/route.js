@@ -1,7 +1,8 @@
+import nodemailer from "nodemailer";
 import { connect } from "../../../../dbConfig/dbConfig.js";
 import bcryptjs from "bcryptjs";
 import User from "../../../../models/userModel.js";
-import { NextResponse, NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 
 connect();
@@ -42,8 +43,28 @@ export async function POST(req) {
       expiresIn: "1d",
     });
 
+    // ✅ Email bhejne ke liye transporter
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.GMAIL_USER,
+        pass: process.env.GMAIL_PASS,
+      },
+    });
+
+    // ✅ Login success email
+    await transporter.sendMail({
+      from: `"Daily Note App" <${process.env.GMAIL_USER}>`,
+      to: email,
+      subject: "Login Successful 🎉",
+      text: `Hi ${user.username}, you have successfully logged in to Daily Note.`,
+      html: `<p>Hi <b>${user.username}</b>,</p>
+             <p>You have successfully logged in to <b>Daily Note</b>.</p>
+             <p>Time: ${new Date().toLocaleString()}</p>`,
+    });
+
     const response = NextResponse.json({
-      message: "Logged In Success",
+      message: "Logged In Success & Email Sent",
       success: true,
     });
 
@@ -51,7 +72,7 @@ export async function POST(req) {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       path: "/",
-      sameSite: "lax"
+      sameSite: "lax",
     });
 
     return response;

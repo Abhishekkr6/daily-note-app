@@ -28,13 +28,12 @@ export const sendEmail = async ({ email, emailType, userId }) => {
       });
     }
 
-    // 4. Email transporter
+    // 4. Gmail SMTP transporter
     const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_SMTP_HOST,
-      port: process.env.EMAIL_SMTP_PORT,
+      service: "gmail",
       auth: {
-        user: process.env.EMAIL_SMTP_USER,
-        pass: process.env.EMAIL_SMTP_PASS,
+        user: process.env.EMAIL_SMTP_USER, 
+        pass: process.env.EMAIL_SMTP_PASS, 
       },
     });
 
@@ -54,7 +53,7 @@ export const sendEmail = async ({ email, emailType, userId }) => {
 
     // 6. Send mail
     const mailOptions = {
-      from: "abhi@gmail.com",
+      from: `"Daily Note" <${process.env.GMAIL_USER}>`,
       to: email,
       subject: emailType === "VERIFY" ? "Verify your email" : "Reset your password",
       html: htmlContent,

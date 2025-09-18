@@ -2,6 +2,7 @@ import { connect } from "../../../../dbConfig/dbConfig.js";
 import User from "../../../../models/userModel.js";
 import bcryptjs from "bcryptjs";
 import { NextResponse } from "next/server";
+import { sendEmail } from "../../../../helpers/mailer.js";
 
 connect();
 
@@ -11,7 +12,6 @@ export async function POST(request) {
     const { token, email } = reqBody;
     console.log("Token received:", token);
 
-    // Find user by email and check expiry
     const user = await User.findOne({
       email,
       emailVerificationExpires: { $gt: Date.now() },
@@ -24,19 +24,25 @@ export async function POST(request) {
       );
     }
 
-    // Compare plain token with hashed token
     const isMatch = await bcryptjs.compare(token, user.emailVerificationToken);
     if (!isMatch) {
       return NextResponse.json({ error: "Invalid token" }, { status: 400 });
     }
 
-    // Mark email as verified
     user.emailVerified = true;
     user.emailVerificationToken = null;
     user.emailVerificationExpires = null;
     await user.save();
 
     console.log("Email Verified");
+
+    // ✅ Verification ke baad email bhejo
+    await sendEmail({
+      to: email,
+      subject: "✅ Email Verified Successfully",
+      text: "Your Daily Note account email has been verified successfully.",
+      html: `<h2>Email Verified</h2><p>Hi ${user.username}, your email has been successfully verified 🎉</p>`,
+    });
 
     return NextResponse.json(
       { message: "Email verified successfully", success: true },
