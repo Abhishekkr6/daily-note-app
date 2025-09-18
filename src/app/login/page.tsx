@@ -5,7 +5,6 @@ import axios from "axios";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
 
-
 const LoginPage = () => {
   const router = useRouter();
 
@@ -22,7 +21,7 @@ const LoginPage = () => {
       setLoading(true);
       const response = await axios.post("/api/users/login", user);
       toast.success("Login successful");
-      router.push("/"); 
+      window.location.href = "/home";
     } catch (err) {
       toast.error(err.response?.data?.error || "Login failed");
     } finally {
