@@ -169,7 +169,7 @@ export function TaskDialog({ trigger, task, onSave }: TaskDialogProps) {
               {tags.map((tag) => (
                 <Badge key={tag} variant="secondary" className="flex items-center gap-1">
                   #{tag}
-                  <button onClick={() => handleRemoveTag(tag)} className="ml-1 hover:text-destructive">
+                  <button onClick={() => handleRemoveTag(tag)} className="ml-1 hover:text-destructive" title="Remove tag">
                     <X className="w-3 h-3" />
                   </button>
                 </Badge>

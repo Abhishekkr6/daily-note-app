@@ -12,14 +12,7 @@ export const sendEmail = async ({ email, emailType, userId }) => {
     const hashedToken = await bcryptjs.hash(plainToken, 10);
 
     // 3. Save hashed token in DB
-    if (emailType === "VERIFY") {
-      await User.findByIdAndUpdate(userId, {
-        $set: {
-          emailVerificationToken: hashedToken,
-          emailVerificationExpires: Date.now() + 3600000, // 1 hour
-        },
-      });
-    } else if (emailType === "RESET") {
+    if (emailType === "RESET") {
       await User.findByIdAndUpdate(userId, {
         $set: {
           resetPasswordToken: hashedToken,
@@ -39,12 +32,7 @@ export const sendEmail = async ({ email, emailType, userId }) => {
 
     // 5. Prepare email HTML with PLAIN token
     let htmlContent = "";
-    if (emailType === "VERIFY") {
-      htmlContent = `<p>Click <a href="${process.env.NEXT_PUBLIC_APP_URL}/verifyemail?token=${plainToken}&email=${email}">here</a> to verify your email
-      or copy and paste the link below in your browser.<br>
-      ${process.env.NEXT_PUBLIC_APP_URL}/verifyemail?token=${plainToken}&email=${email}
-      </p>`;
-    } else if (emailType === "RESET") {
+    if (emailType === "RESET") {
       htmlContent = `<p>Click <a href="${process.env.NEXT_PUBLIC_APP_URL}/resetpassword?token=${plainToken}&email=${email}">here</a> to reset your password
       or copy and paste the link below in your browser.<br>
       ${process.env.NEXT_PUBLIC_APP_URL}/resetpassword?token=${plainToken}&email=${email}
@@ -53,9 +41,9 @@ export const sendEmail = async ({ email, emailType, userId }) => {
 
     // 6. Send mail
     const mailOptions = {
-      from: `"Daily Note" <${process.env.GMAIL_USER}>`,
+      from: `"Daily Note" <${process.env.EMAIL_SMTP_USER}>`,
       to: email,
-      subject: emailType === "VERIFY" ? "Verify your email" : "Reset your password",
+    subject: "Reset your password",
       html: htmlContent,
     };
 

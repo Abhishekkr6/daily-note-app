@@ -8,7 +8,7 @@ const PUBLIC_ROUTES = [
   "/signup",
   "/api/users/login",
   "/api/users/signup",
-  "/api/users/verifyemail",
+  // ...existing code...
   "/api/users/forgotpassword",
   "/api/users/resetpassword"
 ];

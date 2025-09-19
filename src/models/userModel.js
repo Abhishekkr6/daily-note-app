@@ -25,11 +25,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
-    emailVerified: {
-      type: Boolean,
-      default: false,
-    },
-
+    
     // Security & account status
     loginAttempts: {
       type: Number,
@@ -52,16 +48,6 @@ const userSchema = new mongoose.Schema(
       default: null,
     },
     resetPasswordExpires: {
-      type: Date,
-      default: null,
-    },
-
-    // Email/token verification
-    emailVerificationToken: {
-      type: String,
-      default: null,
-    },
-    emailVerificationExpires: {
       type: Date,
       default: null,
     },
