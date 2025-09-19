@@ -6,7 +6,7 @@ const VerifyEmailPage = () => {
   const [token, setToken] = useState("");
   const [email, setEmail] = useState("");
   const [verified, setVerified] = useState(false);
-  const [error, setError] = useState(false);
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
 
   const verifyUserEmail = async () => {
@@ -17,12 +17,25 @@ const VerifyEmailPage = () => {
       await axios.post("/api/users/verifyemail", { token, email });
       setVerified(true);
     } catch (error) {
-      setError(true);
       setVerified(false);
-      console.log(error.response?.data || error.message);
+      if (axios.isAxiosError(error)) {
+        setError(error.response?.data?.error || "Something went wrong");
+        console.log(error.response?.data || error.message);
+      } else {
+        setError("Something went wrong");
+        console.log(error);
+      }
     }
     setLoading(false);
   };
+  useEffect(() => {
+    if (verified) {
+      const timer = setTimeout(() => {
+        window.location.href = "/login";
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [verified]);
 
 
   useEffect(() => {
@@ -47,13 +60,19 @@ const VerifyEmailPage = () => {
       ) : loading ? (
         <p>Verifying your email...</p>
       ) : verified ? (
-        <div className="text-green-600">
-          <p>Email verified successfully!</p>
-          <a href="/login" className="mt-4 underline text-blue-600">Go to Login</a>
+        <div className="flex flex-col items-center text-green-600">
+          <span className="text-4xl">✅</span>
+          <p className="mt-2">Your email has been verified successfully!</p>
+          <a
+            href="/login"
+            className="mt-4 px-4 py-2 bg-green-600 text-white rounded"
+          >
+            Go to Login
+          </a>
         </div>
       ) : error ? (
         <div className="text-red-600">
-          <p>Email verification failed. Please check your link or try again.</p>
+          <p>{error}</p>
           <button
             className="mt-4 px-4 py-2 bg-blue-600 text-white rounded"
             onClick={verifyUserEmail}

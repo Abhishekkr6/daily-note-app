@@ -1,6 +1,5 @@
 import { connect } from "../../../../dbConfig/dbConfig.js";
 import User from "../../../../models/userModel.js";
-import bcryptjs from "bcryptjs";
 import { NextResponse } from "next/server";
 import { sendEmail } from "../../../../helpers/mailer.js";
 
@@ -12,8 +11,10 @@ export async function POST(request) {
     const { token, email } = reqBody;
     console.log("Token received:", token);
 
+    // ✅ User find karo jiska token valid ho aur expire na hua ho
     const user = await User.findOne({
       email,
+      emailVerificationToken: token,
       emailVerificationExpires: { $gt: Date.now() },
     });
 
@@ -24,11 +25,7 @@ export async function POST(request) {
       );
     }
 
-    const isMatch = await bcryptjs.compare(token, user.emailVerificationToken);
-    if (!isMatch) {
-      return NextResponse.json({ error: "Invalid token" }, { status: 400 });
-    }
-
+    // ✅ Verify success
     user.emailVerified = true;
     user.emailVerificationToken = null;
     user.emailVerificationExpires = null;
@@ -36,7 +33,7 @@ export async function POST(request) {
 
     console.log("Email Verified");
 
-    // ✅ Verification ke baad email bhejo
+    // ✅ Verification success hone ke baad ek confirmation mail bhejo
     await sendEmail({
       to: email,
       subject: "✅ Email Verified Successfully",

@@ -2,6 +2,7 @@ import { connect } from "../../../../dbConfig/dbConfig.js";
 import User from "../../../../models/userModel.js";
 import { NextResponse } from "next/server";
 import bcryptjs from "bcryptjs";
+import crypto from "crypto";
 import { sendEmail } from "../../../../helpers/mailer.js";
 
 connect();
@@ -10,7 +11,6 @@ export async function POST(req) {
   try {
     const reqBody = await req.json();
     const { username, email, password, confirmPassword } = reqBody;
-    console.log("Request body:", reqBody);
 
     if (!username || !email || !password || !confirmPassword) {
       return NextResponse.json({ error: "All fields are required" }, { status: 400 });
@@ -33,33 +33,36 @@ export async function POST(req) {
     const salt = await bcryptjs.genSalt(10);
     const hashedPassword = await bcryptjs.hash(password, salt);
 
+    // ✅ Verification token generate
+    const emailVerificationToken = crypto.randomBytes(32).toString("hex");
+    const emailVerificationExpires = Date.now() + 60 * 60 * 1000; // 1 hour
+
     const newUser = new User({
       username,
       email,
       password: hashedPassword,
+      emailVerificationToken,
+      emailVerificationExpires,
     });
 
     const savedUser = await newUser.save();
-    console.log("Saved user:", savedUser);
 
-    // ✅ Verification Email (Gmail SMTP se)
+    // ✅ Verification Email bhejo
+    const verifyUrl = `${process.env.NEXT_PUBLIC_APP_URL}/verify?token=${emailVerificationToken}`;
     await sendEmail({
       email,
-      emailType: "VERIFY",
-      userId: savedUser._id,
+      subject: "Verify your email",
+      html: `<p>Hi ${username},</p>
+             <p>Please verify your email by clicking below link:</p>
+             <a href="${verifyUrl}">Verify Email</a>`,
     });
 
     return NextResponse.json({
-      message: "User registered successfully. Please verify your email.",
+      message: "User registered successfully. Please check your email to verify.",
       success: true,
-      user: {
-        _id: savedUser._id,
-        username: savedUser.username,
-        email: savedUser.email,
-      },
     });
   } catch (error) {
-    console.error("Signup error:", error.message);
+    console.error("Signup error:", error);
 
     if (error.code === 11000) {
       const dupField = Object.keys(error.keyValue)[0];
