@@ -1,6 +1,8 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
+import axios from "axios"
 import { usePathname } from "next/navigation"
 import Link from "next/link"
 import { cn } from "../lib/utils"
@@ -22,8 +24,18 @@ const navigation = [
 ]
 
 export function Sidebar({ className }: SidebarProps) {
-  const [collapsed, setCollapsed] = useState(false)
-  const pathname = usePathname()
+  const [collapsed, setCollapsed] = useState(false);
+  const pathname = usePathname();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+      await axios.get("/api/users/logout");
+      router.replace("/login");
+    } catch (err) {
+      // Optionally show error toast
+    }
+  };
 
   return (
     <div
@@ -57,8 +69,8 @@ export function Sidebar({ className }: SidebarProps) {
       <ScrollArea className="flex-1 px-3 py-4">
         <nav className="space-y-2">
           {navigation.map((item) => {
-            const Icon = item.icon
-            const isActive = pathname === item.href
+            const Icon = item.icon;
+            const isActive = pathname === item.href;
             return (
               <Link key={item.name} href={item.href}>
                 <Button
@@ -73,9 +85,19 @@ export function Sidebar({ className }: SidebarProps) {
                   {!collapsed && <span>{item.name}</span>}
                 </Button>
               </Link>
-            )
+            );
           })}
         </nav>
+        {/* Logout Button */}
+        <div className="mt-6">
+          <Button
+            variant="destructive"
+            className="w-full"
+            onClick={handleLogout}
+          >
+            Logout
+          </Button>
+        </div>
       </ScrollArea>
 
       {/* Footer */}
@@ -85,5 +107,5 @@ export function Sidebar({ className }: SidebarProps) {
         </div>
       )}
     </div>
-  )
+  );
 }
