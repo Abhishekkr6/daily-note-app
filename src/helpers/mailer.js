@@ -33,9 +33,9 @@ export const sendEmail = async ({ email, emailType, userId }) => {
     // 5. Prepare email HTML with PLAIN token
     let htmlContent = "";
     if (emailType === "RESET") {
-      htmlContent = `<p>Click <a href="${process.env.NEXT_PUBLIC_APP_URL}/resetpassword?token=${plainToken}&email=${email}">here</a> to reset your password
+      htmlContent = `<p>Click <a href="${process.env.NEXT_PUBLIC_APP_URL}/reset-password?token=${plainToken}&email=${email}">here</a> to reset your password
       or copy and paste the link below in your browser.<br>
-      ${process.env.NEXT_PUBLIC_APP_URL}/resetpassword?token=${plainToken}&email=${email}
+      ${process.env.NEXT_PUBLIC_APP_URL}/reset-password?token=${plainToken}&email=${email}
       </p>`;
     }
 
