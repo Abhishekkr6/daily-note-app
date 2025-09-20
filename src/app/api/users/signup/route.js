@@ -1,5 +1,5 @@
 import { connect } from "../../../../dbConfig/dbConfig.js";
-import User from "../../../../models/userModel.js";
+import User from "../../../../models/userModel.ts";
 import { NextResponse } from "next/server";
 import bcryptjs from "bcryptjs";
 import crypto from "crypto";

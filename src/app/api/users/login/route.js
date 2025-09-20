@@ -1,7 +1,7 @@
 import nodemailer from "nodemailer";
 import { connect } from "../../../../dbConfig/dbConfig.js";
 import bcryptjs from "bcryptjs";
-import User from "../../../../models/userModel.js";
+import User from "../../../../models/userModel.ts";
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 

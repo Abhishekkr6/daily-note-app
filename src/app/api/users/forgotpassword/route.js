@@ -1,4 +1,4 @@
-import User from "@/models/userModel";
+import User from "@/models/userModel.ts";
 import nodemailer from "nodemailer";
 import crypto from "crypto";
 import { NextResponse } from "next/server";
