@@ -1,8 +1,12 @@
 import User from "@/models/userModel";
 import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
+import { connect } from "@/dbConfig/dbConfig";
+import mongoose from "mongoose";
 
 export async function POST(req) {
+  await connect();
+  console.log('Mongoose connection state:', mongoose.connection.readyState); // 1=connected, 0=disconnected
   try {
     const { token, password } = await req.json();
     if (!token || !password) {
