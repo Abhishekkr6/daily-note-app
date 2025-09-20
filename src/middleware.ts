@@ -6,6 +6,8 @@ const PUBLIC_ROUTES = [
   "/landing",
   "/login",
   "/signup",
+  "/forgot-password",
+  "/reset-password",
   "/api/users/login",
   "/api/users/signup",
   // ...existing code...

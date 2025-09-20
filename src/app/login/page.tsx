@@ -89,6 +89,9 @@ const LoginPage = () => {
               required
               disabled={inputsDisabled}
             />
+            <div className="text-right mb-2">
+              <a href="/forgot-password" className="text-primary font-medium hover:underline text-sm">Forgot Password?</a>
+            </div>
             <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}>
               <Button
                 type="submit"
