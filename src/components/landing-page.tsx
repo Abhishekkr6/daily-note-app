@@ -82,14 +82,14 @@ export function LandingPage() {
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
               <FileText className="w-5 h-5 text-primary-foreground" />
             </div>
-            <span className="text-xl font-semibold">DailyNote</span>
+            <span className="text-xl font-semibold heading">DailyNote</span>
           </div>
           <div className="flex items-center gap-4">
             <Link href="/signup">
-              <Button variant="ghost">Sign Up</Button>
+              <Button variant="ghost" className="btn">Sign Up</Button>
             </Link>
             <Link href="/login">
-              <Button>Log In</Button>
+              <Button className="btn">Log In</Button>
             </Link>
           </div>
         </div>
@@ -105,7 +105,7 @@ export function LandingPage() {
             </Badge>
           </div>
 
-          <h1 className="text-5xl md:text-6xl font-bold mb-6 text-balance">
+          <h1 className="text-5xl md:text-6xl font-bold mb-6 text-balance heading">
             Start your productivity journey with <span className="text-primary">DailyNote</span>
           </h1>
 
@@ -156,7 +156,7 @@ export function LandingPage() {
       {/* Features Section */}
       <section className="container mx-auto px-4 py-20">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">Everything you need to stay productive</h2>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4 heading">Everything you need to stay productive</h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             Powerful features designed to help you organize your thoughts, manage tasks, and track your progress
             effortlessly.
@@ -176,7 +176,7 @@ export function LandingPage() {
                   <div className="w-12 h-12 mx-auto mb-4 rounded-2xl bg-accent flex items-center justify-center">
                     <Icon className={`w-6 h-6 ${feature.color}`} />
                   </div>
-                  <CardTitle className="text-lg">{feature.title}</CardTitle>
+                  <CardTitle className="text-lg heading">{feature.title}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <CardDescription className="text-center">{feature.description}</CardDescription>
@@ -195,7 +195,7 @@ export function LandingPage() {
                   {React.createElement(features[activeFeature].icon, {
                     className: `w-8 h-8 ${features[activeFeature].color}`,
                   })}
-                  <h3 className="text-2xl font-bold">{features[activeFeature].title}</h3>
+                  <h3 className="text-2xl font-bold heading">{features[activeFeature].title}</h3>
                 </div>
                 <p className="text-lg text-muted-foreground mb-6">{features[activeFeature].description}</p>
                 <div className="flex flex-wrap gap-2">
@@ -230,7 +230,7 @@ export function LandingPage() {
       <section className="bg-accent/5 py-20">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Loved by productive people everywhere</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 heading">Loved by productive people everywhere</h2>
             <p className="text-xl text-muted-foreground">
               See what our users have to say about their DailyNote experience
             </p>
@@ -260,13 +260,13 @@ export function LandingPage() {
       {/* CTA Section */}
       <section className="container mx-auto px-4 py-20 text-center">
         <div className="max-w-2xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to boost your productivity?</h2>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4 heading">Ready to boost your productivity?</h2>
           <p className="text-xl text-muted-foreground mb-8">
             Join thousands of users who have transformed their daily routine with DailyNote. Start your free account
             today.
           </p>
           <Link href="/signup">
-            <Button size="lg" className="text-lg px-8 py-6">
+            <Button size="lg" className="text-lg px-8 py-6 btn">
               Create Your Free Account
               <ArrowRight className="w-5 h-5 ml-2" />
             </Button>
@@ -283,7 +283,7 @@ export function LandingPage() {
               <div className="w-6 h-6 bg-primary rounded-lg flex items-center justify-center">
                 <FileText className="w-4 h-4 text-primary-foreground" />
               </div>
-              <span className="font-semibold">DailyNote</span>
+              <span className="font-semibold heading">DailyNote</span>
             </div>
             <p className="text-sm text-muted-foreground">© 2024 DailyNote. Made with ❤️ for productive people.</p>
           </div>
