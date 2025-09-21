@@ -19,8 +19,15 @@ const SignupPage = () => {
   const [buttonDisabled, setButtonDisabled] = useState(false);
   const [loading, setLoading] = useState(false);
   const [inputsDisabled, setInputsDisabled] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
+  const [otp, setOtp] = useState("");
+  const [otpVerified, setOtpVerified] = useState(false);
+  const [otpLoading, setOtpLoading] = useState(false);
   const onSignUp = async () => {
-    // Clear and disable inputs immediately on button click
+    if (!otpVerified) {
+      toast.error("Please verify your email first");
+      return;
+    }
     setUser({ email: "", username: "", password: "", confirmPassword: "" });
     setInputsDisabled(true);
     try {
@@ -31,7 +38,6 @@ const SignupPage = () => {
       setLoading(true);
       const response = await axios.post("/api/users/signup", user);
       toast.success("Signup successful");
-      // Redirect instantly after success
       router.push("/login");
     } catch (err: any) {
       if (err.response?.data?.error) {
@@ -41,6 +47,44 @@ const SignupPage = () => {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const sendOtp = async () => {
+    if (!user.email) {
+      toast.error("Please enter your email");
+      return;
+    }
+    setOtpLoading(true);
+    try {
+      const res = await axios.post("/api/users/emailotp/send", { email: user.email });
+      if (res.data.message) {
+        toast.success("OTP sent to your email");
+        setOtpSent(true);
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || "Failed to send OTP");
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
+  const verifyOtp = async () => {
+    if (!otp || otp.length !== 6) {
+      toast.error("Enter 6 digit OTP");
+      return;
+    }
+    setOtpLoading(true);
+    try {
+      const res = await axios.post("/api/users/emailotp/verify", { email: user.email, otp });
+      if (res.data.message) {
+        toast.success("Email verified");
+        setOtpVerified(true);
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || "Failed to verify OTP");
+    } finally {
+      setOtpLoading(false);
     }
   };
   useEffect(() => {
@@ -55,6 +99,9 @@ const SignupPage = () => {
       setButtonDisabled(true);
     }
   }, [user]);
+  // Email format validation
+  const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(user.email);
+
   return (
     <div className="min-h-screen flex items-center justify-center px-2 sm:px-6" style={{
       background: "linear-gradient(135deg, #fefce8 0%, #f0fdf4 100%)",
@@ -81,15 +128,57 @@ const SignupPage = () => {
             <p className="text-muted-foreground text-center text-base">Start your daily journey with a beautiful, secure account.</p>
           </div>
           <form className="flex flex-col gap-4" onSubmit={e => { e.preventDefault(); onSignUp(); }}>
-            <Input
-              type="email"
-              placeholder="Email"
-              value={user.email}
-              onChange={e => setUser({ ...user, email: e.target.value })}
-              className="bg-input border border-border focus:ring-2 focus:ring-primary focus:border-primary rounded-xl transition-all duration-150"
-              required
-              disabled={inputsDisabled}
-            />
+            <div className="flex gap-2 items-center">
+              <Input
+                type="email"
+                placeholder="Email"
+                value={user.email}
+                onChange={e => {
+                  setUser({ ...user, email: e.target.value });
+                  setOtpSent(false);
+                  setOtpVerified(false);
+                  setOtp("");
+                }}
+                className="bg-input border border-border focus:ring-2 focus:ring-primary focus:border-primary rounded-xl transition-all duration-150"
+                required
+                disabled={inputsDisabled || otpVerified}
+              />
+              {!otpVerified && isEmailValid && (
+                <Button
+                  type="button"
+                  size="sm"
+                  className="ml-1 px-4 py-2 text-xs h-8 min-w-0 w-auto"
+                  disabled={otpLoading || otpSent}
+                  onClick={sendOtp}
+                  style={{ fontSize: "13px", padding: "0 12px" }}
+                >
+                  {otpLoading ? "..." : otpSent ? "✓" : "Send Verification"}
+                </Button>
+              )}
+            </div>
+            {/* OTP input below email */}
+            {!otpVerified && otpSent && (
+              <div className="flex gap-2 items-center">
+                <Input
+                  type="text"
+                  placeholder="Enter 6 digit OTP"
+                  value={otp}
+                  onChange={e => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                  className="bg-input border border-border focus:ring-2 focus:ring-primary focus:border-primary rounded-xl transition-all duration-150 mt-2"
+                  maxLength={6}
+                  disabled={otpLoading}
+                />
+                <Button
+                  type="button"
+                  size="sm"
+                  className="ml-2 px-3 py-1 text-xs"
+                  disabled={otpLoading || otpVerified}
+                  onClick={verifyOtp}
+                >
+                  {otpLoading ? "Verifying..." : "Verify"}
+                </Button>
+              </div>
+            )}
             <Input
               type="text"
               placeholder="Username"
