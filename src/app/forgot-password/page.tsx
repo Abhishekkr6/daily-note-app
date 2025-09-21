@@ -7,6 +7,7 @@ export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,6 +22,7 @@ export default function ForgotPasswordPage() {
       const data = await res.json();
       if (res.ok) {
         setMessage("Reset link sent to your email.");
+        setEmailSent(true);
       } else {
         setMessage(data.error || "Something went wrong.");
       }
@@ -44,8 +46,13 @@ export default function ForgotPasswordPage() {
         <Button type="submit" disabled={loading} className="mt-4 w-full">
           {loading ? "Sending..." : "Send Reset Link"}
         </Button>
+        {message && <p className="mt-4 text-center text-sm">{message}</p>}
       </form>
-      {message && <p className="mt-4 text-center text-sm">{message}</p>}
+      {emailSent && (
+        <Button className="mt-4 w-full" onClick={() => window.location.href = "/login"}>
+          Go to Login
+        </Button>
+      )}
     </div>
   );
 }
