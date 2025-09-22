@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
+import { FaUser, FaEnvelope, FaLock, FaEye, FaEyeSlash, FaKey } from "react-icons/fa";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
@@ -23,6 +24,8 @@ const SignupPage = () => {
   const [otp, setOtp] = useState("");
   const [otpVerified, setOtpVerified] = useState(false);
   const [otpLoading, setOtpLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const onSignUp = async () => {
     if (!otpVerified) {
       toast.error("Please verify your email first");
@@ -128,7 +131,8 @@ const SignupPage = () => {
             <p className="text-muted-foreground text-center text-base">Start your daily journey with a beautiful, secure account.</p>
           </div>
           <form className="flex flex-col gap-4" onSubmit={e => { e.preventDefault(); onSignUp(); }}>
-            <div className="flex gap-2 items-center">
+            <div className="flex gap-2 items-center relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-primary text-lg"><FaEnvelope /></span>
               <Input
                 type="email"
                 placeholder="Email"
@@ -139,7 +143,7 @@ const SignupPage = () => {
                   setOtpVerified(false);
                   setOtp("");
                 }}
-                className="bg-input border border-border focus:ring-2 focus:ring-primary focus:border-primary rounded-xl transition-all duration-150"
+                className="pl-10 bg-input border border-border focus:ring-2 focus:ring-primary focus:border-primary rounded-xl transition-all duration-150"
                 required
                 disabled={inputsDisabled || otpVerified}
               />
@@ -152,19 +156,20 @@ const SignupPage = () => {
                   onClick={sendOtp}
                   style={{ fontSize: "13px", padding: "0 12px" }}
                 >
-                  {otpLoading ? "..." : otpSent ? "✓" : "Send Verification"}
+                  {otpLoading ? "..." : otpSent ? "✓" : "Send OTP"}
                 </Button>
               )}
             </div>
             {/* OTP input below email */}
             {!otpVerified && otpSent && (
-              <div className="flex gap-2 items-center">
+              <div className="flex gap-2 items-center relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-primary text-lg"><FaKey /></span>
                 <Input
                   type="text"
                   placeholder="Enter 6 digit OTP"
                   value={otp}
                   onChange={e => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                  className="bg-input border border-border focus:ring-2 focus:ring-primary focus:border-primary rounded-xl transition-all duration-150 mt-2"
+                  className="pl-10 bg-input border border-border focus:ring-2 focus:ring-primary focus:border-primary rounded-xl transition-all duration-150 mt-2"
                   maxLength={6}
                   disabled={otpLoading}
                 />
@@ -179,33 +184,54 @@ const SignupPage = () => {
                 </Button>
               </div>
             )}
-            <Input
-              type="text"
-              placeholder="Username"
-              value={user.username}
-              onChange={e => setUser({ ...user, username: e.target.value })}
-              className="bg-input border border-border focus:ring-2 focus:ring-primary focus:border-primary rounded-xl transition-all duration-150"
-              required
-              disabled={inputsDisabled}
-            />
-            <Input
-              type="password"
-              placeholder="Password"
-              value={user.password}
-              onChange={e => setUser({ ...user, password: e.target.value })}
-              className="bg-input border border-border focus:ring-2 focus:ring-primary focus:border-primary rounded-xl transition-all duration-150"
-              required
-              disabled={inputsDisabled}
-            />
-            <Input
-              type="password"
-              placeholder="Confirm Password"
-              value={user.confirmPassword}
-              onChange={e => setUser({ ...user, confirmPassword: e.target.value })}
-              className="bg-input border border-border focus:ring-2 focus:ring-primary focus:border-primary rounded-xl transition-all duration-150"
-              required
-              disabled={inputsDisabled}
-            />
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-primary text-lg"><FaUser /></span>
+              <Input
+                type="text"
+                placeholder="Username"
+                value={user.username}
+                onChange={e => setUser({ ...user, username: e.target.value })}
+                className="pl-10 bg-input border border-border focus:ring-2 focus:ring-primary focus:border-primary rounded-xl transition-all duration-150"
+                required
+                disabled={inputsDisabled}
+              />
+            </div>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-primary text-lg"><FaLock /></span>
+              <Input
+                type={showPassword ? "text" : "password"}
+                placeholder="Password"
+                value={user.password}
+                onChange={e => setUser({ ...user, password: e.target.value })}
+                className="pl-10 pr-10 bg-input border border-border focus:ring-2 focus:ring-primary focus:border-primary rounded-xl transition-all duration-150"
+                required
+                disabled={inputsDisabled}
+              />
+              <span
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-primary text-lg cursor-pointer"
+                onClick={() => setShowPassword((prev) => !prev)}
+              >
+                {showPassword ? <FaEyeSlash /> : <FaEye />}
+              </span>
+            </div>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-primary text-lg"><FaLock /></span>
+              <Input
+                type={showConfirmPassword ? "text" : "password"}
+                placeholder="Confirm Password"
+                value={user.confirmPassword}
+                onChange={e => setUser({ ...user, confirmPassword: e.target.value })}
+                className="pl-10 pr-10 bg-input border border-border focus:ring-2 focus:ring-primary focus:border-primary rounded-xl transition-all duration-150"
+                required
+                disabled={inputsDisabled}
+              />
+              <span
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-primary text-lg cursor-pointer"
+                onClick={() => setShowConfirmPassword((prev) => !prev)}
+              >
+                {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+              </span>
+            </div>
             <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}>
               <Button
                 type="submit"

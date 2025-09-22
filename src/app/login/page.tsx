@@ -2,6 +2,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { FaEnvelope, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
@@ -21,6 +22,7 @@ const LoginPage = () => {
   const [buttonDisabled, setButtonDisabled] = useState(true);
   const [loading, setLoading] = useState(false);
   const [inputsDisabled, setInputsDisabled] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const onLogin = async () => {
     // Clear and disable inputs immediately on button click
@@ -70,25 +72,37 @@ const LoginPage = () => {
           </div>
           <form className="flex flex-col gap-4" onSubmit={e => { e.preventDefault(); onLogin(); }}>
             <Label className="text-base font-medium">Email</Label>
-            <Input
-              type="email"
-              placeholder="Email"
-              value={user.email}
-              onChange={e => setUser({ ...user, email: e.target.value })}
-              className="bg-input border border-border focus:ring-2 focus:ring-primary focus:border-primary rounded-xl transition-all duration-150"
-              required
-              disabled={inputsDisabled}
-            />
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-primary text-lg"><FaEnvelope /></span>
+              <Input
+                type="email"
+                placeholder="Email"
+                value={user.email}
+                onChange={e => setUser({ ...user, email: e.target.value })}
+                className="pl-10 bg-input border border-border focus:ring-2 focus:ring-primary focus:border-primary rounded-xl transition-all duration-150"
+                required
+                disabled={inputsDisabled}
+              />
+            </div>
             <Label className="text-base font-medium">Password</Label>
-            <Input
-              type="password"
-              placeholder="Password"
-              value={user.password}
-              onChange={e => setUser({ ...user, password: e.target.value })}
-              className="bg-input border border-border focus:ring-2 focus:ring-primary focus:border-primary rounded-xl transition-all duration-150"
-              required
-              disabled={inputsDisabled}
-            />
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-primary text-lg"><FaLock /></span>
+              <Input
+                type={showPassword ? "text" : "password"}
+                placeholder="Password"
+                value={user.password}
+                onChange={e => setUser({ ...user, password: e.target.value })}
+                className="pl-10 pr-10 bg-input border border-border focus:ring-2 focus:ring-primary focus:border-primary rounded-xl transition-all duration-150"
+                required
+                disabled={inputsDisabled}
+              />
+              <span
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-primary text-lg cursor-pointer"
+                onClick={() => setShowPassword((prev) => !prev)}
+              >
+                {showPassword ? <FaEyeSlash /> : <FaEye />}
+              </span>
+            </div>
             <div className="text-right mb-2">
               <a href="/forgot-password" className="text-primary font-medium hover:underline text-sm">Forgot Password?</a>
             </div>

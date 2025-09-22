@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
 import { useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,8 @@ export default function ResetPasswordPage() {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [resetSuccess, setResetSuccess] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,21 +47,40 @@ export default function ResetPasswordPage() {
     <div className="max-w-md mx-auto mt-20 p-6 bg-white rounded shadow">
       <h2 className="text-2xl font-bold mb-4">Reset Password</h2>
       <form onSubmit={handleSubmit}>
-        <Input
-          type="password"
-          placeholder="Enter new password"
-          value={password}
-          onChange={e => setPassword(e.target.value)}
-          required
-        />
-        <Input
-          type="password"
-          placeholder="Confirm new password"
-          value={confirmPassword}
-          onChange={e => setConfirmPassword(e.target.value)}
-          required
-          className="mt-2"
-        />
+        <div className="relative">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-primary text-lg"><FaLock /></span>
+          <Input
+            type={showPassword ? "text" : "password"}
+            placeholder="Enter new password"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            required
+            className="pl-10 pr-10"
+          />
+          <span
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-primary text-lg cursor-pointer"
+            onClick={() => setShowPassword((prev) => !prev)}
+          >
+            {showPassword ? <FaEyeSlash /> : <FaEye />}
+          </span>
+        </div>
+        <div className="relative mt-2">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-primary text-lg"><FaLock /></span>
+          <Input
+            type={showConfirmPassword ? "text" : "password"}
+            placeholder="Confirm new password"
+            value={confirmPassword}
+            onChange={e => setConfirmPassword(e.target.value)}
+            required
+            className="pl-10 pr-10"
+          />
+          <span
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-primary text-lg cursor-pointer"
+            onClick={() => setShowConfirmPassword((prev) => !prev)}
+          >
+            {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+          </span>
+        </div>
         <Button type="submit" disabled={loading || !token} className="mt-4 w-full">
           {loading ? "Resetting..." : "Reset Password"}
         </Button>
