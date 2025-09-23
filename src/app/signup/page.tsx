@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import logo from "@/../public/logo.png";
 const SignupPage = () => {
+  const [emailError, setEmailError] = useState("");
   const router = useRouter();
   const [user, setUser] = useState({
     email: "",
@@ -54,6 +55,7 @@ const SignupPage = () => {
   };
 
   const sendOtp = async () => {
+    setEmailError("");
     if (!user.email) {
       toast.error("Please enter your email");
       return;
@@ -66,7 +68,11 @@ const SignupPage = () => {
         setOtpSent(true);
       }
     } catch (err: any) {
-      toast.error(err.response?.data?.error || "Failed to send OTP");
+      const errorMsg = err.response?.data?.error || "Failed to send OTP";
+      toast.error(errorMsg);
+      if (errorMsg === "Email exists") {
+        setEmailError("Email already exists");
+      }
     } finally {
       setOtpLoading(false);
     }
@@ -142,6 +148,7 @@ const SignupPage = () => {
                   setOtpSent(false);
                   setOtpVerified(false);
                   setOtp("");
+                  setEmailError("");
                 }}
                 className="pl-10 bg-input border border-border focus:ring-2 focus:ring-primary focus:border-primary rounded-xl transition-all duration-150"
                 required
@@ -160,6 +167,9 @@ const SignupPage = () => {
                 </Button>
               )}
             </div>
+            {emailError && (
+              <div className="text-red-500 text-xs m-0">{emailError}</div>
+            )}
             {/* OTP input below email */}
             {!otpVerified && otpSent && (
               <div className="flex gap-2 items-center relative">
@@ -185,7 +195,7 @@ const SignupPage = () => {
               </div>
             )}
             {/* Always show rest of fields, but make them nonwritable until OTP is verified */}
-            <div className="relative">
+            <div className="relative my-4">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-primary text-lg"><FaUser /></span>
               <Input
                 type="text"
@@ -197,7 +207,7 @@ const SignupPage = () => {
                 disabled={inputsDisabled || !otpVerified}
               />
             </div>
-            <div className="relative">
+            <div className="relative my-1">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-primary text-lg"><FaLock /></span>
               <Input
                 type={showPassword ? "text" : "password"}
@@ -215,7 +225,7 @@ const SignupPage = () => {
                 {showPassword ? <FaEyeSlash className="cursor-pointer" /> : <FaEye className="cursor-pointer" />}
               </span>
             </div>
-            <div className="relative">
+            <div className="relative my-4">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-primary text-lg"><FaLock /></span>
               <Input
                 type={showConfirmPassword ? "text" : "password"}
