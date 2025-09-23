@@ -48,13 +48,13 @@ export default function ForgotPasswordPage() {
             className="pl-10"
           />
         </div>
-        <Button type="submit" disabled={loading} className="mt-4 w-full">
+        <Button type="submit" disabled={loading} className="mt-4 w-full cursor-pointer">
           {loading ? "Sending..." : "Send Reset Link"}
         </Button>
         {message && <p className="mt-4 text-center text-sm">{message}</p>}
       </form>
       {emailSent && (
-        <Button className="mt-4 w-full" onClick={() => window.location.href = "/login"}>
+        <Button className="mt-4 w-full cursor-pointer" onClick={() => window.location.href = "/login"}>
           Go to Login
         </Button>
       )}

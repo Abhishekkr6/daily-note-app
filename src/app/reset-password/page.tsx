@@ -61,7 +61,7 @@ export default function ResetPasswordPage() {
             className="absolute right-3 top-1/2 -translate-y-1/2 text-primary text-lg cursor-pointer"
             onClick={() => setShowPassword((prev) => !prev)}
           >
-            {showPassword ? <FaEyeSlash /> : <FaEye />}
+            {showPassword ? <FaEyeSlash className="cursor-pointer" /> : <FaEye className="cursor-pointer" />}
           </span>
         </div>
         <div className="relative mt-2">
@@ -78,16 +78,16 @@ export default function ResetPasswordPage() {
             className="absolute right-3 top-1/2 -translate-y-1/2 text-primary text-lg cursor-pointer"
             onClick={() => setShowConfirmPassword((prev) => !prev)}
           >
-            {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+            {showConfirmPassword ? <FaEyeSlash className="cursor-pointer" /> : <FaEye className="cursor-pointer" />}
           </span>
         </div>
-        <Button type="submit" disabled={loading || !token} className="mt-4 w-full">
+        <Button type="submit" disabled={loading || !token} className="mt-4 w-full cursor-pointer">
           {loading ? "Resetting..." : "Reset Password"}
         </Button>
       </form>
       {message && <p className="mt-4 text-center text-sm">{message}</p>}
       {resetSuccess && (
-        <Button className="mt-4 w-full" onClick={() => window.location.href = "/login"}>
+        <Button className="mt-4 w-full cursor-pointer" onClick={() => window.location.href = "/login"}>
           Go to Login
         </Button>
       )}

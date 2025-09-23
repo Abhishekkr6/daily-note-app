@@ -151,7 +151,7 @@ const SignupPage = () => {
                 <Button
                   type="button"
                   size="sm"
-                  className="ml-1 px-4 py-2 text-xs h-8 min-w-0 w-auto"
+                  className="ml-1 px-4 py-2 text-xs h-8 min-w-0 w-auto cursor-pointer"
                   disabled={otpLoading || otpSent}
                   onClick={sendOtp}
                   style={{ fontSize: "13px", padding: "0 12px" }}
@@ -176,7 +176,7 @@ const SignupPage = () => {
                 <Button
                   type="button"
                   size="sm"
-                  className="ml-2 px-3 py-1 text-xs"
+                  className="ml-2 px-3 py-1 text-xs cursor-pointer"
                   disabled={otpLoading || otpVerified}
                   onClick={verifyOtp}
                 >
@@ -184,6 +184,7 @@ const SignupPage = () => {
                 </Button>
               </div>
             )}
+            {/* Always show rest of fields, but make them nonwritable until OTP is verified */}
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-primary text-lg"><FaUser /></span>
               <Input
@@ -193,7 +194,7 @@ const SignupPage = () => {
                 onChange={e => setUser({ ...user, username: e.target.value })}
                 className="pl-10 bg-input border border-border focus:ring-2 focus:ring-primary focus:border-primary rounded-xl transition-all duration-150"
                 required
-                disabled={inputsDisabled}
+                disabled={inputsDisabled || !otpVerified}
               />
             </div>
             <div className="relative">
@@ -205,13 +206,13 @@ const SignupPage = () => {
                 onChange={e => setUser({ ...user, password: e.target.value })}
                 className="pl-10 pr-10 bg-input border border-border focus:ring-2 focus:ring-primary focus:border-primary rounded-xl transition-all duration-150"
                 required
-                disabled={inputsDisabled}
+                disabled={inputsDisabled || !otpVerified}
               />
               <span
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-primary text-lg cursor-pointer"
                 onClick={() => setShowPassword((prev) => !prev)}
               >
-                {showPassword ? <FaEyeSlash /> : <FaEye />}
+                {showPassword ? <FaEyeSlash className="cursor-pointer" /> : <FaEye className="cursor-pointer" />}
               </span>
             </div>
             <div className="relative">
@@ -223,20 +224,20 @@ const SignupPage = () => {
                 onChange={e => setUser({ ...user, confirmPassword: e.target.value })}
                 className="pl-10 pr-10 bg-input border border-border focus:ring-2 focus:ring-primary focus:border-primary rounded-xl transition-all duration-150"
                 required
-                disabled={inputsDisabled}
+                disabled={inputsDisabled || !otpVerified}
               />
               <span
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-primary text-lg cursor-pointer"
                 onClick={() => setShowConfirmPassword((prev) => !prev)}
               >
-                {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+                {showConfirmPassword ? <FaEyeSlash className="cursor-pointer" /> : <FaEye className="cursor-pointer" />}
               </span>
             </div>
             <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}>
               <Button
                 type="submit"
-                disabled={buttonDisabled || loading}
-                className="w-full bg-primary text-primary-foreground rounded-xl py-2 font-semibold text-lg transition-all duration-200 hover:bg-primary/90 hover:shadow-lg disabled:opacity-50"
+                disabled={buttonDisabled || loading || !otpVerified}
+                className="w-full bg-primary text-primary-foreground rounded-xl py-2 font-semibold text-lg transition-all duration-200 hover:bg-primary/90 hover:shadow-lg disabled:opacity-50 cursor-pointer"
               >
                 {loading ? "Signing up..." : "Sign Up"}
               </Button>

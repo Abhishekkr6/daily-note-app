@@ -100,7 +100,7 @@ const LoginPage = () => {
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-primary text-lg cursor-pointer"
                 onClick={() => setShowPassword((prev) => !prev)}
               >
-                {showPassword ? <FaEyeSlash /> : <FaEye />}
+                {showPassword ? <FaEyeSlash className="cursor-pointer" /> : <FaEye className="cursor-pointer" />}
               </span>
             </div>
             <div className="text-right mb-2">
@@ -110,7 +110,7 @@ const LoginPage = () => {
               <Button
                 type="submit"
                 disabled={buttonDisabled || loading}
-                className="w-full bg-primary text-primary-foreground rounded-xl py-2 font-semibold text-lg transition-all duration-200 hover:bg-primary/90 hover:shadow-lg disabled:opacity-50"
+                className="w-full bg-primary text-primary-foreground rounded-xl py-2 font-semibold text-lg transition-all duration-200 hover:bg-primary/90 hover:shadow-lg disabled:opacity-50 cursor-pointer"
               >
                 {loading ? "Logging in..." : "Login"}
               </Button>

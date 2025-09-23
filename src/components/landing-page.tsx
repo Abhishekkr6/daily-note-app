@@ -85,11 +85,11 @@ export function LandingPage() {
             <span className="text-xl font-semibold heading">DailyNote</span>
           </div>
           <div className="flex items-center gap-4">
-            <Link href="/signup">
-              <Button variant="ghost" className="btn">Sign Up</Button>
+            <Link href="/signup" className="cursor-pointer">
+              <Button variant="ghost" className="btn cursor-pointer">Sign Up</Button>
             </Link>
-            <Link href="/login">
-              <Button className="btn">Log In</Button>
+            <Link href="/login" className="cursor-pointer">
+              <Button className="btn cursor-pointer">Log In</Button>
             </Link>
           </div>
         </div>
@@ -115,13 +115,13 @@ export function LandingPage() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-            <Link href="/signup">
-              <Button size="lg" className="text-lg px-8 py-6">
+            <Link href="/signup" className="cursor-pointer">
+              <Button size="lg" className="text-lg px-8 py-6 cursor-pointer">
                 Get Started Free
-                <ArrowRight className="w-5 h-5 ml-2" />
+                <ArrowRight className="w-5 h-5 ml-2 cursor-pointer" />
               </Button>
             </Link>
-            <Button size="lg" variant="outline" className="text-lg px-8 py-6 bg-transparent">
+            <Button size="lg" variant="outline" className="text-lg px-8 py-6 bg-transparent cursor-pointer">
               View Demo
             </Button>
           </div>
@@ -265,10 +265,10 @@ export function LandingPage() {
             Join thousands of users who have transformed their daily routine with DailyNote. Start your free account
             today.
           </p>
-          <Link href="/signup">
-            <Button size="lg" className="text-lg px-8 py-6 btn">
+          <Link href="/signup" className="cursor-pointer">
+            <Button size="lg" className="text-lg px-8 py-6 btn cursor-pointer">
               Create Your Free Account
-              <ArrowRight className="w-5 h-5 ml-2" />
+              <ArrowRight className="w-5 h-5 ml-2 cursor-pointer" />
             </Button>
           </Link>
           <p className="text-sm text-muted-foreground mt-4">No credit card required • Free forever plan available</p>
