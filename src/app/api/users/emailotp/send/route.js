@@ -1,14 +1,23 @@
 import nodemailer from "nodemailer";
 import { MongoClient } from "mongodb";
+import User from "../../../../../models/userModel.ts";
+import { connect } from "../../../../../dbConfig/dbConfig.js";
 
 const uri = process.env.MONGO_URI;
 const client = new MongoClient(uri);
 
+
 export async function POST(req) {
+  await connect();
   const body = await req.json();
   const { email } = body;
   if (!email) {
     return new Response(JSON.stringify({ error: "Email is required" }), { status: 400 });
+  }
+  // Check if email exists in User collection
+  const existingUser = await User.findOne({ email });
+  if (existingUser) {
+    return new Response(JSON.stringify({ error: "Email exists" }), { status: 400 });
   }
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
   try {
