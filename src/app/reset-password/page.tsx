@@ -44,9 +44,7 @@ export default function ResetPasswordPage() {
       if (res.ok) {
         setMessage("Password reset successful. Redirecting to login...");
         setResetSuccess(true);
-        setTimeout(() => {
-          window.location.href = "/login";
-        }, 2000);
+        window.location.href = "/login";
       } else {
         setMessage(data.error || "Something went wrong.");
         setDisabled(false);
@@ -103,11 +101,7 @@ export default function ResetPasswordPage() {
         </Button>
       </form>
       {message && <p className="mt-4 text-center text-sm">{message}</p>}
-      {resetSuccess && (
-        <Button className="mt-4 w-full cursor-pointer" onClick={() => window.location.href = "/login"}>
-          Go to Login
-        </Button>
-      )}
+      {/* No Go to Login button, immediate redirect on success */}
       {!token && <p className="mt-4 text-red-500 text-center">Invalid or missing token.</p>}
     </div>
   );
