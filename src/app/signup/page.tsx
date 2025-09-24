@@ -40,12 +40,12 @@ const SignupPage = () => {
       toast.error("Please verify your email first");
       return;
     }
-    setUser({ email: "", username: "", password: "", confirmPassword: "" });
     setInputsDisabled(true);
     setUsernameError("");
     try {
       if (user.password !== user.confirmPassword) {
         toast.error("Passwords do not match");
+        setInputsDisabled(false);
         return;
       }
       setLoading(true);
@@ -54,8 +54,10 @@ const SignupPage = () => {
         csrfToken,
       });
       toast.success("Signup successful");
+      setUser({ email: "", username: "", password: "", confirmPassword: "" });
       router.push("/login");
     } catch (err: any) {
+      setInputsDisabled(false);
       if (err.response?.data?.error) {
         const errorMsg = err.response.data.error;
         toast.error(errorMsg);

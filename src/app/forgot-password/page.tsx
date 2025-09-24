@@ -16,10 +16,12 @@ export default function ForgotPasswordPage() {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
+  const [inputsDisabled, setInputsDisabled] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setInputsDisabled(true);
     setMessage("");
     try {
       const res = await fetch("/api/users/forgotpassword", {
@@ -33,9 +35,11 @@ export default function ForgotPasswordPage() {
         setEmailSent(true);
       } else {
         setMessage(data.error || "Something went wrong.");
+        setInputsDisabled(false);
       }
     } catch (err) {
       setMessage("Error sending reset link.");
+      setInputsDisabled(false);
     }
     setLoading(false);
   };
@@ -53,9 +57,10 @@ export default function ForgotPasswordPage() {
             onChange={e => setEmail(e.target.value)}
             required
             className="pl-10"
+            disabled={inputsDisabled}
           />
         </div>
-        <Button type="submit" disabled={loading} className="mt-4 w-full cursor-pointer">
+        <Button type="submit" disabled={loading || inputsDisabled} className="mt-4 w-full cursor-pointer">
           {loading ? "Sending..." : "Send Reset Link"}
         </Button>
         {message && <p className="mt-4 text-center text-sm">{message}</p>}

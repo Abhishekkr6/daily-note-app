@@ -32,8 +32,6 @@ const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
 
   const onLogin = async () => {
-    // Clear and disable inputs immediately on button click
-    setUser({ email: "", password: "" });
     setInputsDisabled(true);
     try {
       setLoading(true);
@@ -43,8 +41,10 @@ const LoginPage = () => {
       });
       toast.success("Login successful");
       // Redirect instantly after success
+      setUser({ email: "", password: "" });
       window.location.href = "/home";
     } catch (err) {
+      setInputsDisabled(false);
       toast.error((err as any).response?.data?.error || "Login failed");
     } finally {
       setLoading(false);
