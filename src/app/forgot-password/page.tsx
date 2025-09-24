@@ -1,10 +1,17 @@
 "use client";
-import { useState } from "react";
+import React, { useState } from "react";
 import { FaEnvelope } from "react-icons/fa";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
 export default function ForgotPasswordPage() {
+  const [csrfToken, setCsrfToken] = useState("");
+  // Fetch CSRF token on mount
+  React.useEffect(() => {
+    fetch("/api/csrf-token")
+      .then(res => res.json())
+      .then(data => setCsrfToken(data.csrfToken));
+  }, []);
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
@@ -18,7 +25,7 @@ export default function ForgotPasswordPage() {
       const res = await fetch("/api/users/forgotpassword", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, csrfToken }),
       });
       const data = await res.json();
       if (res.ok) {

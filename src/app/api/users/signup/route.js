@@ -30,18 +30,21 @@ export async function POST(req) {
       return NextResponse.json({ error: "Email already registered" }, { status: 400 });
     }
 
-    const salt = await bcryptjs.genSalt(10);
-    const hashedPassword = await bcryptjs.hash(password, salt);
+  // Use bcrypt with cost factor 12 for stronger security
+  const salt = await bcryptjs.genSalt(12);
+  const hashedPassword = await bcryptjs.hash(password, salt);
 
-    // ✅ Verification token generate
-    const emailVerificationToken = crypto.randomBytes(32).toString("hex");
-    const emailVerificationExpires = Date.now() + 60 * 60 * 1000; // 1 hour
+
+  // ✅ Verification token generate
+  const emailVerificationToken = crypto.randomBytes(32).toString("hex");
+  const emailVerificationTokenHash = await bcryptjs.hash(emailVerificationToken, 12);
+  const emailVerificationExpires = Date.now() + 60 * 60 * 1000; // 1 hour
 
     const newUser = new User({
       username,
       email,
       password: hashedPassword,
-      emailVerificationToken,
+      emailVerificationToken: emailVerificationTokenHash,
       emailVerificationExpires,
     });
 

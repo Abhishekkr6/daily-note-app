@@ -10,6 +10,13 @@ import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import logo from "@/../public/logo.png";
 const SignupPage = () => {
+  const [csrfToken, setCsrfToken] = useState("");
+  // Fetch CSRF token on mount
+  useEffect(() => {
+    fetch("/api/csrf-token")
+      .then(res => res.json())
+      .then(data => setCsrfToken(data.csrfToken));
+  }, []);
   const [emailError, setEmailError] = useState("");
   const [usernameError, setUsernameError] = useState("");
   const router = useRouter();
@@ -42,7 +49,10 @@ const SignupPage = () => {
         return;
       }
       setLoading(true);
-      const response = await axios.post("/api/users/signup", user);
+      const response = await axios.post("/api/users/signup", {
+        ...user,
+        csrfToken,
+      });
       toast.success("Signup successful");
       router.push("/login");
     } catch (err: any) {

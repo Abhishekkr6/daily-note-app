@@ -18,6 +18,9 @@ import { Schema, model, models, Document } from "mongoose";
  * @property {Date} [deletedAt]
  */
 export interface IUser extends Document {
+  twoFactorEnabled?: boolean;
+  twoFactorSecret?: string;
+  role?: string;
   email: string;
   password: string;
   username: string;
@@ -31,10 +34,26 @@ export interface IUser extends Document {
   resetPasswordToken?: string;
   resetPasswordExpires?: Date;
   deletedAt?: Date;
+  refreshToken?: string;
+  emailVerified?: boolean;
+  emailVerificationToken?: string;
+  emailVerificationExpires?: Date;
 }
 
-const UserSchema = new Schema<IUser>(
-  {
+const UserSchema = new Schema<IUser>({
+    twoFactorEnabled: {
+      type: Boolean,
+      default: false,
+    },
+    twoFactorSecret: {
+      type: String,
+      default: null,
+    },
+    role: {
+      type: String,
+      enum: ["user", "admin"],
+      default: "user",
+    },
     email: {
       type: String,
       required: [true, "Email is required"],
@@ -80,6 +99,22 @@ const UserSchema = new Schema<IUser>(
       default: null,
     },
     deletedAt: {
+      type: Date,
+      default: null,
+    },
+    refreshToken: {
+      type: String,
+      default: null,
+    },
+    emailVerified: {
+      type: Boolean,
+      default: false,
+    },
+    emailVerificationToken: {
+      type: String,
+      default: null,
+    },
+    emailVerificationExpires: {
       type: Date,
       default: null,
     },

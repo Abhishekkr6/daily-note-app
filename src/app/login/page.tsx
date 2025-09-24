@@ -14,6 +14,13 @@ import { motion } from "framer-motion";
 import logo from "@/../public/logo.png";
 
 const LoginPage = () => {
+  const [csrfToken, setCsrfToken] = useState("");
+  // Fetch CSRF token on mount
+  useEffect(() => {
+    fetch("/api/csrf-token")
+      .then(res => res.json())
+      .then(data => setCsrfToken(data.csrfToken));
+  }, []);
   const router = useRouter();
   const [user, setUser] = useState({
     email: "",
@@ -30,7 +37,10 @@ const LoginPage = () => {
     setInputsDisabled(true);
     try {
       setLoading(true);
-      const response = await axios.post("/api/users/login", user);
+      const response = await axios.post("/api/users/login", {
+        ...user,
+        csrfToken,
+      });
       toast.success("Login successful");
       // Redirect instantly after success
       window.location.href = "/home";

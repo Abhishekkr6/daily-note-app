@@ -1,13 +1,21 @@
 "use client";
-import { useState } from "react";
+import React, { useState } from "react";
 import { FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
 import { useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
 export default function ResetPasswordPage() {
+  const [csrfToken, setCsrfToken] = useState("");
+  // Fetch CSRF token on mount
+  React.useEffect(() => {
+    fetch("/api/csrf-token")
+      .then(res => res.json())
+      .then(data => setCsrfToken(data.csrfToken));
+  }, []);
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
+  const email = searchParams.get("email");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [message, setMessage] = useState("");
@@ -28,7 +36,7 @@ export default function ResetPasswordPage() {
       const res = await fetch("/api/users/resetpassword", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, password }),
+        body: JSON.stringify({ token, password, csrfToken, email }),
       });
       const data = await res.json();
       if (res.ok) {
