@@ -11,6 +11,7 @@ import { motion } from "framer-motion";
 import logo from "@/../public/logo.png";
 const SignupPage = () => {
   const [emailError, setEmailError] = useState("");
+  const [usernameError, setUsernameError] = useState("");
   const router = useRouter();
   const [user, setUser] = useState({
     email: "",
@@ -34,6 +35,7 @@ const SignupPage = () => {
     }
     setUser({ email: "", username: "", password: "", confirmPassword: "" });
     setInputsDisabled(true);
+    setUsernameError("");
     try {
       if (user.password !== user.confirmPassword) {
         toast.error("Passwords do not match");
@@ -45,7 +47,11 @@ const SignupPage = () => {
       router.push("/login");
     } catch (err: any) {
       if (err.response?.data?.error) {
-        toast.error(err.response.data.error);
+        const errorMsg = err.response.data.error;
+        toast.error(errorMsg);
+        if (errorMsg === "Username already taken") {
+          setUsernameError("Username already taken");
+        }
       } else {
         toast.error("Signup failed");
       }
@@ -201,12 +207,18 @@ const SignupPage = () => {
                 type="text"
                 placeholder="Username"
                 value={user.username}
-                onChange={e => setUser({ ...user, username: e.target.value })}
+                onChange={e => {
+                  setUser({ ...user, username: e.target.value });
+                  setUsernameError("");
+                }}
                 className="pl-10 bg-input border border-border focus:ring-2 focus:ring-primary focus:border-primary rounded-xl transition-all duration-150"
                 required
                 disabled={inputsDisabled || !otpVerified}
               />
             </div>
+            {usernameError && (
+              <div className="text-red-500 text-xs m-0">{usernameError}</div>
+            )}
             <div className="relative my-1">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-primary text-lg"><FaLock /></span>
               <Input
