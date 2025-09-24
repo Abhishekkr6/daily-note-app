@@ -10,15 +10,54 @@ import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import logo from "@/../public/logo.png";
 const SignupPage = () => {
+  // Track if user has interacted with email/username for global blur
+  const [emailInteracted, setEmailInteracted] = useState(false);
+  const [usernameInteracted, setUsernameInteracted] = useState(false);
+  const [emailError, setEmailError] = useState("");
+  const [usernameError, setUsernameError] = useState("");
+  const [emailTouched, setEmailTouched] = useState(false);
+  const [usernameTouched, setUsernameTouched] = useState(false);
+
+  // Password and confirm password error/interacted states
+  const [passwordError, setPasswordError] = useState("");
+  const [confirmPasswordError, setConfirmPasswordError] = useState("");
+  const [passwordTouched, setPasswordTouched] = useState(false);
+  const [confirmPasswordTouched, setConfirmPasswordTouched] = useState(false);
+  const [passwordInteracted, setPasswordInteracted] = useState(false);
+  const [confirmPasswordInteracted, setConfirmPasswordInteracted] = useState(false);
+
+  // Global blur handler to show error if user clicks outside after touching input
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (emailInteracted && emailError && !document.activeElement?.matches('input[type="email"]')) {
+        setEmailTouched(true);
+      }
+      if (passwordInteracted && passwordError && !document.activeElement?.matches('input[placeholder="Password"]')) {
+        setPasswordTouched(true);
+      }
+      if (confirmPasswordInteracted && confirmPasswordError && !document.activeElement?.matches('input[placeholder="Confirm Password"]')) {
+        setConfirmPasswordTouched(true);
+      }
+      if (usernameInteracted && usernameError && !document.activeElement?.matches('input[placeholder="Username"]')) {
+        setUsernameTouched(true);
+      }
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [emailInteracted, usernameInteracted, emailError, usernameError, passwordInteracted, passwordError, confirmPasswordInteracted, confirmPasswordError]);
   const [csrfToken, setCsrfToken] = useState("");
   // Fetch CSRF token on mount
+              if (passwordInteracted && passwordError && !document.activeElement?.matches('input[placeholder="Password"]')) {
+                setPasswordTouched(true);
+              }
+              if (confirmPasswordInteracted && confirmPasswordError && !document.activeElement?.matches('input[placeholder="Confirm Password"]')) {
+                setConfirmPasswordTouched(true);
+              }
   useEffect(() => {
     fetch("/api/csrf-token")
       .then(res => res.json())
       .then(data => setCsrfToken(data.csrfToken));
   }, []);
-  const [emailError, setEmailError] = useState("");
-  const [usernameError, setUsernameError] = useState("");
   const router = useRouter();
   const [user, setUser] = useState({
     email: "",
@@ -40,11 +79,21 @@ const SignupPage = () => {
       toast.error("Please verify your email first");
       return;
     }
-    setInputsDisabled(true);
-    setUsernameError("");
+  setInputsDisabled(true);
+  setUsernameError("");
+  setEmailError("");
     try {
       if (user.password !== user.confirmPassword) {
         toast.error("Passwords do not match");
+        setInputsDisabled(false);
+        return;
+      }
+            setPasswordError("");
+            setConfirmPasswordError("");
+      if (!user.username || !user.email || !user.password || !user.confirmPassword) {
+        toast.error("All fields are required");
+        if (!user.username) setUsernameError("Username is required");
+        if (!user.email) setEmailError("Email is required");
         setInputsDisabled(false);
         return;
       }
@@ -59,10 +108,43 @@ const SignupPage = () => {
     } catch (err: any) {
       setInputsDisabled(false);
       if (err.response?.data?.error) {
-        const errorMsg = err.response.data.error;
-        toast.error(errorMsg);
-        if (errorMsg === "Username already taken") {
-          setUsernameError("Username already taken");
+        const errorMsg = err.response.data.error.toLowerCase();
+        // Username errors
+        if (errorMsg.includes("username")) {
+          if (errorMsg.includes("taken") || errorMsg.includes("exists")) {
+            setUsernameError("Username already exists");
+            toast.error("Username already exists");
+          } else if (errorMsg.includes("required")) {
+            setUsernameError("Username is required");
+            toast.error("Username is required");
+          } else if (errorMsg.includes("minlength")) {
+            setUsernameError("Username too short");
+            toast.error("Username too short");
+          } else if (errorMsg.includes("maxlength")) {
+            setUsernameError("Username too long");
+            toast.error("Username too long");
+          } else {
+            setUsernameError("Invalid username");
+            toast.error("Invalid username");
+          }
+        }
+        // Email errors
+        else if (errorMsg.includes("email")) {
+          if (errorMsg.includes("registered") || errorMsg.includes("exists")) {
+            setEmailError("Email already exists");
+            toast.error("Email already exists");
+          } else if (errorMsg.includes("required")) {
+            setEmailError("Email is required");
+            toast.error("Email is required");
+          } else if (errorMsg.includes("valid")) {
+            setEmailError("Invalid email");
+            toast.error("Invalid email");
+          } else {
+            setEmailError("Invalid email");
+            toast.error("Invalid email");
+          }
+        } else {
+          toast.error("Signup failed");
         }
       } else {
         toast.error("Signup failed");
@@ -166,9 +248,11 @@ const SignupPage = () => {
                   setOtpSent(false);
                   setOtpVerified(false);
                   setOtp("");
-                  setEmailError("");
+                  if (emailTouched) setEmailError("");
+                  setEmailInteracted(true);
                 }}
-                className="pl-10 bg-input border border-border focus:ring-2 focus:ring-primary focus:border-primary rounded-xl transition-all duration-150"
+                onBlur={() => setEmailTouched(true)}
+                className={`pl-10 bg-input border focus:ring-2 focus:ring-primary focus:border-primary rounded-xl transition-all duration-150 ${emailTouched && emailError ? 'border-red-500' : 'border-border'}`}
                 required
                 disabled={inputsDisabled || otpVerified}
               />
@@ -186,7 +270,9 @@ const SignupPage = () => {
               )}
             </div>
             {emailError && (
-              <div className="text-red-500 text-xs m-0">{emailError}</div>
+              (emailTouched || (emailInteracted && emailError)) && emailError && (
+                <div className="text-red-500 text-xs" style={{lineHeight: '1', margin: 0, padding: 0, marginTop: '-20px', marginLeft: '10px'}}>{emailError}</div>
+              )
             )}
             {/* OTP input below email */}
             {!otpVerified && otpSent && (
@@ -221,15 +307,19 @@ const SignupPage = () => {
                 value={user.username}
                 onChange={e => {
                   setUser({ ...user, username: e.target.value });
-                  setUsernameError("");
+                  if (usernameTouched) setUsernameError("");
+                  setUsernameInteracted(true);
                 }}
-                className="pl-10 bg-input border border-border focus:ring-2 focus:ring-primary focus:border-primary rounded-xl transition-all duration-150"
+                onBlur={() => setUsernameTouched(true)}
+                className={`pl-10 bg-input border focus:ring-2 focus:ring-primary focus:border-primary rounded-xl transition-all duration-150 ${usernameTouched && usernameError ? 'border-red-500' : 'border-border'}`}
                 required
                 disabled={inputsDisabled || !otpVerified}
               />
             </div>
             {usernameError && (
-              <div className="text-red-500 text-xs m-0">{usernameError}</div>
+              (usernameTouched || (usernameInteracted && usernameError)) && usernameError && (
+                <div className="text-red-500 text-xs" style={{lineHeight: '0', margin: 0, padding: 0, marginTop: '-20px', marginLeft: '10px'}}>{usernameError}</div>
+              )
             )}
             <div className="relative my-1">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-primary text-lg"><FaLock /></span>
@@ -248,6 +338,9 @@ const SignupPage = () => {
               >
                 {showPassword ? <FaEyeSlash className="cursor-pointer" /> : <FaEye className="cursor-pointer" />}
               </span>
+              {(passwordTouched || (passwordInteracted && passwordError)) && passwordError && (
+                <div className="text-red-500 text-xs" style={{lineHeight: '0', margin: 0, padding: 0, marginTop: '-20px', marginLeft: '10px'}}>{passwordError}</div>
+              )}
             </div>
             <div className="relative my-4">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-primary text-lg"><FaLock /></span>
@@ -255,8 +348,13 @@ const SignupPage = () => {
                 type={showConfirmPassword ? "text" : "password"}
                 placeholder="Confirm Password"
                 value={user.confirmPassword}
-                onChange={e => setUser({ ...user, confirmPassword: e.target.value })}
-                className="pl-10 pr-10 bg-input border border-border focus:ring-2 focus:ring-primary focus:border-primary rounded-xl transition-all duration-150"
+                onChange={e => {
+                  setUser({ ...user, confirmPassword: e.target.value });
+                  if (confirmPasswordTouched) setConfirmPasswordError("");
+                  setConfirmPasswordInteracted(true);
+                }}
+                onBlur={() => setConfirmPasswordTouched(true)}
+                className={`pl-10 pr-10 bg-input border focus:ring-2 focus:ring-primary focus:border-primary rounded-xl transition-all duration-150 ${confirmPasswordTouched && (confirmPasswordError || (user.confirmPassword && user.password !== user.confirmPassword)) ? 'border-red-500' : 'border-border'}`}
                 required
                 disabled={inputsDisabled || !otpVerified}
               />
@@ -266,6 +364,13 @@ const SignupPage = () => {
               >
                 {showConfirmPassword ? <FaEyeSlash className="cursor-pointer" /> : <FaEye className="cursor-pointer" />}
               </span>
+              {(confirmPasswordTouched || confirmPasswordInteracted) && (
+                (confirmPasswordError || (user.confirmPassword && user.password !== user.confirmPassword)) && (
+                  <div className="text-red-500 text-xs" style={{lineHeight: '0', margin: 0, padding: 0, marginTop: '-20px', marginLeft: '10px'}}>
+                    {confirmPasswordError || "Passwords do not match"}
+                  </div>
+                )
+              )}
             </div>
             <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}>
               <Button
