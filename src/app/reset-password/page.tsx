@@ -21,6 +21,7 @@ export default function ResetPasswordPage() {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [resetSuccess, setResetSuccess] = useState(false);
+  const [disabled, setDisabled] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -32,6 +33,7 @@ export default function ResetPasswordPage() {
       return;
     }
     setLoading(true);
+    setDisabled(true);
     try {
       const res = await fetch("/api/users/resetpassword", {
         method: "POST",
@@ -40,13 +42,18 @@ export default function ResetPasswordPage() {
       });
       const data = await res.json();
       if (res.ok) {
-        setMessage("Password reset successful. You can now log in.");
+        setMessage("Password reset successful. Redirecting to login...");
         setResetSuccess(true);
+        setTimeout(() => {
+          window.location.href = "/login";
+        }, 2000);
       } else {
         setMessage(data.error || "Something went wrong.");
+        setDisabled(false);
       }
     } catch (err) {
       setMessage("Error resetting password.");
+      setDisabled(false);
     }
     setLoading(false);
   };
@@ -64,6 +71,7 @@ export default function ResetPasswordPage() {
             onChange={e => setPassword(e.target.value)}
             required
             className="pl-10 pr-10"
+            disabled={disabled}
           />
           <span
             className="absolute right-3 top-1/2 -translate-y-1/2 text-primary text-lg cursor-pointer"
@@ -81,6 +89,7 @@ export default function ResetPasswordPage() {
             onChange={e => setConfirmPassword(e.target.value)}
             required
             className="pl-10 pr-10"
+            disabled={disabled}
           />
           <span
             className="absolute right-3 top-1/2 -translate-y-1/2 text-primary text-lg cursor-pointer"
@@ -89,7 +98,7 @@ export default function ResetPasswordPage() {
             {showConfirmPassword ? <FaEyeSlash className="cursor-pointer" /> : <FaEye className="cursor-pointer" />}
           </span>
         </div>
-        <Button type="submit" disabled={loading || !token} className="mt-4 w-full cursor-pointer">
+        <Button type="submit" disabled={loading || !token || disabled} className="mt-4 w-full cursor-pointer">
           {loading ? "Resetting..." : "Reset Password"}
         </Button>
       </form>
