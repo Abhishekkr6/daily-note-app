@@ -1,6 +1,13 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { FaUser, FaEnvelope, FaLock, FaEye, FaEyeSlash, FaKey } from "react-icons/fa";
+import {
+  FaUser,
+  FaEnvelope,
+  FaLock,
+  FaEye,
+  FaEyeSlash,
+  FaKey,
+} from "react-icons/fa";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
@@ -30,33 +37,61 @@ const SignupPage = () => {
   const [passwordTouched, setPasswordTouched] = useState(false);
   const [confirmPasswordTouched, setConfirmPasswordTouched] = useState(false);
   const [passwordInteracted, setPasswordInteracted] = useState(false);
-  const [confirmPasswordInteracted, setConfirmPasswordInteracted] = useState(false);
+  const [confirmPasswordInteracted, setConfirmPasswordInteracted] =
+    useState(false);
 
   // Global blur handler to show error if user clicks outside after touching input
   useEffect(() => {
     function handleClick(e: MouseEvent) {
-      if (emailInteracted && emailError && !document.activeElement?.matches('input[type="email"]')) {
+      if (
+        emailInteracted &&
+        emailError &&
+        !document.activeElement?.matches('input[type="email"]')
+      ) {
         setEmailTouched(true);
       }
-      if (passwordInteracted && passwordError && !document.activeElement?.matches('input[placeholder="Password"]')) {
+      if (
+        passwordInteracted &&
+        passwordError &&
+        !document.activeElement?.matches('input[placeholder="Password"]')
+      ) {
         setPasswordTouched(true);
       }
-      if (confirmPasswordInteracted && confirmPasswordError && !document.activeElement?.matches('input[placeholder="Confirm Password"]')) {
+      if (
+        confirmPasswordInteracted &&
+        confirmPasswordError &&
+        !document.activeElement?.matches(
+          'input[placeholder="Confirm Password"]'
+        )
+      ) {
         setConfirmPasswordTouched(true);
       }
-      if (usernameInteracted && usernameError && !document.activeElement?.matches('input[placeholder="Username"]')) {
+      if (
+        usernameInteracted &&
+        usernameError &&
+        !document.activeElement?.matches('input[placeholder="Username"]')
+      ) {
         setUsernameTouched(true);
       }
     }
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
-  }, [emailInteracted, usernameInteracted, emailError, usernameError, passwordInteracted, passwordError, confirmPasswordInteracted, confirmPasswordError]);
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [
+    emailInteracted,
+    usernameInteracted,
+    emailError,
+    usernameError,
+    passwordInteracted,
+    passwordError,
+    confirmPasswordInteracted,
+    confirmPasswordError,
+  ]);
   const [csrfToken, setCsrfToken] = useState("");
   // Fetch CSRF token on mount
   useEffect(() => {
     fetch("/api/csrf-token")
-      .then(res => res.json())
-      .then(data => setCsrfToken(data.csrfToken));
+      .then((res) => res.json())
+      .then((data) => setCsrfToken(data.csrfToken));
   }, []);
   const router = useRouter();
   const [user, setUser] = useState({
@@ -89,18 +124,23 @@ const SignupPage = () => {
       toast.error("Please verify your email first");
       return;
     }
-  setInputsDisabled(true);
-  // Do not clear usernameError here; rely on validation
-  setEmailError("");
+    setInputsDisabled(true);
+    // Do not clear usernameError here; rely on validation
+    setEmailError("");
     try {
       if (user.password !== user.confirmPassword) {
         toast.error("Passwords do not match");
         setInputsDisabled(false);
         return;
       }
-            setPasswordError("");
-            setConfirmPasswordError("");
-      if (!user.username || !user.email || !user.password || !user.confirmPassword) {
+      setPasswordError("");
+      setConfirmPasswordError("");
+      if (
+        !user.username ||
+        !user.email ||
+        !user.password ||
+        !user.confirmPassword
+      ) {
         toast.error("All fields are required");
         if (!user.username) setUsernameError("Username is required");
         if (!user.email) setEmailError("Email is required");
@@ -114,6 +154,18 @@ const SignupPage = () => {
       });
       toast.success("Signup successful");
       setUser({ email: "", username: "", password: "", confirmPassword: "" });
+      setEmailError("");
+      setUsernameError("");
+      setPasswordError("");
+      setConfirmPasswordError("");
+      setEmailTouched(false);
+      setUsernameTouched(false);
+      setPasswordTouched(false);
+      setConfirmPasswordTouched(false);
+      setEmailInteracted(false);
+      setUsernameInteracted(false);
+      setPasswordInteracted(false);
+      setConfirmPasswordInteracted(false);
       router.push("/login");
     } catch (err: any) {
       setInputsDisabled(false);
@@ -172,7 +224,9 @@ const SignupPage = () => {
     }
     setOtpLoading(true);
     try {
-      const res = await axios.post("/api/users/emailotp/send", { email: user.email });
+      const res = await axios.post("/api/users/emailotp/send", {
+        email: user.email,
+      });
       if (res.data.message) {
         toast.success("OTP sent to your email");
         setOtpSent(true);
@@ -197,7 +251,10 @@ const SignupPage = () => {
     }
     setOtpLoading(true);
     try {
-      const res = await axios.post("/api/users/emailotp/verify", { email: user.email, otp });
+      const res = await axios.post("/api/users/emailotp/verify", {
+        email: user.email,
+        otp,
+      });
       if (res.data.message) {
         toast.success("Email verified");
         setOtpVerified(true);
@@ -265,18 +322,36 @@ const SignupPage = () => {
 
     // Button is disabled if any field is empty or any error exists
     const hasError =
-      emailError || usernameError || passwordError || confirmPasswordError ||
-      !user.email || !user.username || !user.password || !user.confirmPassword;
+      emailError ||
+      usernameError ||
+      passwordError ||
+      confirmPasswordError ||
+      !user.email ||
+      !user.username ||
+      !user.password ||
+      !user.confirmPassword;
     setButtonDisabled(!!hasError);
-  }, [user, emailError, passwordError, confirmPasswordError, usernameTouched, emailTouched, passwordTouched, confirmPasswordTouched]);
+  }, [
+    user,
+    emailError,
+    passwordError,
+    confirmPasswordError,
+    usernameTouched,
+    emailTouched,
+    passwordTouched,
+    confirmPasswordTouched,
+  ]);
   // Email format validation
   const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(user.email);
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-2 sm:px-6" style={{
-      background: "linear-gradient(135deg, #fefce8 0%, #f0fdf4 100%)",
-      position: "relative"
-    }}>
+    <div
+      className="min-h-screen flex items-center justify-center px-2 sm:px-6"
+      style={{
+        background: "linear-gradient(135deg, #fefce8 0%, #f0fdf4 100%)",
+        position: "relative",
+      }}
+    >
       {/* Accent blob */}
       <motion.div
         initial={{ opacity: 0, scale: 0.8 }}
@@ -293,18 +368,34 @@ const SignupPage = () => {
       >
         <Card className="rounded-3xl shadow-2xl bg-white/80 backdrop-blur-lg p-8 flex flex-col gap-6 border border-border">
           <div className="flex flex-col items-center gap-2">
-            <img src={logo.src} alt="DailyNote Logo" className="h-15 mb-2 drop-shadow-lg" />
-            <h1 className="text-3xl font-extrabold text-primary mb-1 tracking-tight">Create your account</h1>
-            <p className="text-muted-foreground text-center text-base">Start your daily journey with a beautiful, secure account.</p>
+            <img
+              src={logo.src}
+              alt="DailyNote Logo"
+              className="h-15 mb-2 drop-shadow-lg"
+            />
+            <h1 className="text-3xl font-extrabold text-primary mb-1 tracking-tight">
+              Create your account
+            </h1>
+            <p className="text-muted-foreground text-center text-base">
+              Start your daily journey with a beautiful, secure account.
+            </p>
           </div>
-          <form className="flex flex-col gap-4" onSubmit={e => { e.preventDefault(); onSignUp(); }}>
+          <form
+            className="flex flex-col gap-4"
+            onSubmit={(e) => {
+              e.preventDefault();
+              onSignUp();
+            }}
+          >
             <div className="flex gap-2 items-center relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-primary text-lg"><FaEnvelope /></span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-primary text-lg">
+                <FaEnvelope />
+              </span>
               <Input
                 type="email"
                 placeholder="Email"
                 value={user.email}
-                onChange={e => {
+                onChange={(e) => {
                   setUser({ ...user, email: e.target.value });
                   setOtpSent(false);
                   setOtpVerified(false);
@@ -313,7 +404,11 @@ const SignupPage = () => {
                   setEmailInteracted(true);
                 }}
                 onBlur={() => setEmailTouched(true)}
-                className={`pl-10 bg-input border focus:ring-2 focus:ring-primary focus:border-primary rounded-xl transition-all duration-150 ${emailTouched && emailError ? 'border-red-500' : 'border-border'}`}
+                className={`pl-10 bg-input border focus:ring-2 focus:ring-primary focus:border-primary rounded-xl transition-all duration-150 ${
+                  emailTouched && emailError
+                    ? "border-red-500"
+                    : "border-border"
+                }`}
                 required
                 disabled={inputsDisabled || otpVerified}
               />
@@ -330,18 +425,26 @@ const SignupPage = () => {
                 </Button>
               )}
             </div>
-            {(emailTouched || (emailInteracted && emailError)) && emailError && (
-              <div className="absolute left-0 w-full text-red-500 text-xs" style={{top: '100%', marginTop: '2px', lineHeight: '1'}}>{emailError}</div>
-            )}
+            {(emailTouched || (emailInteracted && emailError)) &&
+              emailError && (
+                <div
+                  className="absolute left-0 w-full text-red-500 text-xs"
+                  style={{ top: "100%", marginTop: "2px", lineHeight: "1" }}
+                >
+                  {emailError}
+                </div>
+              )}
             {/* OTP input below email */}
             {!otpVerified && otpSent && (
               <div className="flex gap-2 items-center relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-primary text-lg"><FaKey /></span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-primary text-lg">
+                  <FaKey />
+                </span>
                 <Input
                   type="text"
                   placeholder="Enter 6 digit OTP"
                   value={otp}
-                  onChange={e => {
+                  onChange={(e) => {
                     setOtp(e.target.value.replace(/\D/g, "").slice(0, 6));
                     if (otpError) setOtpError("");
                   }}
@@ -359,18 +462,30 @@ const SignupPage = () => {
                   {otpLoading ? "Verifying..." : "Verify"}
                 </Button>
                 {otpError && (
-                  <div className="absolute left-0 w-full text-red-500 text-xs" style={{top: '100%', marginTop: '8px', marginLeft: '10px', lineHeight: '1'}}>{otpError}</div>
+                  <div
+                    className="absolute left-0 w-full text-red-500 text-xs"
+                    style={{
+                      top: "100%",
+                      marginTop: "8px",
+                      marginLeft: "10px",
+                      lineHeight: "1",
+                    }}
+                  >
+                    {otpError}
+                  </div>
                 )}
               </div>
             )}
             {/* Always show rest of fields, but make them nonwritable until OTP is verified */}
             <div className="relative my-4">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-primary text-lg"><FaUser /></span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-primary text-lg">
+                <FaUser />
+              </span>
               <Input
                 type="text"
                 placeholder="Username"
                 value={user.username}
-                onChange={e => {
+                onChange={(e) => {
                   setUser({ ...user, username: e.target.value });
                   setUsernameInteracted(true);
                 }}
@@ -388,21 +503,38 @@ const SignupPage = () => {
                     }
                   }
                 }}
-                className={`pl-10 bg-input border focus:ring-2 focus:ring-primary focus:border-primary rounded-xl transition-all duration-150 ${usernameTouched && usernameError ? 'border-red-500' : 'border-border'}`}
+                className={`pl-10 bg-input border focus:ring-2 focus:ring-primary focus:border-primary rounded-xl transition-all duration-150 ${
+                  usernameTouched && usernameError
+                    ? "border-red-500"
+                    : "border-border"
+                }`}
                 required
                 disabled={inputsDisabled || !otpVerified}
               />
-              {(usernameTouched || user.username.length > 0) && usernameError && (
-                <div className="absolute left-0 w-full text-red-500 text-xs" style={{top: '100%', marginTop: '8px', marginLeft: '10px', lineHeight: '1'}}>{usernameError}</div>
-              )}
+              {(usernameTouched || user.username.length > 0) &&
+                usernameError && (
+                  <div
+                    className="absolute left-0 w-full text-red-500 text-xs"
+                    style={{
+                      top: "100%",
+                      marginTop: "8px",
+                      marginLeft: "10px",
+                      lineHeight: "1",
+                    }}
+                  >
+                    {usernameError}
+                  </div>
+                )}
             </div>
             <div className="relative my-1">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-primary text-lg"><FaLock /></span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-primary text-lg">
+                <FaLock />
+              </span>
               <Input
                 type={showPassword ? "text" : "password"}
                 placeholder="Password"
                 value={user.password}
-                onChange={e => {
+                onChange={(e) => {
                   setUser({ ...user, password: e.target.value });
                   setPasswordTouched(true); // Show error as soon as user types
                 }}
@@ -415,53 +547,95 @@ const SignupPage = () => {
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-primary text-lg cursor-pointer"
                 onClick={() => setShowPassword((prev) => !prev)}
               >
-                {showPassword ? <FaEyeSlash className="cursor-pointer" /> : <FaEye className="cursor-pointer" />}
+                {showPassword ? (
+                  <FaEyeSlash className="cursor-pointer" />
+                ) : (
+                  <FaEye className="cursor-pointer" />
+                )}
               </span>
-              {(passwordTouched || (passwordInteracted && passwordError)) && passwordError && (
-                <div className="absolute left-0 w-full text-red-500 text-xs" style={{top: '100%', marginTop: '10px', marginLeft: '10px', lineHeight: '1'}}>{passwordError}</div>
-              )}
+              {(passwordTouched || (passwordInteracted && passwordError)) &&
+                passwordError && (
+                  <div
+                    className="absolute left-0 w-full text-red-500 text-xs"
+                    style={{
+                      top: "100%",
+                      marginTop: "10px",
+                      marginLeft: "10px",
+                      lineHeight: "1",
+                    }}
+                  >
+                    {passwordError}
+                  </div>
+                )}
             </div>
             <div className="relative my-4">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-primary text-lg"><FaLock /></span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-primary text-lg">
+                <FaLock />
+              </span>
               <Input
                 type={showConfirmPassword ? "text" : "password"}
                 placeholder="Confirm Password"
                 value={user.confirmPassword}
-                onChange={e => {
+                onChange={(e) => {
                   setUser({ ...user, confirmPassword: e.target.value });
                   if (confirmPasswordTouched) setConfirmPasswordError("");
                   setConfirmPasswordInteracted(true);
                 }}
                 onBlur={() => setConfirmPasswordTouched(true)}
-                className={`pl-10 pr-10 bg-input border focus:ring-2 focus:ring-primary focus:border-primary rounded-xl transition-all duration-150 ${confirmPasswordTouched && (confirmPasswordError || (user.confirmPassword && user.password !== user.confirmPassword)) ? 'border-red-500' : 'border-border'}`}
+                className={`pl-10 pr-10 bg-input border focus:ring-2 focus:ring-primary focus:border-primary rounded-xl transition-all duration-150 ${
+                  confirmPasswordTouched &&
+                  (confirmPasswordError ||
+                    (user.confirmPassword &&
+                      user.password !== user.confirmPassword))
+                    ? "border-red-500"
+                    : "border-border"
+                }`}
                 required
                 disabled={inputsDisabled || !otpVerified}
               />
-              {(confirmPasswordTouched || confirmPasswordInteracted) && (
-                (confirmPasswordError || (user.confirmPassword && user.password !== user.confirmPassword)) && (
-                  <div className="absolute left-0 w-full text-red-500 text-xs" style={{top: '100%', marginTop: '10px', marginLeft: '10px', lineHeight: '1'}}>
+              {(confirmPasswordTouched || confirmPasswordInteracted) &&
+                (confirmPasswordError ||
+                  (user.confirmPassword &&
+                    user.password !== user.confirmPassword)) && (
+                  <div
+                    className="absolute left-0 w-full text-red-500 text-xs"
+                    style={{
+                      top: "100%",
+                      marginTop: "10px",
+                      marginLeft: "10px",
+                      lineHeight: "1",
+                    }}
+                  >
                     {confirmPasswordError || "Passwords do not match"}
                   </div>
-                )
-              )}
+                )}
               <span
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-primary text-lg cursor-pointer"
                 onClick={() => setShowConfirmPassword((prev) => !prev)}
               >
-                {showConfirmPassword ? <FaEyeSlash className="cursor-pointer" /> : <FaEye className="cursor-pointer" />}
+                {showConfirmPassword ? (
+                  <FaEyeSlash className="cursor-pointer" />
+                ) : (
+                  <FaEye className="cursor-pointer" />
+                )}
               </span>
             </div>
-              <Button
-                type="submit"
-                disabled={buttonDisabled || loading || !otpVerified}
-                className="w-full bg-primary text-primary-foreground rounded-xl py-2 font-semibold text-lg disabled:opacity-50 cursor-pointer"
-              >
-                {loading ? "Signing up..." : "Sign Up"}
-              </Button>
+            <Button
+              type="submit"
+              disabled={buttonDisabled || loading || !otpVerified}
+              className="w-full bg-primary text-primary-foreground rounded-xl py-2 font-semibold text-lg disabled:opacity-50 cursor-pointer"
+            >
+              {loading ? "Signing up..." : "Sign Up"}
+            </Button>
           </form>
           <div className="text-center text-sm text-muted-foreground mt-2">
-            Already have an account?{' '}
-            <a href="/login" className="text-primary font-medium hover:underline">Login</a>
+            Already have an account?{" "}
+            <a
+              href="/login"
+              className="text-primary font-medium hover:underline"
+            >
+              Login
+            </a>
           </div>
         </Card>
       </motion.div>
