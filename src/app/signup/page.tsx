@@ -19,6 +19,7 @@ import { userSchema } from "@/schemas/user.schema";
 import { motion } from "framer-motion";
 import logo from "@/../public/logo.png";
 const SignupPage = () => {
+  const [emailExistsValue, setEmailExistsValue] = useState("");
   // Username validation using userSchema
   const usernameFieldSchema = userSchema.shape.username;
   const emailFieldSchema = userSchema.shape.email;
@@ -233,9 +234,15 @@ const SignupPage = () => {
       }
     } catch (err: any) {
       const errorMsg = err.response?.data?.error || "Failed to send OTP";
+      console.log('OTP error:', errorMsg);
       toast.error(errorMsg);
-      if (errorMsg === "Email exists") {
+      if (
+        errorMsg.toLowerCase().includes("email") &&
+        (errorMsg.toLowerCase().includes("exist") || errorMsg.toLowerCase().includes("registered"))
+      ) {
         setEmailError("Email already exists");
+        setEmailExistsValue(user.email);
+        setEmailTouched(true);
       }
     } finally {
       setOtpLoading(false);
@@ -291,7 +298,13 @@ const SignupPage = () => {
     } else if (user.email.length > 0) {
       try {
         emailFieldSchema.parse(user.email);
-        setEmailError("");
+        // Only show 'Email already exists' if the email matches
+        if (emailError === "Email already exists" && user.email !== emailExistsValue) {
+          setEmailError("");
+          setEmailExistsValue("");
+        } else if (emailError !== "Email already exists") {
+          setEmailError("");
+        }
       } catch (err: any) {
         setEmailError(err.errors?.[0]?.message || "Invalid email");
       }
@@ -400,7 +413,12 @@ const SignupPage = () => {
                   setOtpSent(false);
                   setOtpVerified(false);
                   setOtp("");
-                  if (emailTouched) setEmailError("");
+                  // Only clear error if it's not 'Email already exists'
+                  if (emailError === "Email already exists") {
+                    setEmailTouched(true);
+                  } else if (emailTouched) {
+                    setEmailError("");
+                  }
                   setEmailInteracted(true);
                 }}
                 onBlur={() => setEmailTouched(true)}
@@ -412,31 +430,31 @@ const SignupPage = () => {
                 required
                 disabled={inputsDisabled || otpVerified}
               />
+              {/* Email error message */}
+              {emailError && emailTouched && (
+                <div
+                  className="absolute left-0 w-full text-red-500 text-xs"
+                  style={{ top: "100%", marginTop: "8px", marginLeft: "10px", lineHeight: "1", zIndex: 2 }}
+                >
+                  {emailError}
+                </div>
+              )}
+              {/* OTP Button and status */}
               {!otpVerified && isEmailValid && (
                 <Button
                   type="button"
                   size="sm"
-                  className="ml-1 px-4 py-2 text-xs h-8 min-w-0 w-auto cursor-pointer"
+                  className="ml-2 px-3 py-1 text-xs cursor-pointer absolute right-2 top-1/2 -translate-y-1/2"
                   disabled={otpLoading || otpSent}
                   onClick={sendOtp}
-                  style={{ fontSize: "13px", padding: "0 12px" }}
                 >
                   {otpLoading ? "..." : otpSent ? "✓" : "Send OTP"}
                 </Button>
               )}
             </div>
-            {(emailTouched || (emailInteracted && emailError)) &&
-              emailError && (
-                <div
-                  className="absolute left-0 w-full text-red-500 text-xs"
-                  style={{ top: "100%", marginTop: "2px", lineHeight: "1" }}
-                >
-                  {emailError}
-                </div>
-              )}
-            {/* OTP input below email */}
-            {!otpVerified && otpSent && (
-              <div className="flex gap-2 items-center relative">
+            {/* OTP input and error */}
+            {otpSent && !otpVerified && (
+              <div className="relative my-2 flex items-center">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-primary text-lg">
                   <FaKey />
                 </span>
@@ -448,7 +466,7 @@ const SignupPage = () => {
                     setOtp(e.target.value.replace(/\D/g, "").slice(0, 6));
                     if (otpError) setOtpError("");
                   }}
-                  className="pl-10 bg-input border border-border focus:ring-2 focus:ring-primary focus:border-primary rounded-xl transition-all duration-150 mt-2"
+                  className="pl-10 bg-input border border-border focus:ring-2 focus:ring-primary focus:border-primary rounded-xl transition-all duration-150"
                   maxLength={6}
                   disabled={otpLoading}
                 />
