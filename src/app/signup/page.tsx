@@ -7,9 +7,15 @@ import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { z } from "zod";
+import { userSchema } from "@/schemas/user.schema";
 import { motion } from "framer-motion";
 import logo from "@/../public/logo.png";
 const SignupPage = () => {
+  // Username validation using userSchema
+  const usernameFieldSchema = userSchema.shape.username;
+  const emailFieldSchema = userSchema.shape.email;
+  const passwordFieldSchema = userSchema.shape.password;
   // Track if user has interacted with email/username for global blur
   const [emailInteracted, setEmailInteracted] = useState(false);
   const [usernameInteracted, setUsernameInteracted] = useState(false);
@@ -47,12 +53,6 @@ const SignupPage = () => {
   }, [emailInteracted, usernameInteracted, emailError, usernameError, passwordInteracted, passwordError, confirmPasswordInteracted, confirmPasswordError]);
   const [csrfToken, setCsrfToken] = useState("");
   // Fetch CSRF token on mount
-              if (passwordInteracted && passwordError && !document.activeElement?.matches('input[placeholder="Password"]')) {
-                setPasswordTouched(true);
-              }
-              if (confirmPasswordInteracted && confirmPasswordError && !document.activeElement?.matches('input[placeholder="Confirm Password"]')) {
-                setConfirmPasswordTouched(true);
-              }
   useEffect(() => {
     fetch("/api/csrf-token")
       .then(res => res.json())
@@ -65,22 +65,32 @@ const SignupPage = () => {
     password: "",
     confirmPassword: "",
   });
-  const [buttonDisabled, setButtonDisabled] = useState(false);
+  const [buttonDisabled, setButtonDisabled] = useState(true);
   const [loading, setLoading] = useState(false);
   const [inputsDisabled, setInputsDisabled] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
   const [otp, setOtp] = useState("");
   const [otpVerified, setOtpVerified] = useState(false);
   const [otpLoading, setOtpLoading] = useState(false);
+  const [otpError, setOtpError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const onSignUp = async () => {
+    // Final username validation before signup
+    try {
+      usernameFieldSchema.parse(user.username);
+    } catch (err: any) {
+      setUsernameError(err.errors?.[0]?.message || "Invalid username");
+      setInputsDisabled(false);
+      toast.error(err.errors?.[0]?.message || "Invalid username");
+      return;
+    }
     if (!otpVerified) {
       toast.error("Please verify your email first");
       return;
     }
   setInputsDisabled(true);
-  setUsernameError("");
+  // Do not clear usernameError here; rely on validation
   setEmailError("");
     try {
       if (user.password !== user.confirmPassword) {
@@ -179,7 +189,9 @@ const SignupPage = () => {
   };
 
   const verifyOtp = async () => {
+    setOtpError("");
     if (!otp || otp.length !== 6) {
+      setOtpError("Enter 6 digit OTP");
       toast.error("Enter 6 digit OTP");
       return;
     }
@@ -189,25 +201,74 @@ const SignupPage = () => {
       if (res.data.message) {
         toast.success("Email verified");
         setOtpVerified(true);
+        setOtpError("");
       }
     } catch (err: any) {
-      toast.error(err.response?.data?.error || "Failed to verify OTP");
+      const errorMsg = err.response?.data?.error || "Failed to verify OTP";
+      setOtpError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setOtpLoading(false);
     }
   };
   useEffect(() => {
-    if (
-      user.email.length > 0 &&
-      user.username.length > 0 &&
-      user.password.length > 0 &&
-      user.confirmPassword.length > 0
-    ) {
-      setButtonDisabled(false);
-    } else {
-      setButtonDisabled(true);
+    // Realtime username validation using updated schema (special char restriction)
+    if (user.username.length === 0 && usernameTouched) {
+      setUsernameError("Username is required");
+    } else if (user.username.length > 0) {
+      try {
+        usernameFieldSchema.parse(user.username);
+        setUsernameError("");
+      } catch (err: any) {
+        if (err.errors && err.errors.length > 0) {
+          setUsernameError(err.errors[0].message);
+        } else {
+          setUsernameError("Invalid username");
+        }
+      }
     }
-  }, [user]);
+
+    // Email validation
+    if (user.email.length === 0 && emailTouched) {
+      setEmailError("Email is required");
+    } else if (user.email.length > 0) {
+      try {
+        emailFieldSchema.parse(user.email);
+        setEmailError("");
+      } catch (err: any) {
+        setEmailError(err.errors?.[0]?.message || "Invalid email");
+      }
+    }
+
+    // Password validation
+    if (user.password.length === 0 && passwordTouched) {
+      setPasswordError("Password is required");
+    } else if (user.password.length > 0) {
+      try {
+        passwordFieldSchema.parse(user.password);
+        setPasswordError("");
+      } catch (err: any) {
+        setPasswordError(err.errors?.[0]?.message || "Invalid password");
+      }
+    }
+
+    // Confirm password validation
+    if (user.confirmPassword.length === 0 && confirmPasswordTouched) {
+      setConfirmPasswordError("Confirm password is required");
+    } else if (user.confirmPassword.length > 0) {
+      if (user.password !== user.confirmPassword) {
+        setConfirmPasswordError("Passwords do not match");
+      } else {
+        setConfirmPasswordError("");
+      }
+    }
+
+    // Button is disabled if any field is empty or any error exists
+    const hasError =
+      emailError || usernameError || passwordError || confirmPasswordError ||
+      !user.email || !user.username || !user.password || !user.confirmPassword;
+    setButtonDisabled(!!hasError);
+  }, [user, emailError, passwordError, confirmPasswordError, usernameTouched, emailTouched, passwordTouched, confirmPasswordTouched]);
   // Email format validation
   const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(user.email);
 
@@ -269,10 +330,8 @@ const SignupPage = () => {
                 </Button>
               )}
             </div>
-            {emailError && (
-              (emailTouched || (emailInteracted && emailError)) && emailError && (
-                <div className="text-red-500 text-xs" style={{lineHeight: '1', margin: 0, padding: 0, marginTop: '-20px', marginLeft: '10px'}}>{emailError}</div>
-              )
+            {(emailTouched || (emailInteracted && emailError)) && emailError && (
+              <div className="absolute left-0 w-full text-red-500 text-xs" style={{top: '100%', marginTop: '2px', lineHeight: '1'}}>{emailError}</div>
             )}
             {/* OTP input below email */}
             {!otpVerified && otpSent && (
@@ -282,7 +341,10 @@ const SignupPage = () => {
                   type="text"
                   placeholder="Enter 6 digit OTP"
                   value={otp}
-                  onChange={e => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                  onChange={e => {
+                    setOtp(e.target.value.replace(/\D/g, "").slice(0, 6));
+                    if (otpError) setOtpError("");
+                  }}
                   className="pl-10 bg-input border border-border focus:ring-2 focus:ring-primary focus:border-primary rounded-xl transition-all duration-150 mt-2"
                   maxLength={6}
                   disabled={otpLoading}
@@ -296,6 +358,9 @@ const SignupPage = () => {
                 >
                   {otpLoading ? "Verifying..." : "Verify"}
                 </Button>
+                {otpError && (
+                  <div className="absolute left-0 w-full text-red-500 text-xs" style={{top: '100%', marginTop: '8px', marginLeft: '10px', lineHeight: '1'}}>{otpError}</div>
+                )}
               </div>
             )}
             {/* Always show rest of fields, but make them nonwritable until OTP is verified */}
@@ -307,27 +372,41 @@ const SignupPage = () => {
                 value={user.username}
                 onChange={e => {
                   setUser({ ...user, username: e.target.value });
-                  if (usernameTouched) setUsernameError("");
                   setUsernameInteracted(true);
                 }}
-                onBlur={() => setUsernameTouched(true)}
+                onBlur={() => {
+                  setUsernameTouched(true);
+                  // Validate on blur as well
+                  try {
+                    usernameFieldSchema.parse(user.username);
+                    setUsernameError("");
+                  } catch (err: any) {
+                    if (err.errors && err.errors.length > 0) {
+                      setUsernameError(err.errors[0].message);
+                    } else {
+                      setUsernameError("Invalid username");
+                    }
+                  }
+                }}
                 className={`pl-10 bg-input border focus:ring-2 focus:ring-primary focus:border-primary rounded-xl transition-all duration-150 ${usernameTouched && usernameError ? 'border-red-500' : 'border-border'}`}
                 required
                 disabled={inputsDisabled || !otpVerified}
               />
+              {(usernameTouched || user.username.length > 0) && usernameError && (
+                <div className="absolute left-0 w-full text-red-500 text-xs" style={{top: '100%', marginTop: '8px', marginLeft: '10px', lineHeight: '1'}}>{usernameError}</div>
+              )}
             </div>
-            {usernameError && (
-              (usernameTouched || (usernameInteracted && usernameError)) && usernameError && (
-                <div className="text-red-500 text-xs" style={{lineHeight: '0', margin: 0, padding: 0, marginTop: '-20px', marginLeft: '10px'}}>{usernameError}</div>
-              )
-            )}
             <div className="relative my-1">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-primary text-lg"><FaLock /></span>
               <Input
                 type={showPassword ? "text" : "password"}
                 placeholder="Password"
                 value={user.password}
-                onChange={e => setUser({ ...user, password: e.target.value })}
+                onChange={e => {
+                  setUser({ ...user, password: e.target.value });
+                  setPasswordTouched(true); // Show error as soon as user types
+                }}
+                onBlur={() => setPasswordTouched(true)}
                 className="pl-10 pr-10 bg-input border border-border focus:ring-2 focus:ring-primary focus:border-primary rounded-xl transition-all duration-150"
                 required
                 disabled={inputsDisabled || !otpVerified}
@@ -339,7 +418,7 @@ const SignupPage = () => {
                 {showPassword ? <FaEyeSlash className="cursor-pointer" /> : <FaEye className="cursor-pointer" />}
               </span>
               {(passwordTouched || (passwordInteracted && passwordError)) && passwordError && (
-                <div className="text-red-500 text-xs" style={{lineHeight: '0', margin: 0, padding: 0, marginTop: '-20px', marginLeft: '10px'}}>{passwordError}</div>
+                <div className="absolute left-0 w-full text-red-500 text-xs" style={{top: '100%', marginTop: '10px', marginLeft: '10px', lineHeight: '1'}}>{passwordError}</div>
               )}
             </div>
             <div className="relative my-4">
@@ -358,29 +437,27 @@ const SignupPage = () => {
                 required
                 disabled={inputsDisabled || !otpVerified}
               />
+              {(confirmPasswordTouched || confirmPasswordInteracted) && (
+                (confirmPasswordError || (user.confirmPassword && user.password !== user.confirmPassword)) && (
+                  <div className="absolute left-0 w-full text-red-500 text-xs" style={{top: '100%', marginTop: '10px', marginLeft: '10px', lineHeight: '1'}}>
+                    {confirmPasswordError || "Passwords do not match"}
+                  </div>
+                )
+              )}
               <span
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-primary text-lg cursor-pointer"
                 onClick={() => setShowConfirmPassword((prev) => !prev)}
               >
                 {showConfirmPassword ? <FaEyeSlash className="cursor-pointer" /> : <FaEye className="cursor-pointer" />}
               </span>
-              {(confirmPasswordTouched || confirmPasswordInteracted) && (
-                (confirmPasswordError || (user.confirmPassword && user.password !== user.confirmPassword)) && (
-                  <div className="text-red-500 text-xs" style={{lineHeight: '0', margin: 0, padding: 0, marginTop: '-20px', marginLeft: '10px'}}>
-                    {confirmPasswordError || "Passwords do not match"}
-                  </div>
-                )
-              )}
             </div>
-            <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}>
               <Button
                 type="submit"
                 disabled={buttonDisabled || loading || !otpVerified}
-                className="w-full bg-primary text-primary-foreground rounded-xl py-2 font-semibold text-lg transition-all duration-200 hover:bg-primary/90 hover:shadow-lg disabled:opacity-50 cursor-pointer"
+                className="w-full bg-primary text-primary-foreground rounded-xl py-2 font-semibold text-lg disabled:opacity-50 cursor-pointer"
               >
                 {loading ? "Signing up..." : "Sign Up"}
               </Button>
-            </motion.div>
           </form>
           <div className="text-center text-sm text-muted-foreground mt-2">
             Already have an account?{' '}

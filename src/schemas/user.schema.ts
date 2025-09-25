@@ -16,7 +16,10 @@ export const userSchema = z.object({
   username: z.string({
     required_error: "Username is required",
     invalid_type_error: "Username must be a string",
-  }).min(3, "Username must be at least 3 characters").max(30, "Username must be at most 30 characters"),
+  })
+    .min(3, "Username must be at least 3 characters")
+    .max(30, "Username must be at most 30 characters")
+    .regex(/^[a-zA-Z0-9_]+$/, "Username can only contain letters, numbers, and underscores"),
   avatarUrl: z.string().url("Avatar must be a valid URL").optional().nullable(),
   loginAttempts: z.number().optional(),
   lockedUntil: z.date().optional().nullable(),
