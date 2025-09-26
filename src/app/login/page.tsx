@@ -63,35 +63,38 @@ const LoginPage = () => {
         ...user,
         csrfToken,
       });
-      toast.success("Login successful");
-      setUser({ email: "", password: "" });
-      setEmailError("");
-      setPasswordError("");
-      setEmailTouched(false);
-      setPasswordTouched(false);
-      setEmailInteracted(false);
-      setPasswordInteracted(false);
-      window.location.href = "/home";
+  toast.success("Login successful");
+  setUser({ email: "", password: "" });
+  setEmailTouched(false);
+  setPasswordTouched(false);
+  setEmailInteracted(false);
+  setPasswordInteracted(false);
+  router.push("/home");
     } catch (err) {
       const errorMsg = (err as any).response?.data?.error || "Login failed";
       // Show error for correct field
-      if (errorMsg.toLowerCase().includes("email")) {
-        setEmailError(errorMsg);
+      if (
+        errorMsg.toLowerCase().includes("email") ||
+        errorMsg.toLowerCase().includes("user does not exists") ||
+        errorMsg.toLowerCase().includes("user does not exist") ||
+        errorMsg.toLowerCase().includes("user")
+      ) {
+  setEmailError(errorMsg);
+  console.log('Email error set:', errorMsg);
+        setLoading(false);
       } else if (
         errorMsg.toLowerCase().includes("password") ||
         errorMsg.toLowerCase().includes("incorrect") ||
         errorMsg.toLowerCase().includes("mismatch") ||
         errorMsg.toLowerCase().includes("check your credentials")
       ) {
-        setPasswordError("Wrong password");
+  setPasswordError("Wrong password");
+  console.log('Password error set: Wrong password');
         setPasswordTouched(true);
+        setLoading(false);
       }
       toast.error(errorMsg);
-      // Keep button disabled for 1.5s so error is visible
-      setTimeout(() => {
-        setInputsDisabled(false);
-        setLoading(false);
-      }, 1500);
+      setInputsDisabled(false);
       return;
     }
     setLoading(false);
@@ -100,11 +103,17 @@ const LoginPage = () => {
   useEffect(() => {
     // Realtime email validation
     if (user.email.length === 0 && emailTouched) {
-      setEmailError("Email is required");
+          setEmailError("Email is required");
     } else if (user.email.length > 0) {
       try {
         loginSchema.shape.email.parse(user.email);
-        setEmailError("");
+            // Sirf frontend validation error clear karein, backend error ko na
+            if (
+              emailError === "Invalid email" ||
+              emailError === "Email is required"
+            ) {
+              setEmailError("");
+            }
       } catch (err: any) {
         setEmailError(err.errors?.[0]?.message || "Invalid email");
       }
@@ -173,7 +182,7 @@ const LoginPage = () => {
             }}
           >
             <Label className="text-base font-medium">Email</Label>
-            <div className="relative">
+            <div className="relative" style={{ position: 'relative' }}>
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-primary text-lg">
                 <FaEnvelope />
               </span>
@@ -184,9 +193,25 @@ const LoginPage = () => {
                 onChange={(e) => {
                   setUser({ ...user, email: e.target.value });
                   setEmailInteracted(true);
-                  if (emailTouched) setEmailError("");
+                  setEmailError("");
+                  setLoading(false);
                 }}
-                onBlur={() => setEmailTouched(true)}
+                onBlur={async () => {
+                  setEmailTouched(true);
+                  // Only check if email format is valid
+                  try {
+                    loginSchema.shape.email.parse(user.email);
+                    // Check email existence
+                    const res = await axios.post("/api/users/check-email", { email: user.email });
+                    if (!res.data.exists) {
+                      setEmailError("Email not found");
+                    } else {
+                      setEmailError("");
+                    }
+                  } catch (err) {
+                    setEmailError("Invalid email");
+                  }
+                }}
                 className={`pl-10 bg-input border focus:ring-2 focus:ring-primary focus:border-primary rounded-xl transition-all duration-150 ${
                   emailTouched && emailError
                     ? "border-red-500"
@@ -195,23 +220,22 @@ const LoginPage = () => {
                 required
                 disabled={inputsDisabled}
               />
-              {(emailTouched || (emailInteracted && emailError)) &&
-                emailError && (
-                  <div
-                    className="absolute left-0 w-full text-red-500 text-xs"
-                    style={{
-                      top: "100%",
-                      marginTop: "5px",
-                      marginLeft: "8px",
-                      lineHeight: "1",
-                    }}
-                  >
-                    {emailError}
-                  </div>
-                )}
+              {emailError && (
+                <div
+                  className="absolute left-0 w-full text-red-500 text-xs"
+                  style={{
+                    top: "100%",
+                    marginTop: "5px",
+                    marginLeft: "8px",
+                    lineHeight: "1",
+                  }}
+                >
+                  {emailError}
+                </div>
+              )}
             </div>
             <Label className="text-base font-medium">Password</Label>
-            <div className="relative">
+            <div className="relative" style={{ position: 'relative' }}>
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-primary text-lg">
                 <FaLock />
               </span>
@@ -223,13 +247,8 @@ const LoginPage = () => {
                   setUser({ ...user, password: e.target.value });
                   setPasswordTouched(true);
                   setPasswordInteracted(true);
-                  // Only clear error if user actually changes the password after a failed login
-                  if (
-                    passwordError === "Wrong password" &&
-                    e.target.value !== user.password
-                  ) {
-                    setPasswordError("");
-                  }
+                  setPasswordError("");
+                  setLoading(false);
                 }}
                 onBlur={() => setPasswordTouched(true)}
                 className={`pl-10 pr-10 bg-input border focus:ring-2 focus:ring-primary focus:border-primary rounded-xl transition-all duration-150 ${
@@ -250,20 +269,19 @@ const LoginPage = () => {
                   <FaEye className="cursor-pointer" />
                 )}
               </span>
-              {(passwordTouched || (passwordInteracted && passwordError)) &&
-                passwordError && (
-                  <div
-                    className="absolute left-0 w-full text-red-500 text-xs"
-                    style={{
-                      top: "100%",
-                      marginTop: "10px",
-                      marginLeft: "8px",
-                      lineHeight: "1",
-                    }}
-                  >
-                    {passwordError}
-                  </div>
-                )}
+              {passwordError && (
+                <div
+                  className="absolute left-0 w-full text-red-500 text-xs"
+                  style={{
+                    top: "100%",
+                    marginTop: "10px",
+                    marginLeft: "8px",
+                    lineHeight: "1",
+                  }}
+                >
+                  {passwordError}
+                </div>
+              )}
             </div>
             <div className="text-right mb-2">
               <a
@@ -273,7 +291,7 @@ const LoginPage = () => {
                 Forgot Password?
               </a>
             </div>
-            <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}>
+            <div>
               <Button
                 type="submit"
                 disabled={buttonDisabled || loading}
@@ -281,7 +299,7 @@ const LoginPage = () => {
               >
                 {loading ? "Logging in..." : "Login"}
               </Button>
-            </motion.div>
+            </div>
           </form>
           <div className="text-center text-sm text-muted-foreground mt-2">
             Don't have an account?{" "}
