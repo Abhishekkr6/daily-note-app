@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import { resetPasswordSchema } from "@/schemas/resetPassword.schema";
 import { FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
 import { useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
@@ -19,6 +20,8 @@ export default function ResetPasswordPage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [message, setMessage] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [confirmPasswordError, setConfirmPasswordError] = useState("");
   const [loading, setLoading] = useState(false);
   const [resetSuccess, setResetSuccess] = useState(false);
   const [disabled, setDisabled] = useState(false);
@@ -28,8 +31,18 @@ export default function ResetPasswordPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setMessage("");
-    if (password !== confirmPassword) {
-      setMessage("Passwords do not match.");
+    setPasswordError("");
+    setConfirmPasswordError("");
+    // Frontend validation
+    try {
+      resetPasswordSchema.parse({ token: token || "", password, confirmPassword });
+    } catch (err: any) {
+      if (err.errors) {
+        err.errors.forEach((error: any) => {
+          if (error.path[0] === "password") setPasswordError(error.message);
+          if (error.path[0] === "confirmPassword") setConfirmPasswordError(error.message);
+        });
+      }
       return;
     }
     setLoading(true);
@@ -60,17 +73,25 @@ export default function ResetPasswordPage() {
     <div className="max-w-md mx-auto mt-20 p-6 bg-white rounded shadow">
       <h2 className="text-2xl font-bold mb-4">Reset Password</h2>
       <form onSubmit={handleSubmit}>
-        <div className="relative">
+  <div className="relative">
           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-primary text-lg"><FaLock /></span>
           <Input
             type={showPassword ? "text" : "password"}
             placeholder="Enter new password"
             value={password}
-            onChange={e => setPassword(e.target.value)}
+            onChange={e => {
+              setPassword(e.target.value);
+              setPasswordError("");
+            }}
             required
             className="pl-10 pr-10"
             disabled={disabled}
           />
+          {passwordError && (
+            <div className="absolute left-0 w-full text-red-500 text-xs" style={{ top: '100%', marginTop: '5px', marginLeft: '8px', lineHeight: '1' }}>
+              {passwordError}
+            </div>
+          )}
           <span
             className="absolute right-3 top-1/2 -translate-y-1/2 text-primary text-lg cursor-pointer"
             onClick={() => setShowPassword((prev) => !prev)}
@@ -84,11 +105,19 @@ export default function ResetPasswordPage() {
             type={showConfirmPassword ? "text" : "password"}
             placeholder="Confirm new password"
             value={confirmPassword}
-            onChange={e => setConfirmPassword(e.target.value)}
+            onChange={e => {
+              setConfirmPassword(e.target.value);
+              setConfirmPasswordError("");
+            }}
             required
             className="pl-10 pr-10"
             disabled={disabled}
           />
+          {confirmPasswordError && (
+            <div className="absolute left-0 w-full text-red-500 text-xs" style={{ top: '100%', marginTop: '5px', marginLeft: '8px', lineHeight: '1' }}>
+              {confirmPasswordError}
+            </div>
+          )}
           <span
             className="absolute right-3 top-1/2 -translate-y-1/2 text-primary text-lg cursor-pointer"
             onClick={() => setShowConfirmPassword((prev) => !prev)}
