@@ -46,7 +46,7 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="max-w-md mx-auto mt-20 p-6 bg-white rounded shadow">
-      <h2 className="text-2xl font-bold mb-4">Forgot Password</h2>
+      <h2 className="text-2xl font-bold mb-4">Forgot your Password</h2>
       <form onSubmit={handleSubmit}>
         <div className="relative">
           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-primary text-lg"><FaEnvelope /></span>
@@ -59,16 +59,23 @@ export default function ForgotPasswordPage() {
             className="pl-10"
             disabled={inputsDisabled}
           />
+          {message && message.toLowerCase().includes('not found') && (
+            <div className="absolute left-0 w-full text-red-500 text-xs" style={{ top: '100%', marginTop: '5px', marginLeft: '8px', lineHeight: '1' }}>
+              {message}
+            </div>
+          )}
         </div>
-        <Button type="submit" disabled={loading || inputsDisabled} className="mt-4 w-full cursor-pointer">
+  <Button type="submit" disabled={loading || inputsDisabled} className="mt-10 w-full cursor-pointer">
           {loading ? "Sending..." : "Send Reset Link"}
         </Button>
-        {message && <p className="mt-4 text-center text-sm">{message}</p>}
       </form>
       {emailSent && (
-        <Button className="mt-4 w-full cursor-pointer" onClick={() => window.location.href = "/login"}>
-          Go to Login
-        </Button>
+        <>
+          <p className="mt-4 text-green-600 text-center text-sm">Reset link sent to your email.</p>
+          <Button className="mt-4 w-full cursor-pointer" onClick={() => window.location.href = "/login"}>
+            Go to Login
+          </Button>
+        </>
       )}
     </div>
   );
