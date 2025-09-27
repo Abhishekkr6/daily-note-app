@@ -1,26 +1,30 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { Inter, Poppins } from "next/font/google"
+import { Inter, Montserrat as Poppins } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Suspense } from "react"
 
+// Body font → Inter
 const inter = Inter({
-  subsets: ['latin'],
-  variable: '--font-inter',
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
 })
 
+// Heading font → Poppins
 const poppins = Poppins({
-  subsets: ['latin'],
-  weight: ['400', '600', '700'],
-  variable: '--font-poppins',
+  subsets: ["latin"],
+  weight: ["400", "600", "700"],
+  variable: "--font-poppins",
+  display: "swap",
 })
-
 
 export const metadata: Metadata = {
   title: "DailyNote - Daily Notes & Tasks",
-  description: "A modern productivity app for daily notes and task management",
+  description:
+    "A modern productivity app for daily notes and task management",
   icons: {
     icon: "/logo.png",
   },
@@ -33,9 +37,16 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-  <body className="antialiased">
+      <body
+        className={`${inter.variable} ${poppins.variable} antialiased`}
+      >
         <Suspense fallback={null}>
-          <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
             {children}
           </ThemeProvider>
         </Suspense>

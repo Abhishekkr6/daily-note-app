@@ -1,30 +1,12 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Roboto:wght@400;500;700&display=swap');
-
-@custom-variant dark (&:is(.dark *));
 
 
-body,
-button,
-input,
-textarea,
-select,
-label,
-.card,
-.sidebar,
-.dialog,
-.popover,
-.dropdown-menu,
-.stats,
-.calendar,
-.top-bar,
-.today-dashboard,
-.welcome-dashboard {
-  font-family: 'Roboto', Arial, Helvetica, sans-serif;
+body {
+  font-family: var(--font-inter, Arial, Helvetica, sans-serif);
 }
 h1, h2, h3, h4, h5, h6 {
-  font-family: 'Montserrat', Arial, Helvetica, sans-serif;
+  font-family: var(--font-poppins, Arial, Helvetica, sans-serif);
 }
 
 :root {
