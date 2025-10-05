@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
+import { signIn } from "next-auth/react";
 import {
   FaUser,
   FaEnvelope,
@@ -435,7 +436,7 @@ const SignupPage = () => {
                 <div
                   className="absolute left-0 w-full text-red-500 text-xs"
                   style={{ top: "100%", marginTop: "8px", marginLeft: "10px", lineHeight: "1", zIndex: 2 }}
-                >
+                > 
                   {emailError}
                 </div>
               )}
@@ -645,6 +646,24 @@ const SignupPage = () => {
             >
               {loading ? "Signing up..." : "Sign Up"}
             </Button>
+            <div className="flex flex-col gap-2 mt-6">
+              <Button
+                type="button"
+                className="w-full bg-white text-black border border-gray-300 rounded-xl py-2 font-semibold text-lg flex items-center justify-center gap-2"
+                onClick={() => signIn("google")}
+              >
+                <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" width={22} height={22} />
+                Sign up with Google
+              </Button>
+              <Button
+                type="button"
+                className="w-full bg-black text-white rounded-xl py-2 font-semibold text-lg flex items-center justify-center gap-2"
+                onClick={() => signIn("github")}
+              >
+                <img src="https://www.svgrepo.com/show/512317/github-142.svg" alt="GitHub" width={22} height={22} />
+                Sign up with GitHub
+              </Button>
+            </div>
           </form>
           <div className="text-center text-sm text-muted-foreground mt-2">
             Already have an account?{" "}

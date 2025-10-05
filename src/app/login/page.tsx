@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { signIn } from "next-auth/react";
 import { loginSchema } from "@/schemas/login.schema";
 import { FaEnvelope, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
 import axios from "axios";
@@ -299,6 +300,24 @@ const LoginPage = () => {
               >
                 {loading ? "Logging in..." : "Login"}
               </Button>
+              <div className="flex flex-col gap-2 mt-6">
+                <Button
+                  type="button"
+                  className="w-full bg-white text-black border border-gray-300 rounded-xl py-2 font-semibold text-lg flex items-center justify-center gap-2"
+                  onClick={() => signIn("google")}
+                >
+                  <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" width={22} height={22} />
+                  Sign in with Google
+                </Button>
+                <Button
+                  type="button"
+                  className="w-full bg-black text-white rounded-xl py-2 font-semibold text-lg flex items-center justify-center gap-2"
+                  onClick={() => signIn("github")}
+                >
+                  <img src="https://www.svgrepo.com/show/512317/github-142.svg" alt="GitHub" width={22} height={22} />
+                  Sign in with GitHub
+                </Button>
+              </div>
             </div>
           </form>
           <div className="text-center text-sm text-muted-foreground mt-2">
