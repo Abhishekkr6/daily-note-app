@@ -301,6 +301,11 @@ const LoginPage = () => {
                 {loading ? "Logging in..." : "Login"}
               </Button>
               <div className="flex flex-col gap-2 mt-6">
+                <div className="flex items-center mb-2">
+                  <div className="flex-grow h-px bg-gray-300" />
+                  <span className="mx-3 text-gray-400 font-semibold text-sm select-none">OR</span>
+                  <div className="flex-grow h-px bg-gray-300" />
+                </div>
                 <Button
                   type="button"
                   className="w-full bg-white text-black border border-gray-300 rounded-xl py-2 font-semibold text-lg flex items-center justify-center gap-2 shadow-md transition-all duration-150 group cursor-pointer no-hover-bg"
