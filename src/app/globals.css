@@ -1,3 +1,12 @@
+/* Remove hover background for social signup buttons */
+.no-hover-bg:hover, .no-hover-bg:focus {
+  background-color: #fff !important;
+  color: #000 !important;
+}
+.no-hover-bg.github:hover, .no-hover-bg.github:focus {
+  background: linear-gradient(to right, #111827, #374151) !important;
+  color: #fff !important;
+}
 @import "tailwindcss";
 @import "tw-animate-css";
 
