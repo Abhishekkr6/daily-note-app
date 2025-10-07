@@ -13,6 +13,8 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { motion } from "framer-motion";
 import logo from "@/../public/logo.png";
+import { StarsBackground } from "@/components/stars-background";
+import { ShootingStars } from "@/components/shooting-stars";
 
 const LoginPage = () => {
   const [csrfToken, setCsrfToken] = useState("");
@@ -141,12 +143,10 @@ const LoginPage = () => {
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center px-2 sm:px-6 bg-[#171717] text-white"
-      style={{
-        background: "#171717",
-        position: "relative",
-      }}
+      className="min-h-screen flex items-center justify-center px-2 sm:px-6 bg-[#171717] text-white relative"
     >
+      <StarsBackground className="z-0 pointer-events-none" />
+      <ShootingStars className="z-0 pointer-events-none" />
       {/* Accent blob */}
       <motion.div
         initial={{ opacity: 0, scale: 0.8 }}
