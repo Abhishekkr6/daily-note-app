@@ -1,7 +1,8 @@
 "use client"
 
-import React from "react"
-import { useState } from "react"
+import React, { useEffect, useState } from "react"
+import { StarsBackground } from "@/components/stars-background"
+import { ShootingStars } from "@/components/shooting-stars"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -24,6 +25,15 @@ import {
 
 export function LandingPage() {
   const [activeFeature, setActiveFeature] = useState(0)
+  const [navBg, setNavBg] = useState(false)
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setNavBg(window.scrollY > 10)
+    }
+    window.addEventListener("scroll", handleScroll)
+    return () => window.removeEventListener("scroll", handleScroll)
+  }, [])
 
   const features = [
     {
@@ -75,9 +85,11 @@ export function LandingPage() {
 
   const router = useRouter();
   return (
-  <div className="min-h-screen bg-[#171717] text-white">
+  <div className="min-h-screen bg-[#171717] text-white relative">
+  <StarsBackground className="z-0" />
+  <ShootingStars className="z-0" />
       {/* Header */}
-  <header className="border-b bg-[#171717] backdrop-blur-sm sticky top-0 z-50 text-white">
+  <header className={`border-b sticky top-0 z-50 text-white w-full transition-colors duration-300 ${navBg ? "bg-[#171717]" : "bg-transparent"}`}>
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div
             className="flex items-center gap-2 cursor-pointer"

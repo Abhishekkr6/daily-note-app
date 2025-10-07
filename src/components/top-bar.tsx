@@ -11,11 +11,20 @@ import React, { useState, useRef, useEffect } from "react";
 export function TopBar() {
   const { theme, setTheme } = useTheme();
   const [searchQuery, setSearchQuery] = useState("");
-  const [results, setResults] = useState([]);
+  type Item = {
+    id: number;
+    type: string;
+    title: string;
+    content: string;
+    createdAt: string;
+    status: string;
+  };
+
+  const [results, setResults] = useState<Item[]>([]);
   const [loading, setLoading] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
-  const inputRef = useRef(null);
-  const debounceTimeout = useRef(null);
+  const inputRef = useRef<HTMLDivElement>(null);
+  const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
 
   // Mock local data (replace with actual notes/tasks)
   // Add createdAt and status for streak logic
@@ -89,7 +98,7 @@ export function TopBar() {
     // Get unique days with completed items
     const days = Array.from(
       new Set(completed.map((item) => item.createdAt))
-    ).sort((a, b) => new Date(b) - new Date(a));
+    ).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
     // Calculate streak: how many consecutive days from today backwards have completed items
     let currentStreak = 0;
     let date = new Date();
@@ -129,13 +138,17 @@ export function TopBar() {
       setShowDropdown(true);
       setLoading(false);
     }, 350);
-    return () => clearTimeout(debounceTimeout.current);
+    return () => {
+      if (debounceTimeout.current) {
+        clearTimeout(debounceTimeout.current);
+      }
+    };
   }, [searchQuery]);
 
   // Close dropdown on outside click
   useEffect(() => {
-    function handleClick(e) {
-      if (inputRef.current && !inputRef.current.contains(e.target)) {
+    function handleClick(e: MouseEvent) {
+      if (inputRef.current && !inputRef.current.contains((e.target as Node))) {
         setShowDropdown(false);
       }
     }
