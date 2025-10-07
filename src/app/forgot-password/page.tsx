@@ -45,7 +45,7 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="max-w-md mx-auto mt-20 p-6 bg-white rounded shadow">
+  <div className="max-w-md mx-auto mt-20 p-6 bg-[#171717] rounded shadow text-white">
       <h2 className="text-2xl font-bold mb-4">Forgot your Password</h2>
       <form onSubmit={handleSubmit}>
         <div className="relative">
@@ -56,11 +56,11 @@ export default function ForgotPasswordPage() {
             value={email}
             onChange={e => setEmail(e.target.value)}
             required
-            className="pl-10"
+            className="pl-10 bg-[#232323] text-white placeholder:text-white/60 border border-border focus:ring-2 focus:ring-primary focus:border-primary rounded-xl transition-all duration-150"
             disabled={inputsDisabled}
           />
           {message && message.toLowerCase().includes('not found') && (
-            <div className="absolute left-0 w-full text-red-500 text-xs" style={{ top: '100%', marginTop: '5px', marginLeft: '8px', lineHeight: '1' }}>
+            <div className="absolute left-0 w-full text-red-400 text-xs font-semibold" style={{ top: '100%', marginTop: '5px', marginLeft: '8px', lineHeight: '1' }}>
               {message}
             </div>
           )}
@@ -71,7 +71,7 @@ export default function ForgotPasswordPage() {
       </form>
       {emailSent && (
         <>
-          <p className="mt-4 text-green-600 text-center text-sm">Reset link sent to your email.</p>
+          <p className="mt-4 text-green-400 text-center text-sm font-semibold">Reset link sent to your email.</p>
           <Button className="mt-4 w-full cursor-pointer" onClick={() => window.location.href = "/login"}>
             Go to Login
           </Button>

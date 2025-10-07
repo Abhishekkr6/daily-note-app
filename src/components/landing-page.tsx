@@ -74,9 +74,9 @@ export function LandingPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5">
+  <div className="min-h-screen bg-[#171717] text-white">
       {/* Header */}
-      <header className="border-b bg-background/80 backdrop-blur-sm sticky top-0 z-50">
+  <header className="border-b bg-[#171717] backdrop-blur-sm sticky top-0 z-50 text-white">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
@@ -96,7 +96,7 @@ export function LandingPage() {
       </header>
 
       {/* Hero Section */}
-      <section className="container mx-auto px-4 py-20 text-center">
+  <section className="container mx-auto px-4 py-20 text-center bg-[#171717] text-white">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center justify-center gap-2 mb-6">
             <Sparkles className="w-6 h-6 text-primary" />
@@ -154,7 +154,7 @@ export function LandingPage() {
       </section>
 
       {/* Features Section */}
-      <section className="container mx-auto px-4 py-20">
+  <section className="container mx-auto px-4 py-20 bg-[#171717] text-white">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold mb-4 heading">Everything you need to stay productive</h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
@@ -227,7 +227,7 @@ export function LandingPage() {
       </section>
 
       {/* Testimonials */}
-      <section className="bg-accent/5 py-20">
+  <section className="bg-[#171717] py-20 text-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold mb-4 heading">Loved by productive people everywhere</h2>
@@ -258,7 +258,7 @@ export function LandingPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="container mx-auto px-4 py-20 text-center">
+  <section className="container mx-auto px-4 py-20 text-center bg-[#171717] text-white">
         <div className="max-w-2xl mx-auto">
           <h2 className="text-3xl md:text-4xl font-bold mb-4 heading">Ready to boost your productivity?</h2>
           <p className="text-xl text-muted-foreground mb-8">
@@ -276,7 +276,7 @@ export function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t bg-background/80 backdrop-blur-sm">
+  <footer className="border-t bg-[#171717] backdrop-blur-sm text-white">
         <div className="container mx-auto px-4 py-8">
           <div className="flex flex-col md:flex-row items-center justify-between">
             <div className="flex items-center gap-2 mb-4 md:mb-0">

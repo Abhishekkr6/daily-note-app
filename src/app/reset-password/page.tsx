@@ -70,7 +70,7 @@ export default function ResetPasswordPage() {
   };
 
   return (
-    <div className="max-w-md mx-auto mt-20 p-6 bg-white rounded shadow">
+  <div className="max-w-md mx-auto mt-20 p-6 bg-[#171717] rounded shadow text-white">
       <h2 className="text-2xl font-bold mb-4">Reset Password</h2>
       <form onSubmit={handleSubmit}>
   <div className="relative">
@@ -84,11 +84,11 @@ export default function ResetPasswordPage() {
               setPasswordError("");
             }}
             required
-            className="pl-10 pr-10"
+            className="pl-10 pr-10 bg-[#232323] text-white placeholder:text-white/60 border border-border focus:ring-2 focus:ring-primary focus:border-primary rounded-xl transition-all duration-150"
             disabled={disabled}
           />
           {passwordError && (
-            <div className="absolute left-0 w-full text-red-500 text-xs" style={{ top: '100%', marginTop: '5px', marginLeft: '8px', lineHeight: '1' }}>
+            <div className="absolute left-0 w-full text-red-400 text-xs font-semibold" style={{ top: '100%', marginTop: '5px', marginLeft: '8px', lineHeight: '1' }}>
               {passwordError}
             </div>
           )}
@@ -110,11 +110,11 @@ export default function ResetPasswordPage() {
               setConfirmPasswordError("");
             }}
             required
-            className="pl-10 pr-10"
+            className="pl-10 pr-10 bg-[#232323] text-white placeholder:text-white/60 border border-border focus:ring-2 focus:ring-primary focus:border-primary rounded-xl transition-all duration-150"
             disabled={disabled}
           />
           {confirmPasswordError && (
-            <div className="absolute left-0 w-full text-red-500 text-xs" style={{ top: '100%', marginTop: '5px', marginLeft: '8px', lineHeight: '1' }}>
+            <div className="absolute left-0 w-full text-red-400 text-xs font-semibold" style={{ top: '100%', marginTop: '5px', marginLeft: '8px', lineHeight: '1' }}>
               {confirmPasswordError}
             </div>
           )}
@@ -129,9 +129,9 @@ export default function ResetPasswordPage() {
           {loading ? "Resetting..." : "Reset Password"}
         </Button>
       </form>
-      {message && <p className="mt-4 text-center text-sm">{message}</p>}
+  {message && <p className="mt-4 text-center text-sm text-white font-semibold">{message}</p>}
       {/* No Go to Login button, immediate redirect on success */}
-      {!token && <p className="mt-4 text-red-500 text-center">Invalid or missing token.</p>}
+  {!token && <p className="mt-4 text-red-400 text-center font-semibold">Invalid or missing token.</p>}
     </div>
   );
 }

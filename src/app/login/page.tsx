@@ -141,9 +141,9 @@ const LoginPage = () => {
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center px-2 sm:px-6"
+      className="min-h-screen flex items-center justify-center px-2 sm:px-6 bg-[#171717] text-white"
       style={{
-        background: "linear-gradient(135deg, #fefce8 0%, #f0fdf4 100%)",
+        background: "#171717",
         position: "relative",
       }}
     >
@@ -161,7 +161,7 @@ const LoginPage = () => {
         transition={{ type: "spring", stiffness: 80, damping: 18 }}
         className="w-full max-w-md mx-auto z-10"
       >
-        <Card className="rounded-3xl shadow-2xl bg-white/80 backdrop-blur-lg p-8 flex flex-col gap-6 border border-border">
+  <Card className="rounded-3xl shadow-2xl bg-[#232323] backdrop-blur-lg p-8 flex flex-col gap-6 border border-border text-white">
           <div className="flex flex-col items-center gap-2">
             <img
               src={logo.src}
@@ -213,9 +213,9 @@ const LoginPage = () => {
                     setEmailError("Invalid email");
                   }
                 }}
-                className={`pl-10 bg-input border focus:ring-2 focus:ring-primary focus:border-primary rounded-xl transition-all duration-150 ${
+                className={`pl-10 bg-[#232323] border focus:ring-2 focus:ring-primary focus:border-primary rounded-xl transition-all duration-150 text-white placeholder:text-white/60 ${
                   emailTouched && emailError
-                    ? "border-red-500"
+                    ? "border-red-400"
                     : "border-border"
                 }`}
                 required
@@ -223,7 +223,7 @@ const LoginPage = () => {
               />
               {emailError && (
                 <div
-                  className="absolute left-0 w-full text-red-500 text-xs"
+                  className="absolute left-0 w-full text-red-400 text-xs font-semibold"
                   style={{
                     top: "100%",
                     marginTop: "5px",
@@ -252,9 +252,9 @@ const LoginPage = () => {
                   setLoading(false);
                 }}
                 onBlur={() => setPasswordTouched(true)}
-                className={`pl-10 pr-10 bg-input border focus:ring-2 focus:ring-primary focus:border-primary rounded-xl transition-all duration-150 ${
+                className={`pl-10 pr-10 bg-[#232323] border focus:ring-2 focus:ring-primary focus:border-primary rounded-xl transition-all duration-150 text-white placeholder:text-white/60 ${
                   passwordTouched && passwordError
-                    ? "border-red-500"
+                    ? "border-red-400"
                     : "border-border"
                 }`}
                 required
@@ -272,7 +272,7 @@ const LoginPage = () => {
               </span>
               {passwordError && (
                 <div
-                  className="absolute left-0 w-full text-red-500 text-xs"
+                  className="absolute left-0 w-full text-red-400 text-xs font-semibold"
                   style={{
                     top: "100%",
                     marginTop: "10px",
@@ -325,7 +325,7 @@ const LoginPage = () => {
               </div>
             </div>
           </form>
-          <div className="text-center text-sm text-muted-foreground mt-2">
+          <div className="text-center text-sm text-white/70 mt-2">
             Don't have an account?{" "}
             <a
               href="/signup"
