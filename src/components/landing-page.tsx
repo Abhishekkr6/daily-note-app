@@ -86,8 +86,8 @@ export function LandingPage() {
   const router = useRouter();
   return (
   <div className="min-h-screen bg-[#171717] text-white relative">
-  <StarsBackground className="z-0" />
-  <ShootingStars className="z-0" />
+  <StarsBackground className="z-0 pointer-events-none" />
+  <ShootingStars className="z-0 pointer-events-none" />
       {/* Header */}
   <header className={`border-b sticky top-0 z-50 text-white w-full transition-colors duration-300 ${navBg ? "bg-[#171717]" : "bg-transparent"}`}>
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
