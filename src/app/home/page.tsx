@@ -4,11 +4,19 @@
 import { Sidebar } from "@/components/sidebar";
 import { TopBar } from "@/components/top-bar";
 import { TodayDashboard } from "@/components/today-dashboard";
+import { WelcomeToast } from "@/components/welcome-toast";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 
+type UserType = {
+  username?: string;
+  name?: string;
+  email?: string;
+  [key: string]: any;
+};
+
 export default function HomePage() {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<UserType | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
@@ -43,6 +51,8 @@ export default function HomePage() {
           <TodayDashboard />
         </main>
       </div>
+      {/* Welcome Toast Animation */}
+  <WelcomeToast name={user?.username || user?.name || "User"} />
     </div>
   );
 }
