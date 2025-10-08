@@ -10,33 +10,25 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 export default function HomePage() {
-
-  const { data: session, status } = useSession();
+  const sessionData = useSession();
+  const session = sessionData?.data;
+  const status = sessionData?.status;
   const router = useRouter();
 
   useEffect(() => {
-    // Debug: log session and status
-    console.log('Session:', session);
-    console.log('Session status:', status);
     if (status === "unauthenticated") {
       router.push("/login");
     }
-  }, [status, router, session]);
+  }, [status, router]);
 
   if (status === "loading") return <div>Loading...</div>;
-  if (!session) return <div>No session found. Check console for details.</div>;
+  if (!session) return <div>No session found. Please login.</div>;
 
   return (
     <div className="flex h-screen bg-background">
-      {/* Sidebar */}
       <Sidebar />
-
-      {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Top Bar */}
         <TopBar />
-
-        {/* Page Content */}
         <main className="flex-1 overflow-auto">
           <TodayDashboard />
         </main>
