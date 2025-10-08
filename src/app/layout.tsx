@@ -1,9 +1,9 @@
 "use client";
-import type React from "react";
 import type { Metadata } from "next";
-import { Inter, Montserrat as Poppins } from "next/font/google";
+import { Inter, Montserrat } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
+// Removed client-only imports
 import { ThemeProvider } from "@/components/theme-provider";
 import { Suspense } from "react";
 import { SessionProvider } from "next-auth/react"; // ✅ Add this import
@@ -12,11 +12,9 @@ import { SessionProvider } from "next-auth/react"; // ✅ Add this import
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
-  display: "swap",
 });
-
-// Heading font → Poppins
-const poppins = Poppins({
+// Heading font → Montserrat
+const poppins = Montserrat({
   subsets: ["latin"],
   weight: ["400", "600", "700"],
   variable: "--font-poppins",
