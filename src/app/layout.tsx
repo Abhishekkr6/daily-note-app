@@ -1,4 +1,5 @@
 "use client";
+// Removed "use client"; layout must be a server component to export metadata
 import type { Metadata } from "next";
 import { Inter, Montserrat } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
