@@ -1,3 +1,5 @@
+"use client";
+
 import { Sidebar } from "@/components/sidebar";
 import { TopBar } from "@/components/top-bar";
 import { TodayDashboard } from "@/components/today-dashboard";
