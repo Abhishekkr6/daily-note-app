@@ -309,7 +309,7 @@ const LoginPage = () => {
                 <Button
                   type="button"
                   className="w-full bg-white text-black border border-gray-300 rounded-xl py-2 font-semibold text-lg flex items-center justify-center gap-2 shadow-md transition-all duration-150 group cursor-pointer no-hover-bg"
-                  onClick={() => signIn("google")}
+                  onClick={() => signIn("google", { callbackUrl: "/home" })}
                 >
                   <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" width={22} height={22} className="group-hover:scale-110 transition-transform duration-150" />
                   <span className="tracking-wide">Sign in with <span className="font-bold">Google</span></span>
@@ -317,7 +317,7 @@ const LoginPage = () => {
                 <Button
                   type="button"
                   className="w-full bg-white text-black border border-gray-300 rounded-xl py-2 font-semibold text-lg flex items-center justify-center gap-2 shadow-md transition-all duration-150 group cursor-pointer no-hover-bg"
-                  onClick={() => signIn("github")}
+                  onClick={() => signIn("github", { callbackUrl: "/home" })}
                 >
                   <img src="https://www.svgrepo.com/show/512317/github-142.svg" alt="GitHub" width={22} height={22} className="group-hover:scale-110 transition-transform duration-150" />
                   <span className="tracking-wide">Sign in with <span className="font-bold">GitHub</span></span>
