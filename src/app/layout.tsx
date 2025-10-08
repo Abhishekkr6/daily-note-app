@@ -1,3 +1,4 @@
+"use client";
 import type React from "react";
 import type { Metadata } from "next";
 import { Inter, Montserrat as Poppins } from "next/font/google";
