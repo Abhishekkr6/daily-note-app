@@ -125,10 +125,8 @@ const SignupPage = () => {
       setUsernameError(err.errors?.[0]?.message || "Invalid username");
       setInputsDisabled(false);
       toast.error(err.errors?.[0]?.message || "Invalid username");
-      return;
-    }
-    if (!otpVerified) {
-      toast.error("Please verify your email first");
+
+      "use client";
       return;
     }
     setInputsDisabled(true);

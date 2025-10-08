@@ -45,10 +45,7 @@ export default function ResetPasswordPage() {
           if (error.path[0] === "password") setPasswordError(error.message);
           if (error.path[0] === "confirmPassword") setConfirmPasswordError(error.message);
         });
-      }
-      return;
-    }
-    setLoading(true);
+      "use client";
     setDisabled(true);
     try {
       const res = await fetch("/api/users/resetpassword", {
