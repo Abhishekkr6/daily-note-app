@@ -43,6 +43,7 @@ const authOptions = {
               avatarUrl: user.image,
               password: randomPassword,
               emailVerified: true,
+              name: user.name || username,
             });
             console.log("OAuth user created:", user.email, username);
           }

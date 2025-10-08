@@ -4,24 +4,35 @@
 import { Sidebar } from "@/components/sidebar";
 import { TopBar } from "@/components/top-bar";
 import { TodayDashboard } from "@/components/today-dashboard";
-import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 
 export default function HomePage() {
-  const sessionData = useSession();
-  const session = sessionData?.data;
-  const status = sessionData?.status;
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/login");
+    async function fetchUser() {
+      try {
+        const res = await fetch("/api/users/aboutme", { method: "POST" });
+        const data = await res.json();
+        if (data?.data) {
+          setUser(data.data);
+        } else {
+          router.push("/login");
+        }
+      } catch {
+        router.push("/login");
+      } finally {
+        setLoading(false);
+      }
     }
-  }, [status, router]);
+    fetchUser();
+  }, [router]);
 
-  if (status === "loading") return <div>Loading...</div>;
-  if (!session) return <div>No session found. Please login.</div>;
+  if (loading) return <div>Loading...</div>;
+  if (!user) return null;
 
   return (
     <div className="flex h-screen bg-background">
