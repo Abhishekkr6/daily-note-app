@@ -1,6 +1,11 @@
-import { Sidebar } from "@/components/sidebar"
-import { TopBar } from "@/components/top-bar"
-import { CalendarPage } from "@/components/calendar-page"
+
+"use client";
+export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
+export const revalidate = 0;
+import { Sidebar } from "@/components/sidebar";
+import { TopBar } from "@/components/top-bar";
+import { CalendarPage } from "@/components/calendar-page";
 
 export default function Calendar() {
   return (
@@ -19,5 +24,5 @@ export default function Calendar() {
         </main>
       </div>
     </div>
-  )
+  );
 }
