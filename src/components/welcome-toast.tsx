@@ -22,7 +22,8 @@ export const WelcomeToast: React.FC<WelcomeToastProps> = ({ name }) => {
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 40, scale: 0.95 }}
           transition={{ type: "spring", stiffness: 120, damping: 18 }}
-          className="fixed bottom-6 right-6 z-50 bg-gradient-to-br from-primary to-primary/80 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3"
+          className="fixed bottom-6 right-6 z-[9999] bg-gradient-to-br from-primary to-primary/80 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 w-[90vw] max-w-xs md:max-w-sm lg:max-w-md"
+          style={{ pointerEvents: 'none' }}
         >
           <span className="text-2xl">👋</span>
           <div>

@@ -138,9 +138,6 @@ export function LandingPage() {
                 <ArrowRight className="w-5 h-5 ml-2 cursor-pointer" />
               </Button>
             </Link>
-            <Button size="lg" variant="outline" className="text-lg px-8 py-6 bg-transparent cursor-pointer">
-              View Demo
-            </Button>
           </div>
 
           {/* Stats */}
