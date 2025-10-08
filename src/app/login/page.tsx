@@ -306,22 +306,32 @@ const LoginPage = () => {
                   <span className="mx-3 text-gray-400 font-semibold text-sm select-none">OR</span>
                   <div className="flex-grow h-px bg-gray-300" />
                 </div>
-                <Button
-                  type="button"
-                  className="w-full bg-white text-black border border-gray-300 rounded-xl py-2 font-semibold text-lg flex items-center justify-center gap-2 shadow-md transition-all duration-150 group cursor-pointer no-hover-bg"
-                  onClick={() => signIn("google", { callbackUrl: "/home" })}
-                >
-                  <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" width={22} height={22} className="group-hover:scale-110 transition-transform duration-150" />
-                  <span className="tracking-wide">Sign in with <span className="font-bold">Google</span></span>
-                </Button>
-                <Button
-                  type="button"
-                  className="w-full bg-white text-black border border-gray-300 rounded-xl py-2 font-semibold text-lg flex items-center justify-center gap-2 shadow-md transition-all duration-150 group cursor-pointer no-hover-bg"
-                  onClick={() => signIn("github", { callbackUrl: "/home" })}
-                >
-                  <img src="https://www.svgrepo.com/show/512317/github-142.svg" alt="GitHub" width={22} height={22} className="group-hover:scale-110 transition-transform duration-150" />
-                  <span className="tracking-wide">Sign in with <span className="font-bold">GitHub</span></span>
-                </Button>
+                <div className="relative group w-full">
+                  <Button
+                    type="button"
+                    className="w-full bg-white text-black border border-gray-300 rounded-xl py-2 font-semibold text-lg flex items-center justify-center gap-2 shadow-md transition-all duration-150 cursor-not-allowed no-hover-bg"
+                    disabled
+                  >
+                    <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" width={22} height={22} className="group-hover:scale-110 transition-transform duration-150" />
+                    <span className="tracking-wide">Sign in with <span className="font-bold">Google</span></span>
+                  </Button>
+                  <span className="absolute left-1/2 -translate-x-1/2 -top-8 bg-gray-900 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10 shadow-lg">
+                    This feature is currently unavailable
+                  </span>
+                </div>
+                <div className="relative group w-full">
+                  <Button
+                    type="button"
+                    className="w-full bg-white text-black border border-gray-300 rounded-xl py-2 font-semibold text-lg flex items-center justify-center gap-2 shadow-md transition-all duration-150 cursor-not-allowed no-hover-bg"
+                    disabled
+                  >
+                    <img src="https://www.svgrepo.com/show/512317/github-142.svg" alt="GitHub" width={22} height={22} className="group-hover:scale-110 transition-transform duration-150" />
+                    <span className="tracking-wide">Sign in with <span className="font-bold">GitHub</span></span>
+                  </Button>
+                  <span className="absolute left-1/2 -translate-x-1/2 -top-8 bg-gray-900 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10 shadow-lg">
+                    This feature is currently unavailable
+                  </span>
+                </div>
               </div>
             </div>
           </form>
