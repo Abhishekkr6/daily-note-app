@@ -1,4 +1,7 @@
 "use client";
+export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
+export const revalidate = 0;
 import React, { useState } from "react";
 import { resetPasswordSchema } from "@/schemas/resetPassword.schema";
 import { FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
