@@ -18,6 +18,7 @@ type UserType = {
 export default function HomePage() {
   const [user, setUser] = useState<UserType | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showWelcome, setShowWelcome] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -37,9 +38,17 @@ export default function HomePage() {
       }
     }
     fetchUser();
+
+    // Check for login flag in sessionStorage
+    if (typeof window !== "undefined") {
+      if (sessionStorage.getItem("justLoggedIn") === "true") {
+        setShowWelcome(true);
+        sessionStorage.removeItem("justLoggedIn");
+      }
+    }
   }, [router]);
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) return null;
   if (!user) return null;
 
   return (
@@ -52,7 +61,9 @@ export default function HomePage() {
         </main>
       </div>
       {/* Welcome Toast Animation */}
-  <WelcomeToast name={user?.username || user?.name || "User"} />
+      {showWelcome && (
+        <WelcomeToast name={user?.username || user?.name || "User"} />
+      )}
     </div>
   );
 }

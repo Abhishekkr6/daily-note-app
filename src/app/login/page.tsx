@@ -66,13 +66,16 @@ const LoginPage = () => {
         ...user,
         csrfToken,
       });
-  toast.success("Login successful");
-  setUser({ email: "", password: "" });
-  setEmailTouched(false);
-  setPasswordTouched(false);
-  setEmailInteracted(false);
-  setPasswordInteracted(false);
-  router.push("/home");
+      toast.success("Login successful");
+      setUser({ email: "", password: "" });
+      setEmailTouched(false);
+      setPasswordTouched(false);
+      setEmailInteracted(false);
+      setPasswordInteracted(false);
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem("justLoggedIn", "true");
+      }
+      router.push("/home");
     } catch (err) {
       const errorMsg = (err as any).response?.data?.error || "Login failed";
       // Show error for correct field
