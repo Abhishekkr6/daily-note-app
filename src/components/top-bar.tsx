@@ -9,6 +9,20 @@ import { Badge } from "@/components/ui/badge";
 import React, { useState, useRef, useEffect } from "react";
 
 export function TopBar() {
+  // User email fetch logic
+  const [userEmail, setUserEmail] = useState("");
+  useEffect(() => {
+    async function fetchProfile() {
+      try {
+        const res = await fetch("/api/users/profile", { credentials: "include" });
+        if (res.ok) {
+          const data = await res.json();
+          setUserEmail(data.email || "");
+        }
+      } catch {}
+    }
+    fetchProfile();
+  }, []);
   const { theme, setTheme } = useTheme();
   const [searchQuery, setSearchQuery] = useState("");
   type Item = {
@@ -248,9 +262,8 @@ export function TopBar() {
 
         {/* Profile Avatar */}
         <Avatar className="w-8 h-8">
-          <AvatarImage src="/diverse-user-avatars.png" alt="Profile" />
-          <AvatarFallback className="bg-primary text-primary-foreground">
-            <User className="w-4 h-4" />
+          <AvatarFallback className="bg-primary text-primary-foreground text-xl">
+            {userEmail ? userEmail[0].toUpperCase() : "?"}
           </AvatarFallback>
         </Avatar>
       </div>
