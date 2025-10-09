@@ -3,8 +3,13 @@ import jwt from 'jsonwebtoken';
 
 export const getDataFromToken = (req) => {
     try {
-        // Read the correct cookie name set by login API
-        const token = req.cookies.get("authToken")?.value || "";
+        let token = "";
+        if (typeof req === "string") {
+            token = req;
+        } else if (req && req.cookies && typeof req.cookies.get === "function") {
+            token = req.cookies.get("authToken")?.value || "";
+        }
+        if (!token) throw new Error("Token not found");
         const decodedToken = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
         return decodedToken.id;
     } catch (error) {

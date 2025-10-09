@@ -93,7 +93,7 @@ export async function POST(req) {
     // Set access token (short-lived)
     response.cookies.set("authToken", accessToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: process.env.NODE_ENV === "production" ? true : false,
       path: "/",
       sameSite: "lax",
       maxAge: 15 * 60, // 15 minutes

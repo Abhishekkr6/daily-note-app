@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import React, { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -23,8 +23,8 @@ export function SettingsPage() {
   })
 
   const [profile, setProfile] = useState({
-    name: "Alex Johnson",
-    email: "alex.johnson@example.com",
+    name: "",
+    email: "",
     timezone: "America/New_York",
     workingHours: { start: "09:00", end: "17:00" },
   })
@@ -37,6 +37,26 @@ export function SettingsPage() {
     autoArchive: 30,
     weekStartsOn: "monday",
   })
+
+  // Fetch user profile from API
+  React.useEffect(() => {
+    async function fetchProfile() {
+      try {
+        const res = await fetch("/api/users/profile", { credentials: "include" });
+        if (res.ok) {
+          const data = await res.json();
+          setProfile((prev) => ({
+            ...prev,
+            name: data.name || "",
+            email: data.email || "",
+          }));
+        }
+      } catch (err) {
+        // handle error (optional)
+      }
+    }
+    fetchProfile();
+  }, []);
 
   const handleNotificationChange = (key: string, value: boolean) => {
     setNotifications((prev) => ({ ...prev, [key]: value }))
@@ -117,12 +137,10 @@ export function SettingsPage() {
             <CardContent className="space-y-6">
               <div className="flex items-center space-x-4">
                 <Avatar className="w-20 h-20">
-                  <AvatarImage src="/diverse-user-avatars.png" alt="Profile" />
                   <AvatarFallback className="bg-primary text-primary-foreground text-lg">
-                    {profile.name
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")}
+                  <AvatarFallback className="bg-primary text-primary-foreground text-2xl">
+                    {profile.email ? profile.email[0].toUpperCase() : "?"}
+                  </AvatarFallback>
                   </AvatarFallback>
                 </Avatar>
                 <div className="space-y-2">
@@ -150,7 +168,8 @@ export function SettingsPage() {
                     id="email"
                     type="email"
                     value={profile.email}
-                    onChange={(e) => setProfile((prev) => ({ ...prev, email: e.target.value }))}
+                    readOnly
+                    disabled
                   />
                 </div>
                 <div className="space-y-2">
