@@ -15,11 +15,11 @@ export async function GET(req) {
       return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
     // Find user in DB
-    const user = await User.findById(userId).select("username email");
+    const user = await User.findById(userId).select("username email avatarUrl");
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
-    return NextResponse.json({ name: user.username, email: user.email });
+    return NextResponse.json({ name: user.username, email: user.email, avatarUrl: user.avatarUrl });
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

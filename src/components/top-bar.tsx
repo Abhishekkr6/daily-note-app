@@ -9,19 +9,29 @@ import { Badge } from "@/components/ui/badge";
 import React, { useState, useRef, useEffect } from "react";
 
 export function TopBar() {
-  // User email fetch logic
-  const [username, setUsername] = useState("");
+  // User profile fetch logic
+  const [profile, setProfile] = useState<{ name: string; email: string; avatarUrl: string | null }>({ name: "", email: "", avatarUrl: null });
   useEffect(() => {
     async function fetchProfile() {
       try {
         const res = await fetch("/api/users/profile", { credentials: "include" });
         if (res.ok) {
           const data = await res.json();
-          setUsername(data.name || "");
+          setProfile({
+            name: data.name || "",
+            email: data.email || "",
+            avatarUrl: data.avatarUrl || null,
+          });
         }
       } catch {}
     }
     fetchProfile();
+    // Listen for avatarUrl changes from settings page
+    const handler = (e: any) => {
+      setProfile((prev) => ({ ...prev, avatarUrl: e.detail.avatarUrl }));
+    };
+    window.addEventListener("avatarUrlChanged", handler);
+    return () => window.removeEventListener("avatarUrlChanged", handler);
   }, []);
   const { theme, setTheme } = useTheme();
   const [searchQuery, setSearchQuery] = useState("");
@@ -262,9 +272,17 @@ export function TopBar() {
 
         {/* Profile Avatar */}
         <Avatar className="w-8 h-8">
-          <AvatarFallback className="bg-primary text-primary-foreground text-xl">
-            {username ? username[0].toUpperCase() : "?"}
-          </AvatarFallback>
+          {profile.avatarUrl ? (
+            <AvatarImage src={profile.avatarUrl} alt="Profile" />
+          ) : (
+            <AvatarFallback className="bg-primary text-primary-foreground text-xl">
+              {profile.name
+                ? profile.name[0].toUpperCase()
+                : profile.email
+                ? profile.email[0].toUpperCase()
+                : "?"}
+            </AvatarFallback>
+          )}
         </Avatar>
       </div>
     </header>

@@ -10,9 +10,32 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
 import { Settings, User, Bell, Palette, Download, Upload, Trash2, Clock, Database } from "lucide-react"
+import { Check } from "lucide-react"
 import { useTheme } from "next-themes"
 
 export function SettingsPage() {
+  const [saveStatus, setSaveStatus] = useState<string | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  // Remove Photo feature and state fully removed
+
+  // Handle image select and preview
+  const handleChangePhoto = () => {
+    if (fileInputRef.current) fileInputRef.current.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setSelectedFile(file);
+    // Preview
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      setAvatarUrl(ev.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
   const { theme, setTheme } = useTheme()
   const [notifications, setNotifications] = useState({
     taskReminders: true,
@@ -50,6 +73,11 @@ export function SettingsPage() {
             name: data.name || "",
             email: data.email || "",
           }));
+          if (data.avatarUrl) {
+            setAvatarUrl(data.avatarUrl);
+          } else {
+            setAvatarUrl(null);
+          }
         }
       } catch (err) {
         // handle error (optional)
@@ -82,41 +110,34 @@ export function SettingsPage() {
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Settings</h1>
-          <p className="text-muted-foreground">Manage your account and application preferences</p>
-        </div>
-      </div>
-
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Settings Navigation */}
-        <div className="lg:col-span-1">
-          <Card className="bg-card border-border shadow-sm sticky top-6">
+        {/* Sidebar Menu */}
+        <div>
+          <Card className="bg-card border-border shadow-sm">
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
                 <Settings className="w-5 h-5 text-primary" />
-                <span>Settings Menu</span>
+                <span>Settings</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              <Button variant="ghost" className="w-full justify-start">
+              <Button variant="ghost" className="w-full justify-start cursor-pointer">
                 <User className="w-4 h-4 mr-3" />
                 Profile
               </Button>
-              <Button variant="ghost" className="w-full justify-start">
+              <Button variant="ghost" className="w-full justify-start cursor-pointer">
                 <Palette className="w-4 h-4 mr-3" />
                 Appearance
               </Button>
-              <Button variant="ghost" className="w-full justify-start">
+              <Button variant="ghost" className="w-full justify-start cursor-pointer">
                 <Bell className="w-4 h-4 mr-3" />
                 Notifications
               </Button>
-              <Button variant="ghost" className="w-full justify-start">
+              <Button variant="ghost" className="w-full justify-start cursor-pointer">
                 <Clock className="w-4 h-4 mr-3" />
                 Preferences
               </Button>
-              <Button variant="ghost" className="w-full justify-start">
+              <Button variant="ghost" className="w-full justify-start cursor-pointer">
                 <Database className="w-4 h-4 mr-3" />
                 Data & Privacy
               </Button>
@@ -137,19 +158,34 @@ export function SettingsPage() {
             <CardContent className="space-y-6">
               <div className="flex items-center space-x-4">
                 <Avatar className="w-20 h-20">
-                  <AvatarFallback className="bg-primary text-primary-foreground text-lg">
-                  <AvatarFallback className="bg-primary text-primary-foreground text-2xl">
-                    {profile.name ? profile.name[0].toUpperCase() : "?"}
-                  </AvatarFallback>
-                  </AvatarFallback>
+                  {selectedFile ? (
+                    <AvatarImage src={avatarUrl || ""} alt="Profile" />
+                  ) : avatarUrl ? (
+                    <AvatarImage src={avatarUrl} alt="Profile" />
+                  ) : (
+                    <AvatarFallback className="bg-primary text-primary-foreground text-2xl">
+                      {profile.name
+                        ? profile.name[0].toUpperCase()
+                        : profile.email
+                        ? profile.email[0].toUpperCase()
+                        : "?"}
+                    </AvatarFallback>
+                  )}
                 </Avatar>
                 <div className="space-y-2">
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline" size="sm" onClick={handleChangePhoto} className="cursor-pointer">
                     Change Photo
                   </Button>
-                  <Button variant="ghost" size="sm" className="text-destructive">
-                    Remove Photo
-                  </Button>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    ref={fileInputRef}
+                    className="hidden"
+                    onChange={handleFileChange}
+                    placeholder="Select profile photo"
+                    title="Select profile photo"
+                  />
+                  {/* Remove Photo button and state fully removed. JSX is now valid. */}
                 </div>
               </div>
 
@@ -435,7 +471,7 @@ export function SettingsPage() {
                   <p className="text-sm text-muted-foreground mb-3">
                     Download all your tasks, notes, and settings as a JSON file
                   </p>
-                  <Button onClick={handleExportData} variant="outline">
+                  <Button onClick={handleExportData} variant="outline" className="cursor-pointer">
                     <Download className="w-4 h-4 mr-2" />
                     Export Data
                   </Button>
@@ -448,7 +484,7 @@ export function SettingsPage() {
                   <p className="text-sm text-muted-foreground mb-3">
                     Import your data from a previously exported JSON file
                   </p>
-                  <Button variant="outline">
+                  <Button variant="outline" className="cursor-pointer">
                     <Upload className="w-4 h-4 mr-2" />
                     Import Data
                   </Button>
@@ -461,7 +497,7 @@ export function SettingsPage() {
                   <p className="text-sm text-muted-foreground mb-3">
                     Permanently delete all your data. This action cannot be undone.
                   </p>
-                  <Button variant="destructive">
+                  <Button variant="destructive" className="cursor-pointer">
                     <Trash2 className="w-4 h-4 mr-2" />
                     Delete All Data
                   </Button>
@@ -471,9 +507,43 @@ export function SettingsPage() {
           </Card>
 
           {/* Save Changes */}
-          <div className="flex justify-end space-x-2">
-            <Button variant="outline">Reset to Defaults</Button>
-            <Button>Save Changes</Button>
+          <div className="flex justify-end">
+            <Button
+              onClick={async () => {
+                setSaveStatus(null);
+                let success = false;
+                if (selectedFile) {
+                  const formData = new FormData();
+                  formData.append("avatar", selectedFile);
+                  const res = await fetch("/api/users/avatar", {
+                    method: "POST",
+                    body: formData,
+                    credentials: "include"
+                  });
+                  if (res.ok) {
+                    const data = await res.json();
+                    setAvatarUrl(data.avatarUrl);
+                    window.dispatchEvent(new CustomEvent("avatarUrlChanged", { detail: { avatarUrl: data.avatarUrl } }));
+                    success = true;
+                  }
+                }
+                // TODO: Add other profile update logic here if needed
+                if (success) {
+                  setSaveStatus("Saved Changes");
+                  setTimeout(() => setSaveStatus(null), 2500);
+                } else {
+                  setSaveStatus(null);
+                }
+              }}
+              className={saveStatus ? "bg-green-100 text-green-700 cursor-pointer" : "cursor-pointer"}
+            >
+              {saveStatus ? (
+                <span className="flex items-center gap-2">
+                  {saveStatus}
+                  <Check className="w-4 h-4" />
+                </span>
+              ) : "Save Changes"}
+            </Button>
           </div>
         </div>
       </div>
