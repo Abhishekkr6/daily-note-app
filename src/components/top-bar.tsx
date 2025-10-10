@@ -10,14 +10,14 @@ import React, { useState, useRef, useEffect } from "react";
 
 export function TopBar() {
   // User email fetch logic
-  const [userEmail, setUserEmail] = useState("");
+  const [username, setUsername] = useState("");
   useEffect(() => {
     async function fetchProfile() {
       try {
         const res = await fetch("/api/users/profile", { credentials: "include" });
         if (res.ok) {
           const data = await res.json();
-          setUserEmail(data.email || "");
+          setUsername(data.name || "");
         }
       } catch {}
     }
@@ -263,7 +263,7 @@ export function TopBar() {
         {/* Profile Avatar */}
         <Avatar className="w-8 h-8">
           <AvatarFallback className="bg-primary text-primary-foreground text-xl">
-            {userEmail ? userEmail[0].toUpperCase() : "?"}
+            {username ? username[0].toUpperCase() : "?"}
           </AvatarFallback>
         </Avatar>
       </div>

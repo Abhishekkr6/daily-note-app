@@ -139,7 +139,7 @@ export function SettingsPage() {
                 <Avatar className="w-20 h-20">
                   <AvatarFallback className="bg-primary text-primary-foreground text-lg">
                   <AvatarFallback className="bg-primary text-primary-foreground text-2xl">
-                    {profile.email ? profile.email[0].toUpperCase() : "?"}
+                    {profile.name ? profile.name[0].toUpperCase() : "?"}
                   </AvatarFallback>
                   </AvatarFallback>
                 </Avatar>
