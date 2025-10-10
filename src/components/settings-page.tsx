@@ -15,6 +15,7 @@ import { useTheme } from "next-themes"
 
 export function SettingsPage() {
   const [saveStatus, setSaveStatus] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -511,6 +512,7 @@ export function SettingsPage() {
             <Button
               onClick={async () => {
                 setSaveStatus(null);
+                setIsSaving(true);
                 let success = false;
                 if (selectedFile) {
                   const formData = new FormData();
@@ -528,6 +530,7 @@ export function SettingsPage() {
                   }
                 }
                 // TODO: Add other profile update logic here if needed
+                setIsSaving(false);
                 if (success) {
                   setSaveStatus("Saved Changes");
                   setTimeout(() => setSaveStatus(null), 2500);
@@ -536,8 +539,17 @@ export function SettingsPage() {
                 }
               }}
               className={saveStatus ? "bg-green-100 text-green-700 cursor-pointer" : "cursor-pointer"}
+              disabled={isSaving}
             >
-              {saveStatus ? (
+              {isSaving ? (
+                <span className="flex items-center gap-2">
+                  <svg className="animate-spin h-5 w-5 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M12 2a10 10 0 1 1-9.95 9.05" />
+                  </svg>
+                  Saving...
+                </span>
+              ) : saveStatus ? (
                 <span className="flex items-center gap-2">
                   {saveStatus}
                   <Check className="w-4 h-4" />
