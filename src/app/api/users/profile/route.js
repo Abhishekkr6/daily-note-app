@@ -9,15 +9,31 @@ export async function PUT(req) {
       return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
     const body = await req.json();
-    const { name } = body;
-    if (!name || typeof name !== "string" || name.length < 3) {
-      return NextResponse.json({ error: "Invalid name" }, { status: 400 });
-    }
-    const user = await User.findByIdAndUpdate(userId, { username: name }, { new: true });
+    let user = await User.findById(userId);
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
-    return NextResponse.json({ name: user.username, email: user.email, avatarUrl: user.avatarUrl });
+    if (body.name && typeof body.name === "string" && body.name.length >= 3) {
+      user.username = body.name;
+    }
+    if (body.timezone && typeof body.timezone === "string") {
+      user.preferences.timezone = body.timezone;
+    }
+    if (body.workingHours && typeof body.workingHours === "object") {
+      user.preferences.workingHours = body.workingHours;
+      user.markModified("preferences.workingHours");
+    }
+    await user.save();
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+    return NextResponse.json({
+      name: user.username,
+      email: user.email,
+      avatarUrl: user.avatarUrl,
+      timezone: user.preferences?.timezone,
+      workingHours: user.preferences?.workingHours
+    });
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
@@ -39,11 +55,17 @@ export async function GET(req) {
       return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
     // Find user in DB
-    const user = await User.findById(userId).select("username email avatarUrl");
+    const user = await User.findById(userId).select("username email avatarUrl preferences");
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
-    return NextResponse.json({ name: user.username, email: user.email, avatarUrl: user.avatarUrl });
+    return NextResponse.json({
+      name: user.username,
+      email: user.email,
+      avatarUrl: user.avatarUrl,
+      timezone: user.preferences?.timezone,
+      workingHours: user.preferences?.workingHours || { start: "09:00", end: "17:00" }
+    });
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

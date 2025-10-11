@@ -30,6 +30,10 @@ export interface IUser extends Document {
   preferences?: {
     theme?: string;
     timezone?: string;
+    workingHours?: {
+      start?: string;
+      end?: string;
+    };
   };
   resetPasswordToken?: string;
   resetPasswordExpires?: Date;
@@ -89,6 +93,10 @@ const UserSchema = new Schema<IUser>({
     preferences: {
       theme: { type: String, default: "light" },
       timezone: { type: String, default: "UTC" },
+      workingHours: {
+        type: Object,
+        default: { start: "09:00", end: "17:00" }
+      }
     },
     resetPasswordToken: {
       type: String,

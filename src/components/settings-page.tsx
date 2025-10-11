@@ -73,6 +73,8 @@ export function SettingsPage() {
             ...prev,
             name: data.name || "",
             email: data.email || "",
+            timezone: data.timezone || "America/New_York",
+            workingHours: data.workingHours || { start: "09:00", end: "17:00" },
           }));
           if (data.avatarUrl) {
             setAvatarUrl(data.avatarUrl);
@@ -530,17 +532,19 @@ export function SettingsPage() {
                     success = true;
                   }
                 }
-                // Save name if changed
-                if (profile.name) {
-                  const res = await fetch("/api/users/profile", {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    credentials: "include",
-                    body: JSON.stringify({ name: profile.name })
-                  });
-                  if (res.ok) {
-                    success = true;
-                  }
+                // Save name, timezone, working hours
+                const res = await fetch("/api/users/profile", {
+                  method: "PUT",
+                  headers: { "Content-Type": "application/json" },
+                  credentials: "include",
+                  body: JSON.stringify({
+                    name: profile.name,
+                    timezone: profile.timezone,
+                    workingHours: profile.workingHours
+                  })
+                });
+                if (res.ok) {
+                  success = true;
                 }
                 setIsSaving(false);
                 if (success) {
