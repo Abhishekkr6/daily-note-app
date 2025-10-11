@@ -514,6 +514,7 @@ export function SettingsPage() {
                 setSaveStatus(null);
                 setIsSaving(true);
                 let success = false;
+                // Save avatar if selected
                 if (selectedFile) {
                   const formData = new FormData();
                   formData.append("avatar", selectedFile);
@@ -529,7 +530,18 @@ export function SettingsPage() {
                     success = true;
                   }
                 }
-                // TODO: Add other profile update logic here if needed
+                // Save name if changed
+                if (profile.name) {
+                  const res = await fetch("/api/users/profile", {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    credentials: "include",
+                    body: JSON.stringify({ name: profile.name })
+                  });
+                  if (res.ok) {
+                    success = true;
+                  }
+                }
                 setIsSaving(false);
                 if (success) {
                   setSaveStatus("Saved Changes");
