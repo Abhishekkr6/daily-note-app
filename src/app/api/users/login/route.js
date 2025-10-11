@@ -57,10 +57,10 @@ export async function POST(req) {
       username: user.username,
       email: user.email,
     };
-  // Short-lived access token (15m)
-  const accessToken = signAccessToken(tokenData);
-  // Long-lived refresh token (7d)
-  const refreshToken = signRefreshToken({ id: user._id });
+  // Long-lived access token (30d)
+  const accessToken = signAccessToken(tokenData, "30d");
+  // Long-lived refresh token (30d)
+  const refreshToken = signRefreshToken({ id: user._id }, "30d");
   // Store hashed refresh token in DB for rotation/revocation
   const refreshTokenHash = await bcryptjs.hash(refreshToken, 12);
   user.refreshToken = refreshTokenHash;
@@ -90,13 +90,13 @@ export async function POST(req) {
       message: "Logged In Success & Email Sent",
       success: true,
     });
-    // Set access token (short-lived)
+    // Set access token (long-lived)
     response.cookies.set("authToken", accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production" ? true : false,
       path: "/",
       sameSite: "lax",
-      maxAge: 15 * 60, // 15 minutes
+      maxAge: 30 * 24 * 60 * 60, // 30 days
     });
     // Set refresh token (long-lived)
     response.cookies.set("refreshToken", refreshToken, {
@@ -104,7 +104,7 @@ export async function POST(req) {
       secure: process.env.NODE_ENV === "production",
       path: "/api/users/refresh-token", // Only sent to refresh endpoint
       sameSite: "lax",
-      maxAge: 7 * 24 * 60 * 60, // 7 days
+      maxAge: 30 * 24 * 60 * 60, // 30 days
     });
     return response;
   } catch (error) {
