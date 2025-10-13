@@ -118,7 +118,7 @@ export function TodayDashboard() {
 
   // Delete task with undo
   const deleteTask = async (id: string) => {
-  const taskToDelete = tasks.find((t) => t._id === id);
+    const taskToDelete = tasks.find((t) => t._id === id);
     if (!taskToDelete) return;
 
     setLoading(true);
@@ -126,7 +126,7 @@ export function TodayDashboard() {
       await fetch("/api/tasks", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id }),
+        body: JSON.stringify({ _id: id }),
       });
       const res = await fetch("/api/tasks");
       const data = await res.json();
@@ -463,6 +463,8 @@ function TaskSection({
   handleUndo,
   onReopen,
 }: any) {
+  // Show newest tasks at the top
+  const orderedTasks = [...tasks].reverse();
   return (
     <Card className="bg-card border-border shadow-sm">
       <CardHeader>
@@ -474,10 +476,10 @@ function TaskSection({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        {tasks.length === 0 ? (
+        {orderedTasks.length === 0 ? (
           <div className="text-muted-foreground">No {title.toLowerCase()} tasks</div>
         ) : (
-          tasks.map((task: Task) => (
+          orderedTasks.map((task: Task) => (
             <div
               key={task._id}
               className={`flex items-center space-x-3 p-3 rounded-xl border relative z-10 ${title === "Completed" ? "bg-muted/40 border-muted text-muted-foreground opacity-70" : "bg-accent/30 border-accent"}`}

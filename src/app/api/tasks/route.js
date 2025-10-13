@@ -10,6 +10,8 @@ export async function GET(req) {
 export async function POST(req) {
   await connect();
   const body = await req.json();
+  // Remove _id if present
+  if (body._id) delete body._id;
   const newTask = await Task.create(body);
   return Response.json(newTask);
 }
