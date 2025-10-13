@@ -389,7 +389,7 @@ export function TodayDashboard() {
             className="text-base bg-background border-border focus:border-primary transition-colors"
             onKeyDown={(e) => e.key === "Enter" && handleQuickAdd()}
           />
-          <Button onClick={handleQuickAdd} disabled={loading}>
+          <Button onClick={handleQuickAdd} disabled={loading} className="cursor-pointer">
             Add
           </Button>
         </CardContent>
@@ -475,7 +475,7 @@ export function TodayDashboard() {
                 onChange={(e) => setNote(e.target.value)}
                 disabled={noteLoading}
               />
-              <div className="flex items-center gap-2 mt-2">
+              <div className="flex items-center gap-2 mt-2 cursor-pointer">
                 <Button onClick={handleSaveNote} disabled={noteLoading}>
                   {noteLoading ? "Saving..." : "Save"}
                 </Button>
@@ -603,6 +603,7 @@ function PomodoroTimer({
         </div>
         <div className="flex justify-center space-x-2">
           <Button
+            className="cursor-pointer"
             variant={pomodoroActive ? "secondary" : "default"}
             size="sm"
             onClick={() => {
@@ -620,15 +621,15 @@ function PomodoroTimer({
           >
             {pomodoroActive ? (
               <>
-                <Pause className="w-4 h-4 mr-2" /> Pause
+                <Pause className="w-4 h-4 mr-2 cursor-pointer" /> Pause
               </>
             ) : (
               <>
-                <Play className="w-4 h-4 mr-2" /> Start
+                <Play className="w-4 h-4 mr-2 cursor-pointer" /> Start
               </>
             )}
           </Button>
-          <Button variant="outline" size="sm" onClick={reset}>
+          <Button className="cursor-pointer" variant="outline" size="sm" onClick={reset}>
             <RotateCcw className="w-4 h-4 mr-2" />
             Reset
           </Button>
@@ -699,7 +700,7 @@ function TaskSection({
                 <button
                   type="button"
                   onClick={() => completeTask(task._id ?? "")}
-                  className="focus:outline-none"
+                  className="focus:outline-none cursor-pointer"
                   title="Complete task"
                 >
                   <Circle className="w-5 h-5 text-primary" />
@@ -708,7 +709,7 @@ function TaskSection({
               {onReopen && title === "Completed" && (
                 <button
                   type="button"
-                  className="focus:outline-none"
+                  className="focus:outline-none cursor-pointer"
                   onClick={() => onReopen(task._id ?? "")}
                   title="Reopen task"
                 >
@@ -766,7 +767,7 @@ function TaskSection({
                   <DropdownMenuTrigger asChild>
                     <button
                       type="button"
-                      className="focus:outline-none bg-transparent p-1 rounded hover:bg-muted"
+                      className="focus:outline-none bg-transparent p-1 rounded hover:bg-muted cursor-pointer"
                       title="More options"
                     >
                       <MoreHorizontal className="w-4 h-4" />
@@ -775,6 +776,7 @@ function TaskSection({
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem
                       onClick={() => deleteTask(task._id ?? "")}
+                      className="cursor-pointer"
                     >
                       Delete
                     </DropdownMenuItem>
@@ -786,18 +788,19 @@ function TaskSection({
                   <DropdownMenuTrigger asChild>
                     <button
                       type="button"
-                      className="focus:outline-none bg-transparent p-1 rounded hover:bg-muted"
+                      className="focus:outline-none bg-transparent p-1 rounded hover:bg-muted cursor-pointer"
                       title="More options"
                     >
                       <MoreHorizontal className="w-4 h-4" />
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => startEditTask(task)}>
+                    <DropdownMenuItem onClick={() => startEditTask(task)} className="cursor-pointer">
                       Edit
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={() => deleteTask(task._id ?? "")}
+                      className="cursor-pointer"
                     >
                       Delete
                     </DropdownMenuItem>

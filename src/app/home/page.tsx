@@ -48,7 +48,20 @@ export default function HomePage() {
     }
   }, [router]);
 
-  if (loading) return null;
+
+  if (loading) {
+    return (
+      <div className="flex h-screen bg-background animate-pulse">
+        <div className="w-64 bg-muted/30 border-r border-border" />
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <div className="h-16 bg-muted/30 border-b border-border" />
+          <main className="flex-1 overflow-auto p-6">
+            <div className="h-96 bg-muted/20 rounded-xl" />
+          </main>
+        </div>
+      </div>
+    );
+  }
   if (!user) return null;
 
   return (
