@@ -35,7 +35,7 @@ type Task = {
 
 export function TodayDashboard() {
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [quickAddValue, setQuickAddValue] = useState("");
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
