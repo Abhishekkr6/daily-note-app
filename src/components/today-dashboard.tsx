@@ -414,6 +414,7 @@ export function TodayDashboard() {
             color="text-muted-foreground"
             icon={<CheckCircle2 className="w-5 h-5" />}
             tasks={completedTasks}
+            deleteTask={deleteTask}
             onReopen={async (id: string) => {
               const task = tasks.find((t) => t._id === id);
               if (!task) return;
@@ -740,6 +741,26 @@ function TaskSection({
                   {task.priority}
                 </Badge>
               )}
+              {deleteTask && title === "Completed" && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      type="button"
+                      className="focus:outline-none bg-transparent p-1 rounded hover:bg-muted"
+                      title="More options"
+                    >
+                      <MoreHorizontal className="w-4 h-4" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem
+                      onClick={() => deleteTask(task._id ?? "")}
+                    >
+                      Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
               {startEditTask && deleteTask && title !== "Completed" && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -766,7 +787,7 @@ function TaskSection({
             </div>
           ))
         )}
-        {showUndo && deletedTask && (
+        {showUndo && deletedTask && ((title === "Completed" && deletedTask.status === "completed") || (title === "Today" && deletedTask.status === "today")) && (
           <div className="mt-2 flex items-center gap-2">
             <span className="text-sm text-destructive">Task deleted</span>
             <Button size="sm" variant="outline" onClick={handleUndo}>
