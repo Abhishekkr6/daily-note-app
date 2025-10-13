@@ -2,6 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 
+type MoodEntry = {
+  date: string;
+  mood: number;
+  note?: string;
+};
+
 // Fetch all tasks on mount (move inside TodayDashboard)
 import {
   DropdownMenu,
@@ -342,6 +348,57 @@ export function TodayDashboard() {
   const moodLabels = ["Very Bad", "Bad", "Neutral", "Good", "Very Good"];
   const [mood, setMood] = useState(0); // -2 to +2, default neutral
   const [moodNote, setMoodNote] = useState("");
+  const [moodLoading, setMoodLoading] = useState(false);
+  const [moodSaved, setMoodSaved] = useState(false);
+  const [moodHistory, setMoodHistory] = useState<MoodEntry[]>([]);
+  // Fetch today's mood on mount
+  useEffect(() => {
+    const fetchMood = async () => {
+      setMoodLoading(true);
+      try {
+        const res = await fetch(`/api/mood?date=${todayDate}`);
+        const data = await res.json();
+        if (data && typeof data.mood === "number") {
+          setMood(data.mood);
+          setMoodNote(data.note || "");
+        }
+      } catch (err) {
+        // ignore
+      }
+      setMoodLoading(false);
+    };
+    fetchMood();
+  }, [todayDate]);
+
+  // Save mood to backend
+  const saveMood = async () => {
+    setMoodLoading(true);
+    setMoodSaved(false);
+    try {
+      await fetch("/api/mood", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ date: todayDate, mood, note: moodNote }),
+      });
+      setMoodSaved(true);
+      setTimeout(() => setMoodSaved(false), 2000);
+    } catch (err) {
+      // Optionally show error
+    }
+    setMoodLoading(false);
+  };
+
+  // Fetch mood history (last 30 days)
+  useEffect(() => {
+    const fetchHistory = async () => {
+      try {
+        const res = await fetch("/api/mood");
+        const data = await res.json();
+        setMoodHistory(Array.isArray(data) ? data : []);
+      } catch (err) {}
+    };
+    fetchHistory();
+  }, []);
 
   // Whenever todayTasks change, reset Pomodoro if current working task is completed or no tasks remain
   useEffect(() => {
@@ -521,6 +578,7 @@ export function TodayDashboard() {
                         : "hover:bg-muted/50 hover:scale-105"
                     }`}
                     title={moodLabels[index]}
+                    disabled={moodLoading}
                   >
                     {emoji}
                   </button>
@@ -534,7 +592,29 @@ export function TodayDashboard() {
                 className="text-sm bg-background border-border"
                 value={moodNote}
                 onChange={(e) => setMoodNote(e.target.value)}
+                disabled={moodLoading}
               />
+              <Button
+                onClick={saveMood}
+                disabled={moodLoading}
+                className="cursor-pointer"
+                variant="outline"
+                size="sm"
+              >
+                {moodLoading ? "Saving..." : moodSaved ? "Saved!" : "Save Mood"}
+              </Button>
+              {moodHistory.length > 0 && (
+                <div className="mt-4">
+                  <div className="text-xs text-muted-foreground mb-2">Last 7 days:</div>
+                  <div className="flex gap-2 justify-center">
+                    {moodHistory.slice(0, 7).map((m, idx) => (
+                      <span key={idx} title={m.date} className="text-xl">
+                        {moodEmojis[m.mood + 2]}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
