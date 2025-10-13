@@ -1,44 +1,67 @@
 "use client"
 
-import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { ChevronLeft, ChevronRight, TrendingUp } from "lucide-react"
-import { format, subDays, eachDayOfInterval, startOfWeek, endOfWeek, isToday } from "date-fns"
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { ChevronLeft, ChevronRight, TrendingUp } from "lucide-react";
+import { format, subDays, eachDayOfInterval, startOfWeek, endOfWeek, isToday } from "date-fns";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 
 interface HeatmapProps {
-  className?: string
+  className?: string;
 }
 
 export function CalendarHeatmap({ className }: HeatmapProps) {
-  const [currentWeekStart, setCurrentWeekStart] = useState(startOfWeek(new Date()))
+  const [selectedDay, setSelectedDay] = useState<{ date: string; completed: number; mood: number | null } | null>(null);
+  const [popoverOpen, setPopoverOpen] = useState(false);
+  const [currentWeekStart, setCurrentWeekStart] = useState(startOfWeek(new Date()));
+  const [activityData, setActivityData] = useState<Array<{ date: string; completed: number; mood: number | null }>>([]);
+  const moodColors = ["bg-[#e57373]", "bg-[#ffb74d]", "bg-[#e0e0e0]", "bg-[#81c784]", "bg-[#64b5f6]"]; // creative color for mood
+
+  useEffect(() => {
+    const fetchActivity = async () => {
+      try {
+        const res = await fetch("/api/activity");
+        const data = await res.json();
+        setActivityData(Array.isArray(data) ? data : []);
+      } catch (err) {}
+    };
+    fetchActivity();
+  }, []);
 
   // Generate 7 weeks of data for heatmap view
   const weeks = Array.from({ length: 7 }, (_, weekIndex) => {
-    const weekStart = subDays(currentWeekStart, weekIndex * 7)
-    const weekEnd = endOfWeek(weekStart)
-    return eachDayOfInterval({ start: weekStart, end: weekEnd })
-  }).reverse()
+    const weekStart = subDays(currentWeekStart, weekIndex * 7);
+    const weekEnd = endOfWeek(weekStart);
+    return eachDayOfInterval({ start: weekStart, end: weekEnd });
+  }).reverse();
 
-  // Mock completion data
-  const getCompletionRate = (date: Date) => {
-    const dayOfYear = Math.floor((date.getTime() - new Date(date.getFullYear(), 0, 0).getTime()) / 86400000)
-    return Math.floor(Math.random() * 100)
-  }
+  // Get activity for a date
+  const getActivity = (date: Date) => {
+    const d = date.toISOString().slice(0, 10);
+    return activityData.find((a) => a.date === d);
+  };
 
-  const getIntensityClass = (rate: number) => {
-    if (rate === 0) return "bg-muted/30"
-    if (rate < 25) return "bg-primary/20"
-    if (rate < 50) return "bg-primary/40"
-    if (rate < 75) return "bg-primary/60"
-    return "bg-primary/80"
-  }
+  // Creative color logic: if completed > 0, use intensity; else use mood color if mood exists
+  const getCellClass = (activity?: { completed: number; mood: number | null }) => {
+    if (!activity) return "bg-muted/30";
+    if (activity.completed > 0) {
+      if (activity.completed < 2) return "bg-primary/20";
+      if (activity.completed < 4) return "bg-primary/40";
+      if (activity.completed < 7) return "bg-primary/60";
+      return "bg-primary/80";
+    }
+    if (activity.mood !== null && activity.mood >= -2 && activity.mood <= 2) {
+      return moodColors[activity.mood + 2];
+    }
+    return "bg-muted/30";
+  };
 
   const navigateWeek = (direction: "prev" | "next") => {
-    const newDate = new Date(currentWeekStart)
-    newDate.setDate(newDate.getDate() + (direction === "next" ? 7 : -7))
-    setCurrentWeekStart(newDate)
-  }
+    const newDate = new Date(currentWeekStart);
+    newDate.setDate(newDate.getDate() + (direction === "next" ? 7 : -7));
+    setCurrentWeekStart(newDate);
+  };
 
   return (
     <Card className={className}>
@@ -77,36 +100,63 @@ export function CalendarHeatmap({ className }: HeatmapProps) {
                 {format(week[0], "MMM d")}
               </div>
               {week.map((day, dayIndex) => {
-                const completionRate = getCompletionRate(day)
-                const isCurrentDay = isToday(day)
-
+                const activity = getActivity(day);
+                const isCurrentDay = isToday(day);
                 return (
-                  <div
-                    key={dayIndex}
-                    className={`
-                      w-6 h-6 rounded-sm transition-all hover:scale-110 cursor-pointer
-                      ${getIntensityClass(completionRate)}
-                      ${isCurrentDay ? "ring-2 ring-primary ring-offset-1" : ""}
-                    `}
-                    title={`${format(day, "MMM d, yyyy")}: ${completionRate}% completion`}
-                  />
-                )
+                  <Popover key={dayIndex}>
+                    <PopoverTrigger asChild>
+                      <div
+                        className={`w-6 h-6 rounded-sm transition-all hover:scale-110 cursor-pointer ${getCellClass(activity)} ${isCurrentDay ? "ring-2 ring-primary ring-offset-1" : ""}`}
+                        title={
+                          activity
+                            ? `${format(day, "MMM d, yyyy")}: ${activity.completed} tasks, Mood: ${
+                                activity.mood !== null
+                                  ? ["😢", "😞", "😐", "😊", "😄"][activity.mood + 2]
+                                  : "-"
+                              }`
+                            : `${format(day, "MMM d, yyyy")}: No data`
+                        }
+                        onClick={() => activity && setSelectedDay(activity)}
+                      ></div>
+                    </PopoverTrigger>
+                    <PopoverContent side="top" align="center">
+                      {activity && selectedDay?.date === activity.date && (
+                        <div className="p-4 min-w-[180px]">
+                          <div className="font-semibold mb-2">{format(new Date(activity.date), "MMM d, yyyy")}</div>
+                          <div className="mb-1">Completed Tasks: <span className="font-bold text-primary">{activity.completed}</span></div>
+                          <div>Mood: <span className="text-2xl">{activity.mood !== null ? ["😢", "😞", "😐", "😊", "😄"][activity.mood + 2] : "-"}</span></div>
+                        </div>
+                      )}
+                    </PopoverContent>
+                  </Popover>
+                );
               })}
             </div>
           ))}
         </div>
 
         {/* Legend */}
-        <div className="flex items-center justify-between mt-4 text-xs text-muted-foreground">
-          <span>Less</span>
-          <div className="flex space-x-1">
-            <div className="w-3 h-3 rounded-sm bg-muted/30"></div>
-            <div className="w-3 h-3 rounded-sm bg-primary/20"></div>
-            <div className="w-3 h-3 rounded-sm bg-primary/40"></div>
-            <div className="w-3 h-3 rounded-sm bg-primary/60"></div>
-            <div className="w-3 h-3 rounded-sm bg-primary/80"></div>
+        <div className="flex flex-col gap-2 mt-4 text-xs text-muted-foreground">
+          <div className="flex items-center justify-between">
+            <span>Less</span>
+            <div className="flex space-x-1">
+              <div className="w-3 h-3 rounded-sm bg-muted/30"></div>
+              <div className="w-3 h-3 rounded-sm bg-primary/20"></div>
+              <div className="w-3 h-3 rounded-sm bg-primary/40"></div>
+              <div className="w-3 h-3 rounded-sm bg-primary/60"></div>
+              <div className="w-3 h-3 rounded-sm bg-primary/80"></div>
+            </div>
+            <span>More</span>
           </div>
-          <span>More</span>
+          <div className="flex items-center gap-2 mt-1">
+            <span className="mr-2">Mood Colors:</span>
+            <span className="w-3 h-3 rounded-sm bg-[#e57373] inline-block" title="Very Bad"></span>
+            <span className="w-3 h-3 rounded-sm bg-[#ffb74d] inline-block" title="Bad"></span>
+            <span className="w-3 h-3 rounded-sm bg-[#e0e0e0] inline-block" title="Neutral"></span>
+            <span className="w-3 h-3 rounded-sm bg-[#81c784] inline-block" title="Good"></span>
+            <span className="w-3 h-3 rounded-sm bg-[#64b5f6] inline-block" title="Very Good"></span>
+          </div>
+          <div className="mt-2 text-muted-foreground">Click any cell to view details</div>
         </div>
       </CardContent>
     </Card>
