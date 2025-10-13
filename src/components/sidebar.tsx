@@ -30,7 +30,7 @@ export function Sidebar({ className }: SidebarProps) {
 
   const handleLogout = async () => {
     try {
-      await axios.get("/api/users/logout");
+      await axios.post("/api/users/logout");
       router.replace("/login");
     } catch (err) {
       // Optionally show error toast
