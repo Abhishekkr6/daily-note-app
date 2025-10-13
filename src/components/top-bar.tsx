@@ -274,13 +274,13 @@ export function TopBar() {
         </Button>
 
         {/* Profile Avatar */}
-        <Avatar className="w-8 h-8">
+        <Avatar className="w-8 h-8 border-2 border-border shadow-sm bg-background">
           {avatarLoading ? (
             <div className="animate-pulse w-full h-full bg-muted rounded-full" />
           ) : profile.avatarUrl ? (
-            <AvatarImage src={profile.avatarUrl} alt="Profile" />
+            <AvatarImage src={profile.avatarUrl} alt="Profile" className="object-cover w-full h-full rounded-full" />
           ) : (
-            <AvatarFallback className="bg-primary text-primary-foreground text-xl">
+            <AvatarFallback className="bg-primary text-primary-foreground text-xl flex items-center justify-center w-full h-full rounded-full">
               {profile.name
                 ? profile.name[0].toUpperCase()
                 : profile.email

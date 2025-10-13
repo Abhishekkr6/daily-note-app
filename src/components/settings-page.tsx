@@ -172,16 +172,15 @@ export function SettingsPage() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="flex items-center space-x-4">
-                <Avatar className="w-20 h-20">
-                <Avatar className={`w-20 h-20 ${animating ? "animate-spin-slow" : ""}`}>
+                <Avatar className={`w-20 h-20 border-2 border-border shadow-md bg-background ${animating ? "animate-spin-slow" : ""}`}>
                   {avatarLoading ? (
                     <div className="animate-pulse w-full h-full bg-muted rounded-full" />
                   ) : selectedFile ? (
-                    <AvatarImage src={avatarUrl || ""} alt="Profile" />
+                    <AvatarImage src={avatarUrl || ""} alt="Profile" className="object-cover w-full h-full rounded-full" />
                   ) : avatarUrl ? (
-                    <AvatarImage src={avatarUrl} alt="Profile" />
+                    <AvatarImage src={avatarUrl} alt="Profile" className="object-cover w-full h-full rounded-full" />
                   ) : (
-                    <AvatarFallback className="bg-primary text-primary-foreground text-2xl">
+                    <AvatarFallback className="bg-primary text-primary-foreground text-2xl flex items-center justify-center w-full h-full rounded-full">
                       {profile.name
                         ? profile.name[0].toUpperCase()
                         : profile.email
@@ -189,7 +188,6 @@ export function SettingsPage() {
                         : "?"}
                     </AvatarFallback>
                   )}
-                </Avatar>
                 </Avatar>
                 <div className="space-y-2">
                   <Button variant="outline" size="sm" onClick={handleChangePhoto} className="cursor-pointer">
