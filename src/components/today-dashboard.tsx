@@ -44,35 +44,83 @@ export function TodayDashboard() {
   const undoTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const [note, setNote] = useState("");
+  const [noteLoading, setNoteLoading] = useState(false);
+  const [noteSaved, setNoteSaved] = useState(false);
+  const todayDate = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+
   const [pomodoroActive, setPomodoroActive] = useState(false);
   const [pomodoroTime, setPomodoroTime] = useState(25 * 60);
-  const [mood, setMood] = useState(0);
-  const [moodNote, setMoodNote] = useState("");
+  const [pomodoroCycles, setPomodoroCycles] = useState(0);
+  const [pomodoroDuration, setPomodoroDuration] = useState(25); // minutes
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Fetch tasks on mount
+  // Track the current working task id for Pomodoro reset
+  const workingTaskIdRef = useRef<string | undefined>(undefined);
+
+  // Fetch Pomodoro data on mount
   useEffect(() => {
-    const fetchTasks = async () => {
-      setLoading(true);
+    const fetchPomodoro = async () => {
       try {
-        const res = await fetch("/api/tasks");
+        const res = await fetch(`/api/pomodoro?date=${todayDate}`);
         const data = await res.json();
-        setTasks(data);
+        if (data && typeof data.cycles === "number")
+          setPomodoroCycles(data.cycles);
+        if (data && typeof data.duration === "number") {
+          setPomodoroDuration(data.duration);
+          setPomodoroTime(data.duration * 60);
+        }
       } catch (err) {
-        console.error(err);
+        console.error("Failed to fetch pomodoro", err);
       }
-      setLoading(false);
     };
-    fetchTasks();
-  }, []);
+    fetchPomodoro();
+  }, [todayDate]);
 
-  // Pomodoro timer
+  // Save Pomodoro cycles/duration to backend
+  const savePomodoro = async (cycles: number, duration: number) => {
+    try {
+      await fetch("/api/pomodoro", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cycles, duration, date: todayDate }),
+      });
+    } catch (err) {
+      console.error("Failed to save pomodoro", err);
+    }
+  };
+
+  // Pomodoro timer with notification and sound
   useEffect(() => {
     if (!pomodoroActive) return;
+    if (pomodoroTime === 0) {
+      setPomodoroActive(false);
+      setPomodoroCycles((prev) => {
+        const next = prev + 1;
+        savePomodoro(next, pomodoroDuration);
+        return next;
+      });
+      // Show browser notification
+      if (window.Notification && Notification.permission === "granted") {
+        new Notification("Pomodoro Complete!", { body: "Time for a break!" });
+      }
+      // Play sound
+      if (audioRef.current) {
+        audioRef.current.play();
+      }
+      return;
+    }
     const interval = setInterval(() => {
       setPomodoroTime((prev) => (prev > 0 ? prev - 1 : 0));
     }, 1000);
     return () => clearInterval(interval);
-  }, [pomodoroActive]);
+  }, [pomodoroActive, pomodoroTime]);
+
+  // Request notification permission on mount
+  useEffect(() => {
+    if (window.Notification && Notification.permission !== "granted") {
+      Notification.requestPermission();
+    }
+  }, []);
 
   // Format time utility
   const formatTime = (seconds: number) => {
@@ -169,12 +217,12 @@ export function TodayDashboard() {
 
   // Edit task
   const startEditTask = (task: Task) => {
-  setEditingTaskId(task._id ?? "");
-  setEditValue(task.title);
+    setEditingTaskId(task._id ?? "");
+    setEditValue(task.title);
   };
 
   const saveEditTask = async (id: string) => {
-  const task = tasks.find((t) => t._id === id);
+    const task = tasks.find((t) => t._id === id);
     if (!task) return;
 
     const updated = { ...task, title: editValue };
@@ -223,12 +271,85 @@ export function TodayDashboard() {
     setLoading(false);
   };
 
-  const overdueTasks = tasks.filter((t) => t.status === "overdue");
+  // Fetch today's note on mount
+  useEffect(() => {
+    const fetchNote = async () => {
+      setNoteLoading(true);
+      try {
+        const res = await fetch(`/api/note?date=${todayDate}`);
+        const data = await res.json();
+        setNote(data?.content || "");
+      } catch (err) {
+        console.error(err);
+      }
+      setNoteLoading(false);
+    };
+    fetchNote();
+  }, [todayDate]);
+
+  // Save note handler
+  const handleSaveNote = async () => {
+    setNoteLoading(true);
+    setNoteSaved(false);
+    try {
+      await fetch("/api/note", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: note, date: todayDate }),
+      });
+      setNoteSaved(true);
+    } catch (err) {
+      console.error("Failed to save note", err);
+    }
+    setNoteLoading(false);
+    setTimeout(() => setNoteSaved(false), 2000);
+  };
+
+  // Save duration change to backend
+  const handleDurationChange = (val: number) => {
+    setPomodoroDuration(val);
+    if (!pomodoroActive) setPomodoroTime(val * 60);
+    savePomodoro(pomodoroCycles, val);
+  };
+
+  // Filter tasks by status
   const todayTasks = tasks.filter((t) => t.status === "today");
+  const overdueTasks = tasks.filter((t) => t.status === "overdue");
   const completedTasks = tasks.filter((t) => t.status === "completed");
 
-  const moodEmojis = ["😢", "😕", "😐", "🙂", "😊"];
-  const moodLabels = ["Very Bad", "Bad", "Neutral", "Good", "Great"];
+  // Mood tracker state and data
+  const moodEmojis = ["😢", "😞", "😐", "😊", "😄"];
+  const moodLabels = ["Very Bad", "Bad", "Neutral", "Good", "Very Good"];
+  const [mood, setMood] = useState(0); // -2 to +2, default neutral
+  const [moodNote, setMoodNote] = useState("");
+
+  // Whenever todayTasks change, reset Pomodoro if current working task is completed or no tasks remain
+  useEffect(() => {
+    // If no today tasks, reset Pomodoro
+    if (todayTasks.length === 0) {
+      setPomodoroActive(false);
+      setPomodoroTime(pomodoroDuration * 60);
+      workingTaskIdRef.current = undefined;
+      return;
+    }
+    // Get the current working task id (first today task)
+    const currentWorkingTaskId = todayTasks[0]?._id;
+    // If timer is active and the previous working task is not in todayTasks, reset
+    if (
+      pomodoroActive &&
+      workingTaskIdRef.current &&
+      !todayTasks.some((t) => t._id === workingTaskIdRef.current)
+    ) {
+      setPomodoroActive(false);
+      setPomodoroTime(pomodoroDuration * 60);
+    }
+    // Update the ref to the current working task
+    workingTaskIdRef.current = currentWorkingTaskId;
+  }, [todayTasks, pomodoroActive, pomodoroDuration]);
+  // Add this above the effect:
+  // const workingTaskIdRef = useRef<string | undefined>(undefined);
+  // In the effect, update workingTaskIdRef.current = todayTasks[0]?._id;
+  // If pomodoroActive and workingTaskIdRef.current is set and not found in todayTasks, reset
 
   return (
     <div className="p-6 space-y-6">
@@ -331,7 +452,16 @@ export function TodayDashboard() {
                 className="min-h-32 bg-background border-border resize-none"
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
+                disabled={noteLoading}
               />
+              <div className="flex items-center gap-2 mt-2">
+                <Button onClick={handleSaveNote} disabled={noteLoading}>
+                  {noteLoading ? "Saving..." : "Save"}
+                </Button>
+                {noteSaved && (
+                  <span className="text-green-600 text-sm">Saved!</span>
+                )}
+              </div>
             </CardContent>
           </Card>
 
@@ -340,12 +470,17 @@ export function TodayDashboard() {
             pomodoroActive={pomodoroActive}
             setPomodoroActive={setPomodoroActive}
             pomodoroTime={pomodoroTime}
+            setPomodoroTime={setPomodoroTime}
             formatTime={formatTime}
             reset={() => {
               setPomodoroActive(false);
-              setPomodoroTime(25 * 60);
+              setPomodoroTime(pomodoroDuration * 60);
             }}
             currentTask={todayTasks[0]?.title}
+            pomodoroCycles={pomodoroCycles}
+            audioRef={audioRef}
+            pomodoroDuration={pomodoroDuration}
+            setPomodoroDuration={handleDurationChange}
           />
 
           {/* Mood Tracker */}
@@ -387,21 +522,30 @@ export function TodayDashboard() {
   );
 }
 
-// Reusable Pomodoro component
 function PomodoroTimer({
   pomodoroActive,
   setPomodoroActive,
   pomodoroTime,
+  setPomodoroTime,
   formatTime,
   reset,
   currentTask,
+  pomodoroCycles,
+  audioRef,
+  pomodoroDuration,
+  setPomodoroDuration,
 }: {
   pomodoroActive: boolean;
   setPomodoroActive: (val: boolean) => void;
   pomodoroTime: number;
+  setPomodoroTime: (val: number) => void;
   formatTime: (s: number) => string;
   reset: () => void;
   currentTask?: string;
+  pomodoroCycles: number;
+  audioRef: React.RefObject<HTMLAudioElement>;
+  pomodoroDuration: number;
+  setPomodoroDuration: (val: number) => void;
 }) {
   return (
     <Card className="bg-card border-border shadow-sm">
@@ -412,6 +556,27 @@ function PomodoroTimer({
         </CardTitle>
       </CardHeader>
       <CardContent className="text-center space-y-4">
+        <div className="flex justify-center items-center gap-2 mb-2">
+          <label
+            htmlFor="pomodoro-duration"
+            className="text-sm text-muted-foreground"
+          >
+            Set timer:
+          </label>
+          <select
+            id="pomodoro-duration"
+            value={pomodoroDuration}
+            onChange={(e) => setPomodoroDuration(Number(e.target.value))}
+            className="border rounded px-2 py-1 text-sm"
+            disabled={pomodoroActive}
+          >
+            {[15, 20, 25, 30, 45, 50, 60].map((min) => (
+              <option key={min} value={min}>
+                {min} min
+              </option>
+            ))}
+          </select>
+        </div>
         <div className="text-4xl font-mono font-bold text-primary">
           {formatTime(pomodoroTime)}
         </div>
@@ -419,7 +584,18 @@ function PomodoroTimer({
           <Button
             variant={pomodoroActive ? "secondary" : "default"}
             size="sm"
-            onClick={() => setPomodoroActive(!pomodoroActive)}
+            onClick={() => {
+              if (pomodoroActive) {
+                // Pause only
+                setPomodoroActive(false);
+              } else {
+                // Start: only reset if timer is at zero
+                if (pomodoroTime === 0) {
+                  setPomodoroTime(pomodoroDuration * 60);
+                }
+                setPomodoroActive(true);
+              }
+            }}
           >
             {pomodoroActive ? (
               <>
@@ -439,6 +615,14 @@ function PomodoroTimer({
         <p className="text-sm text-muted-foreground">
           {currentTask ? `Working on: ${currentTask}` : "No active task"}
         </p>
+        <p className="text-xs text-muted-foreground">
+          Pomodoro cycles: {pomodoroCycles}
+        </p>
+        <audio
+          ref={audioRef}
+          src="https://cdn.pixabay.com/audio/2022/10/16/audio_12b6b1b2b2.mp3"
+          preload="auto"
+        />
       </CardContent>
     </Card>
   );
@@ -477,12 +661,18 @@ function TaskSection({
       </CardHeader>
       <CardContent className="space-y-3">
         {orderedTasks.length === 0 ? (
-          <div className="text-muted-foreground">No {title.toLowerCase()} tasks</div>
+          <div className="text-muted-foreground">
+            No {title.toLowerCase()} tasks
+          </div>
         ) : (
           orderedTasks.map((task: Task) => (
             <div
               key={task._id}
-              className={`flex items-center space-x-3 p-3 rounded-xl border relative z-10 ${title === "Completed" ? "bg-muted/40 border-muted text-muted-foreground opacity-70" : "bg-accent/30 border-accent"}`}
+              className={`flex items-center space-x-3 p-3 rounded-xl border relative z-10 ${
+                title === "Completed"
+                  ? "bg-muted/40 border-muted text-muted-foreground opacity-70"
+                  : "bg-accent/30 border-accent"
+              }`}
             >
               {completeTask && title !== "Completed" && (
                 <button
@@ -518,15 +708,29 @@ function TaskSection({
                     >
                       Save
                     </Button>
-                    <Button size="sm" variant="outline" onClick={cancelEditTask}>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={cancelEditTask}
+                    >
                       Cancel
                     </Button>
                   </div>
                 ) : (
                   <>
-                    <p className={`font-medium ${title === "Completed" ? "line-through" : "text-foreground"}`}>{task.title}</p>
+                    <p
+                      className={`font-medium ${
+                        title === "Completed"
+                          ? "line-through"
+                          : "text-foreground"
+                      }`}
+                    >
+                      {task.title}
+                    </p>
                     {task.tag && (
-                      <p className="text-sm text-muted-foreground">#{task.tag}</p>
+                      <p className="text-sm text-muted-foreground">
+                        #{task.tag}
+                      </p>
                     )}
                   </>
                 )}
@@ -551,7 +755,11 @@ function TaskSection({
                     <DropdownMenuItem onClick={() => startEditTask(task)}>
                       Edit
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => deleteTask(task._id ?? "")}>Delete</DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => deleteTask(task._id ?? "")}
+                    >
+                      Delete
+                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               )}
