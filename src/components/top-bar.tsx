@@ -11,8 +11,10 @@ import React, { useState, useRef, useEffect } from "react";
 export function TopBar() {
   // User profile fetch logic
   const [profile, setProfile] = useState<{ name: string; email: string; avatarUrl: string | null }>({ name: "", email: "", avatarUrl: null });
+  const [avatarLoading, setAvatarLoading] = useState(true);
   useEffect(() => {
     async function fetchProfile() {
+      setAvatarLoading(true);
       try {
         const res = await fetch("/api/users/profile", { credentials: "include" });
         if (res.ok) {
@@ -24,6 +26,7 @@ export function TopBar() {
           });
         }
       } catch {}
+      setAvatarLoading(false);
     }
     fetchProfile();
     // Listen for avatarUrl changes from settings page
@@ -272,7 +275,9 @@ export function TopBar() {
 
         {/* Profile Avatar */}
         <Avatar className="w-8 h-8">
-          {profile.avatarUrl ? (
+          {avatarLoading ? (
+            <div className="animate-pulse w-full h-full bg-muted rounded-full" />
+          ) : profile.avatarUrl ? (
             <AvatarImage src={profile.avatarUrl} alt="Profile" />
           ) : (
             <AvatarFallback className="bg-primary text-primary-foreground text-xl">

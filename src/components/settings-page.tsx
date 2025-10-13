@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -17,6 +17,8 @@ export function SettingsPage() {
   const [saveStatus, setSaveStatus] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [avatarLoading, setAvatarLoading] = useState(true);
+  const [animating, setAnimating] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   // Remove Photo feature and state fully removed
@@ -85,9 +87,19 @@ export function SettingsPage() {
       } catch (err) {
         // handle error (optional)
       }
+      setAvatarLoading(false);
     }
     fetchProfile();
   }, []);
+
+  // Animate avatar on change
+  useEffect(() => {
+    if (selectedFile || avatarUrl) {
+      setAnimating(true);
+      const timeout = setTimeout(() => setAnimating(false), 700);
+      return () => clearTimeout(timeout);
+    }
+  }, [selectedFile, avatarUrl]);
 
   const handleNotificationChange = (key: string, value: boolean) => {
     setNotifications((prev) => ({ ...prev, [key]: value }))
@@ -161,7 +173,10 @@ export function SettingsPage() {
             <CardContent className="space-y-6">
               <div className="flex items-center space-x-4">
                 <Avatar className="w-20 h-20">
-                  {selectedFile ? (
+                <Avatar className={`w-20 h-20 ${animating ? "animate-spin-slow" : ""}`}>
+                  {avatarLoading ? (
+                    <div className="animate-pulse w-full h-full bg-muted rounded-full" />
+                  ) : selectedFile ? (
                     <AvatarImage src={avatarUrl || ""} alt="Profile" />
                   ) : avatarUrl ? (
                     <AvatarImage src={avatarUrl} alt="Profile" />
@@ -174,6 +189,7 @@ export function SettingsPage() {
                         : "?"}
                     </AvatarFallback>
                   )}
+                </Avatar>
                 </Avatar>
                 <div className="space-y-2">
                   <Button variant="outline" size="sm" onClick={handleChangePhoto} className="cursor-pointer">
