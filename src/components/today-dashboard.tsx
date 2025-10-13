@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+
+// Fetch all tasks on mount (move inside TodayDashboard)
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -34,6 +36,9 @@ type Task = {
 };
 
 export function TodayDashboard() {
+  // Get today's date in YYYY-MM-DD format
+  const todayDate = new Date().toISOString().slice(0, 10);
+
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [quickAddValue, setQuickAddValue] = useState("");
@@ -43,19 +48,34 @@ export function TodayDashboard() {
   const [showUndo, setShowUndo] = useState(false);
   const undoTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const [note, setNote] = useState("");
-  const [noteLoading, setNoteLoading] = useState(false);
-  const [noteSaved, setNoteSaved] = useState(false);
-  const todayDate = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
-
-  const [pomodoroActive, setPomodoroActive] = useState(false);
-  const [pomodoroTime, setPomodoroTime] = useState(25 * 60);
-  const [pomodoroCycles, setPomodoroCycles] = useState(0);
-  const [pomodoroDuration, setPomodoroDuration] = useState(25); // minutes
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-
   // Track the current working task id for Pomodoro reset
   const workingTaskIdRef = useRef<string | undefined>(undefined);
+
+  const [pomodoroCycles, setPomodoroCycles] = useState(0);
+  const [pomodoroTime, setPomodoroTime] = useState(0); // Add this line
+  const [pomodoroDuration, setPomodoroDuration] = useState(25); // Add this line (default 25 min)
+  const [pomodoroActive, setPomodoroActive] = useState(false); // Add this line
+  const audioRef = useRef<HTMLAudioElement>(null); // Add this line
+
+  const [note, setNote] = useState(""); // Add this line
+  const [noteLoading, setNoteLoading] = useState(false); // Add this line
+  const [noteSaved, setNoteSaved] = useState(false); // Add this line
+
+  // Fetch all tasks on mount
+  useEffect(() => {
+    const fetchTasks = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch("/api/tasks");
+        const data = await res.json();
+        setTasks(data);
+      } catch (error) {
+        console.error("Failed to fetch tasks", error);
+      }
+      setLoading(false);
+    };
+    fetchTasks();
+  }, []);
 
   // Fetch Pomodoro data on mount
   useEffect(() => {
@@ -787,14 +807,17 @@ function TaskSection({
             </div>
           ))
         )}
-        {showUndo && deletedTask && ((title === "Completed" && deletedTask.status === "completed") || (title === "Today" && deletedTask.status === "today")) && (
-          <div className="mt-2 flex items-center gap-2">
-            <span className="text-sm text-destructive">Task deleted</span>
-            <Button size="sm" variant="outline" onClick={handleUndo}>
-              Undo
-            </Button>
-          </div>
-        )}
+        {showUndo &&
+          deletedTask &&
+          ((title === "Completed" && deletedTask.status === "completed") ||
+            (title === "Today" && deletedTask.status === "today")) && (
+            <div className="mt-2 flex items-center gap-2">
+              <span className="text-sm text-destructive">Task deleted</span>
+              <Button size="sm" variant="outline" onClick={handleUndo}>
+                Undo
+              </Button>
+            </div>
+          )}
       </CardContent>
     </Card>
   );
