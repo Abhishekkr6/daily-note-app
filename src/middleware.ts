@@ -23,6 +23,33 @@ function isPublicRoute(path: string) {
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = request.cookies.get("authToken")?.value || request.headers.get("Authorization");
+  // Daily logout logic: if token exists, check its iat (issued at) date
+  if (token) {
+    try {
+      // Decode JWT without verifying signature (for iat)
+      const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+      if (payload.iat) {
+        const issuedDate = new Date(payload.iat * 1000);
+        const now = new Date();
+        // If token was issued on a previous day, force logout
+        if (
+          issuedDate.getUTCFullYear() !== now.getUTCFullYear() ||
+          issuedDate.getUTCMonth() !== now.getUTCMonth() ||
+          issuedDate.getUTCDate() !== now.getUTCDate()
+        ) {
+          const url = request.nextUrl.clone();
+          url.pathname = "/login";
+          // Clear cookies
+          const response = NextResponse.redirect(url);
+          response.cookies.set("authToken", "", { maxAge: 0, path: "/" });
+          response.cookies.set("refreshToken", "", { maxAge: 0, path: "/api/users/refresh-token" });
+          return response;
+        }
+      }
+    } catch (err) {
+      // If token is invalid, ignore and continue
+    }
+  }
 
   // If authenticated, block access to login, signup, landing
   if (token && ["/login", "/signup", "/landing"].some(route => pathname.startsWith(route))) {
