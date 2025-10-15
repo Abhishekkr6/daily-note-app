@@ -371,15 +371,26 @@ export function TodayDashboard() {
   }, [todayDate]);
 
   // Save mood to backend
-  const saveMood = async () => {
+  const saveMood = async (newMood = mood, newNote = moodNote) => {
     setMoodLoading(true);
     setMoodSaved(false);
     try {
       await fetch("/api/mood", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ date: todayDate, mood, note: moodNote }),
+        body: JSON.stringify({ date: todayDate, mood: newMood, note: newNote }),
       });
+      // Refetch mood from backend for real-time update
+      const res = await fetch(`/api/mood?date=${todayDate}`);
+      const data = await res.json();
+      if (data && typeof data.mood === "number") {
+        setMood(data.mood);
+        setMoodNote(data.note || "");
+      }
+      // Refetch mood history for last 7 days
+      const historyRes = await fetch("/api/mood");
+      const historyData = await historyRes.json();
+      setMoodHistory(Array.isArray(historyData) ? historyData : []);
       setMoodSaved(true);
       setTimeout(() => setMoodSaved(false), 2000);
     } catch (err) {
@@ -595,7 +606,7 @@ export function TodayDashboard() {
                 disabled={moodLoading}
               />
               <Button
-                onClick={saveMood}
+                onClick={() => saveMood(mood, moodNote)}
                 disabled={moodLoading}
                 className="cursor-pointer"
                 variant="outline"
