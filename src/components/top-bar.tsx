@@ -285,7 +285,7 @@ export function TopBar() {
                 ? profile.name[0].toUpperCase()
                 : profile.email
                 ? profile.email[0].toUpperCase()
-                : "?"}
+                : ""}
             </AvatarFallback>
           )}
         </Avatar>
