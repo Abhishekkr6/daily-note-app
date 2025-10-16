@@ -20,10 +20,18 @@ export async function GET(req) {
     d.setDate(today.getDate() - i);
     return d.toISOString().slice(0, 10);
   });
-  // Fetch completed tasks per day
+  // Fetch completed tasks per day.
+  // Use updatedAt (task completion/update time) and group by its YYYY-MM-DD string so
+  // tasks without a dueDate are still counted when they are marked completed.
+  const startDate = new Date(today);
+  startDate.setDate(startDate.getDate() - 48); // earliest date to include (inclusive)
+  startDate.setHours(0, 0, 0, 0);
+
   const tasks = await Task.aggregate([
-    { $match: { userId: userId, status: "completed", dueDate: { $in: days } } },
-    { $group: { _id: "$dueDate", count: { $sum: 1 } } }
+    { $match: { userId: userId, status: "completed", updatedAt: { $gte: startDate } } },
+    // Project date string in YYYY-MM-DD format from updatedAt
+    { $project: { dateStr: { $dateToString: { format: "%Y-%m-%d", date: "$updatedAt" } } } },
+    { $group: { _id: "$dateStr", count: { $sum: 1 } } }
   ]);
   // Fetch moods per day
   const moods = await Mood.find({ userId, date: { $in: days } });

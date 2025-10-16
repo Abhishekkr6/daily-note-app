@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, TrendingUp } from "lucide-react";
@@ -13,6 +13,8 @@ interface HeatmapProps {
 
 export function CalendarHeatmap({ className }: HeatmapProps) {
   const [selectedDay, setSelectedDay] = useState<{ date: string; completed: number; mood: number | null } | null>(null);
+  // Keep a ref to the latest selectedDay so event handlers attached once can read up-to-date value
+  const selectedDayRef = useRef<typeof selectedDay>(selectedDay);
   const [currentWeekStart, setCurrentWeekStart] = useState(startOfWeek(new Date()));
   const [activityData, setActivityData] = useState<Array<{ date: string; completed: number; mood: number | null }>>([]);
   const moodColors = ["bg-[#e57373]", "bg-[#ffb74d]", "bg-[#e0e0e0]", "bg-[#81c784]", "bg-[#64b5f6]"]; // creative color for mood
@@ -24,15 +26,16 @@ export function CalendarHeatmap({ className }: HeatmapProps) {
       const data = await res.json();
       const normalized = Array.isArray(data) ? data : [];
       setActivityData(normalized);
-
-      // If a day is selected, keep the selectedDay object in sync with the refreshed activity data
-      if (selectedDay) {
-        const updated = normalized.find((a: any) => a.date === selectedDay.date) || null;
+      // If a day is (currently) selected, keep the selectedDay object in sync with the refreshed activity data
+      // Use ref to avoid stale closures when fetchActivity is called from a global event handler
+      const curSelected = selectedDayRef.current;
+      if (curSelected) {
+        const updated = normalized.find((a: any) => a.date === curSelected.date) || null;
         // Only update when something changed to avoid unnecessary re-renders
         if (!updated) {
           // if activity removed for the selected date, clear selection
           setSelectedDay(null);
-        } else if (JSON.stringify(updated) !== JSON.stringify(selectedDay)) {
+        } else if (JSON.stringify(updated) !== JSON.stringify(curSelected)) {
           setSelectedDay(updated);
         }
       }
@@ -45,6 +48,11 @@ export function CalendarHeatmap({ className }: HeatmapProps) {
     window.addEventListener("activityChanged", handler as EventListener);
     return () => window.removeEventListener("activityChanged", handler as EventListener);
   }, []);
+
+  // Keep the ref in sync with state so handlers/readers can access the latest selectedDay
+  useEffect(() => {
+    selectedDayRef.current = selectedDay;
+  }, [selectedDay]);
 
   // Generate 7 weeks of data for heatmap view
   const weeks = Array.from({ length: 7 }, (_, weekIndex) => {
