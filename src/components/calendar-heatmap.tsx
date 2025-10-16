@@ -13,7 +13,6 @@ interface HeatmapProps {
 
 export function CalendarHeatmap({ className }: HeatmapProps) {
   const [selectedDay, setSelectedDay] = useState<{ date: string; completed: number; mood: number | null } | null>(null);
-  const [popoverOpen, setPopoverOpen] = useState(false);
   const [currentWeekStart, setCurrentWeekStart] = useState(startOfWeek(new Date()));
   const [activityData, setActivityData] = useState<Array<{ date: string; completed: number; mood: number | null }>>([]);
   const moodColors = ["bg-[#e57373]", "bg-[#ffb74d]", "bg-[#e0e0e0]", "bg-[#81c784]", "bg-[#64b5f6]"]; // creative color for mood
@@ -23,7 +22,20 @@ export function CalendarHeatmap({ className }: HeatmapProps) {
     try {
       const res = await fetch("/api/activity");
       const data = await res.json();
-      setActivityData(Array.isArray(data) ? data : []);
+      const normalized = Array.isArray(data) ? data : [];
+      setActivityData(normalized);
+
+      // If a day is selected, keep the selectedDay object in sync with the refreshed activity data
+      if (selectedDay) {
+        const updated = normalized.find((a: any) => a.date === selectedDay.date) || null;
+        // Only update when something changed to avoid unnecessary re-renders
+        if (!updated) {
+          // if activity removed for the selected date, clear selection
+          setSelectedDay(null);
+        } else if (JSON.stringify(updated) !== JSON.stringify(selectedDay)) {
+          setSelectedDay(updated);
+        }
+      }
     } catch (err) {}
   };
 
@@ -47,6 +59,33 @@ export function CalendarHeatmap({ className }: HeatmapProps) {
     const d = format(date, "yyyy-MM-dd");
     return activityData.find((a) => a.date === d);
   };
+
+  // When a day is selected, poll for updates for that specific day to keep popover realtime
+  useEffect(() => {
+    if (!selectedDay) return;
+    let mounted = true;
+    const poll = async () => {
+      try {
+        const res = await fetch("/api/activity");
+        const data = await res.json();
+        if (!mounted) return;
+        const normalized = Array.isArray(data) ? data : [];
+        setActivityData(normalized);
+        const updated = normalized.find((a: any) => a.date === selectedDay.date) || null;
+        if (!updated) {
+          setSelectedDay(null);
+        } else if (JSON.stringify(updated) !== JSON.stringify(selectedDay)) {
+          setSelectedDay(updated);
+        }
+      } catch (err) {}
+    };
+    // Poll every 2 seconds while popover is open
+    const id = setInterval(poll, 2000);
+    return () => {
+      mounted = false;
+      clearInterval(id);
+    };
+  }, [selectedDay]);
 
   // Creative color logic: if completed > 0, use intensity; else use mood color if mood exists
   const getCellClass = (activity?: { completed: number; mood: number | null }) => {
@@ -108,21 +147,38 @@ export function CalendarHeatmap({ className }: HeatmapProps) {
               {week.map((day, dayIndex) => {
                 const activity = getActivity(day);
                 const isCurrentDay = isToday(day);
+                const cellTitle = activity
+                  ? `${format(day, "MMM d, yyyy")}: ${activity.completed} tasks, Mood: ${
+                      activity.mood !== null ? ["😢", "😞", "😐", "😊", "😄"][activity.mood + 2] : "-"
+                    }`
+                  : `${format(day, "MMM d, yyyy")}: No data`;
+
                 return (
-                  <Popover key={dayIndex}>
+                  <Popover
+                    key={dayIndex}
+                    open={!!(selectedDay && activity && selectedDay.date === activity.date)}
+                    onOpenChange={(open) => {
+                      // When popover closes via escape/blur, clear selectedDay
+                      if (!open) setSelectedDay(null);
+                    }}
+                  >
                     <PopoverTrigger asChild>
                       <div
                         className={`w-6 h-6 rounded-sm transition-all hover:scale-110 cursor-pointer ${getCellClass(activity)} ${isCurrentDay ? "ring-2 ring-primary ring-offset-1" : ""}`}
-                        title={
-                          activity
-                            ? `${format(day, "MMM d, yyyy")}: ${activity.completed} tasks, Mood: ${
-                                activity.mood !== null
-                                  ? ["😢", "😞", "😐", "😊", "😄"][activity.mood + 2]
-                                  : "-"
-                              }`
-                            : `${format(day, "MMM d, yyyy")}: No data`
-                        }
+                        title={cellTitle}
                         onClick={() => activity && setSelectedDay(activity)}
+                        onMouseEnter={() => activity && setSelectedDay(activity)}
+                        onMouseLeave={() => {
+                          // Delay clearing slightly to allow interacting with popover
+                          setTimeout(() => {
+                            // Only clear if mouse did not move into popover content
+                            setSelectedDay((prev) => {
+                              if (!prev) return null;
+                              // keep selected if dates still match (popover likely opened)
+                              return prev.date === (activity ? activity.date : prev.date) ? prev : null;
+                            });
+                          }, 100);
+                        }}
                       ></div>
                     </PopoverTrigger>
                     <PopoverContent side="top" align="center">

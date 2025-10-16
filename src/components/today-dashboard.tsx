@@ -399,6 +399,8 @@ export function TodayDashboard() {
       const historyData = await historyRes.json();
       setMoodHistory(Array.isArray(historyData) ? historyData : []);
       setMoodSaved(true);
+  // Notify heatmap/activity listeners to refetch activity (tasks+mood)
+  window.dispatchEvent(new Event("activityChanged"));
       setTimeout(() => setMoodSaved(false), 2000);
     } catch (err) {
       // Optionally show error
