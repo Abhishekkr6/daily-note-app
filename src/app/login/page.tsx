@@ -62,10 +62,11 @@ const LoginPage = () => {
     setInputsDisabled(true);
     try {
       setLoading(true);
-      const response = await axios.post("/api/users/login", {
-        ...user,
-        csrfToken,
-      });
+      const response = await axios.post(
+        "/api/users/login",
+        { ...user, csrfToken },
+        { withCredentials: true }
+      );
       toast.success("Login successful");
       setUser({ email: "", password: "" });
       setEmailTouched(false);
@@ -74,8 +75,12 @@ const LoginPage = () => {
       setPasswordInteracted(false);
       if (typeof window !== "undefined") {
         sessionStorage.setItem("justLoggedIn", "true");
+        // Use full-page navigation so the browser sends the Set-Cookie to the server
+        // and server-rendered /home can access the auth cookie immediately.
+        window.location.href = "/home";
+      } else {
+        router.push("/home");
       }
-      router.push("/home");
     } catch (err) {
       const errorMsg = (err as any).response?.data?.error || "Login failed";
       // Show error for correct field

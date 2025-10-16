@@ -24,7 +24,7 @@ export default function HomePage() {
   useEffect(() => {
     async function fetchUser() {
       try {
-        const res = await fetch("/api/users/aboutme", { method: "POST" });
+        const res = await fetch("/api/users/aboutme", { method: "POST", credentials: "include" });
         const data = await res.json();
         if (data?.data) {
           setUser(data.data);
