@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, TrendingUp } from "lucide-react";
-import { format, subDays, eachDayOfInterval, startOfWeek, endOfWeek, isToday } from "date-fns";
+import { format, subDays, eachDayOfInterval, startOfWeek, endOfWeek, isToday, parseISO } from "date-fns";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 
 interface HeatmapProps {
@@ -18,15 +18,20 @@ export function CalendarHeatmap({ className }: HeatmapProps) {
   const [activityData, setActivityData] = useState<Array<{ date: string; completed: number; mood: number | null }>>([]);
   const moodColors = ["bg-[#e57373]", "bg-[#ffb74d]", "bg-[#e0e0e0]", "bg-[#81c784]", "bg-[#64b5f6]"]; // creative color for mood
 
+  // Fetch activity and expose a refetchable function so we can update in real-time
+  const fetchActivity = async () => {
+    try {
+      const res = await fetch("/api/activity");
+      const data = await res.json();
+      setActivityData(Array.isArray(data) ? data : []);
+    } catch (err) {}
+  };
+
   useEffect(() => {
-    const fetchActivity = async () => {
-      try {
-        const res = await fetch("/api/activity");
-        const data = await res.json();
-        setActivityData(Array.isArray(data) ? data : []);
-      } catch (err) {}
-    };
     fetchActivity();
+    const handler = () => fetchActivity();
+    window.addEventListener("activityChanged", handler as EventListener);
+    return () => window.removeEventListener("activityChanged", handler as EventListener);
   }, []);
 
   // Generate 7 weeks of data for heatmap view
@@ -38,7 +43,8 @@ export function CalendarHeatmap({ className }: HeatmapProps) {
 
   // Get activity for a date
   const getActivity = (date: Date) => {
-    const d = date.toISOString().slice(0, 10);
+    // Use local date string in yyyy-MM-dd to match backend stored dates
+    const d = format(date, "yyyy-MM-dd");
     return activityData.find((a) => a.date === d);
   };
 
@@ -122,7 +128,7 @@ export function CalendarHeatmap({ className }: HeatmapProps) {
                     <PopoverContent side="top" align="center">
                       {activity && selectedDay?.date === activity.date && (
                         <div className="p-4 min-w-[180px]">
-                          <div className="font-semibold mb-2">{format(new Date(activity.date), "MMM d, yyyy")}</div>
+                          <div className="font-semibold mb-2">{format(parseISO(activity.date), "MMM d, yyyy")}</div>
                           <div className="mb-1">Completed Tasks: <span className="font-bold text-primary">{activity.completed}</span></div>
                           <div>Mood: <span className="text-2xl">{activity.mood !== null ? ["😢", "😞", "😐", "😊", "😄"][activity.mood + 2] : "-"}</span></div>
                         </div>

@@ -184,6 +184,8 @@ export function TodayDashboard() {
       const res = await fetch("/api/tasks");
       const data = await res.json();
       setTasks(data);
+      // Notify other components (heatmap) that activity changed
+      window.dispatchEvent(new Event("activityChanged"));
     } catch (error) {
       console.error("Failed to add task", error);
     }
@@ -205,6 +207,7 @@ export function TodayDashboard() {
       const res = await fetch("/api/tasks");
       const data = await res.json();
       setTasks(data);
+      window.dispatchEvent(new Event("activityChanged"));
       setDeletedTask(taskToDelete);
       setShowUndo(true);
       if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
@@ -232,6 +235,8 @@ export function TodayDashboard() {
       const res = await fetch("/api/tasks");
       const data = await res.json();
       setTasks(data);
+      // Notify heatmap/activity listeners
+      window.dispatchEvent(new Event("activityChanged"));
     } catch (error) {
       console.error("Failed to restore task", error);
     } finally {
@@ -263,6 +268,7 @@ export function TodayDashboard() {
       const res = await fetch("/api/tasks");
       const data = await res.json();
       setTasks(data);
+      window.dispatchEvent(new Event("activityChanged"));
     } catch (error) {
       console.error("Failed to edit task", error);
     } finally {
@@ -291,6 +297,7 @@ export function TodayDashboard() {
       const res = await fetch("/api/tasks");
       const data = await res.json();
       setTasks(data);
+      window.dispatchEvent(new Event("activityChanged"));
     } catch (error) {
       console.error("Failed to complete task", error);
     }
@@ -433,11 +440,11 @@ export function TodayDashboard() {
     }
     // Update the ref to the current working task
     workingTaskIdRef.current = currentWorkingTaskId;
+    // In the effect, update workingTaskIdRef.current = todayTasks[0]?._id;
+    // If pomodoroActive and workingTaskIdRef.current is set and not found in todayTasks, reset
+
+    // finish effect
   }, [todayTasks, pomodoroActive, pomodoroDuration]);
-  // Add this above the effect:
-  // const workingTaskIdRef = useRef<string | undefined>(undefined);
-  // In the effect, update workingTaskIdRef.current = todayTasks[0]?._id;
-  // If pomodoroActive and workingTaskIdRef.current is set and not found in todayTasks, reset
 
   return (
     <div className="p-6 space-y-6">
@@ -457,7 +464,11 @@ export function TodayDashboard() {
             className="text-base bg-background border-border focus:border-primary transition-colors"
             onKeyDown={(e) => e.key === "Enter" && handleQuickAdd()}
           />
-          <Button onClick={handleQuickAdd} disabled={loading} className="cursor-pointer">
+          <Button
+            onClick={handleQuickAdd}
+            disabled={loading}
+            className="cursor-pointer"
+          >
             Add
           </Button>
         </CardContent>
@@ -517,6 +528,8 @@ export function TodayDashboard() {
                 const res = await fetch("/api/tasks");
                 const data = await res.json();
                 setTasks(data);
+                // Notify heatmap/activity listeners
+                window.dispatchEvent(new Event("activityChanged"));
               } catch (error) {
                 console.error("Failed to reopen task", error);
               }
@@ -616,7 +629,9 @@ export function TodayDashboard() {
               </Button>
               {moodHistory.length > 0 && (
                 <div className="mt-4">
-                  <div className="text-xs text-muted-foreground mb-2">Last 7 days:</div>
+                  <div className="text-xs text-muted-foreground mb-2">
+                    Last 7 days:
+                  </div>
                   <div className="flex gap-2 justify-center">
                     {moodHistory.slice(0, 7).map((m, idx) => (
                       <span key={idx} title={m.date} className="text-xl">
@@ -720,7 +735,12 @@ function PomodoroTimer({
               </>
             )}
           </Button>
-          <Button className="cursor-pointer" variant="outline" size="sm" onClick={reset}>
+          <Button
+            className="cursor-pointer"
+            variant="outline"
+            size="sm"
+            onClick={reset}
+          >
             <RotateCcw className="w-4 h-4 mr-2" />
             Reset
           </Button>
@@ -886,7 +906,10 @@ function TaskSection({
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => startEditTask(task)} className="cursor-pointer">
+                    <DropdownMenuItem
+                      onClick={() => startEditTask(task)}
+                      className="cursor-pointer"
+                    >
                       Edit
                     </DropdownMenuItem>
                     <DropdownMenuItem
