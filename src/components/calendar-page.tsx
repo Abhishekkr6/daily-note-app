@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -19,52 +19,30 @@ interface DayData {
   note?: string
   completionRate: number
 }
-
-// Mock data for calendar
-const generateMockData = (date: Date): DayData => {
-  const dayOfMonth = date.getDate()
-  const mockTasks = []
-
-  // Generate different numbers of tasks for different days
-  const taskCount = Math.floor(Math.random() * 5) + 1
-
-  for (let i = 0; i < taskCount; i++) {
-    const statuses = ["todo", "in-progress", "completed"] as const
-    const priorities = ["low", "medium", "high"] as const
-    const taskTitles = [
-      "Review documents",
-      "Team meeting",
-      "Write report",
-      "Call client",
-      "Update project",
-      "Plan presentation",
-      "Code review",
-      "Design mockups",
-    ]
-
-    mockTasks.push({
-      id: `${dayOfMonth}-${i}`,
-      title: taskTitles[Math.floor(Math.random() * taskTitles.length)],
-      status: statuses[Math.floor(Math.random() * statuses.length)],
-      priority: priorities[Math.floor(Math.random() * priorities.length)],
-    })
-  }
-
-  const completedTasks = mockTasks.filter((task) => task.status === "completed").length
-  const completionRate = taskCount > 0 ? (completedTasks / taskCount) * 100 : 0
-
-  return {
-    date,
-    tasks: mockTasks,
-    note: dayOfMonth % 3 === 0 ? "Had a productive day working on the new project features." : undefined,
-    completionRate,
-  }
+// Replace mock data with real user data fetched from the API
+interface TaskFromApi {
+  _id: string
+  title: string
+  status: string
+  priority?: string
+  dueDate?: string
 }
+
+// Helper to convert Date -> YYYY-MM-DD using local timezone (avoids UTC shifts)
+const toDateKey = (d: Date) => {
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, "0")
+  const day = String(d.getDate()).padStart(2, "0")
+  return `${y}-${m}-${day}`
+}
+
 
 export function CalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedDay, setSelectedDay] = useState<DayData | null>(null)
   const [showDayDetail, setShowDayDetail] = useState(false)
+  const [tasksByDate, setTasksByDate] = useState<Record<string, TaskFromApi[]>>({})
+  const [loadingTasks, setLoadingTasks] = useState(false)
 
   const monthStart = startOfMonth(currentDate)
   const monthEnd = endOfMonth(currentDate)
@@ -93,8 +71,32 @@ export function CalendarPage() {
     setCurrentDate(newDate)
   }
 
-  const handleDayClick = (date: Date) => {
-    const dayData = generateMockData(date)
+  const handleDayClick = async (date: Date) => {
+    const key = toDateKey(date)
+    const tasks = tasksByDate[key] ?? []
+    // Compute completion rate
+    const completed = tasks.filter((t) => t.status === "completed").length
+    const completionRate = tasks.length > 0 ? (completed / tasks.length) * 100 : 0
+
+    // Fetch note for the date
+    let note = undefined
+    try {
+      const res = await fetch(`/api/note?date=${key}`)
+      if (res.ok) {
+        const json = await res.json()
+        note = json.content || json.note || undefined
+      }
+    } catch (err) {
+      // ignore note fetch errors; keep note undefined
+    }
+
+    const dayData: DayData = {
+      date,
+      tasks: tasks.map((t) => ({ id: t._id, title: t.title, status: (t.status as any) || "todo", priority: (t.priority || "low") as any })),
+      note,
+      completionRate,
+    }
+
     setSelectedDay(dayData)
     setShowDayDetail(true)
   }
@@ -130,6 +132,52 @@ export function CalendarPage() {
         return "secondary"
     }
   }
+
+  // Fetch tasks for the user and group by date key (prefer dueDate, else use updatedAt date)
+  useEffect(() => {
+    let cancelled = false
+    const loadTasks = async () => {
+      setLoadingTasks(true)
+      try {
+        const res = await fetch(`/api/tasks`)
+        if (!res.ok) return
+        const tasks: TaskFromApi[] = await res.json()
+        if (cancelled) return
+        const map: Record<string, TaskFromApi[]> = {}
+        tasks.forEach((t) => {
+          // Prefer explicit dueDate (which may already be YYYY-MM-DD). Otherwise use updatedAt
+          let key: string | undefined = undefined
+          if (t.dueDate) {
+            // If dueDate already looks like YYYY-MM-DD, use as-is. If it contains a time, parse it.
+            if (t.dueDate.includes("T")) {
+              const dt = new Date(t.dueDate)
+              key = toDateKey(dt)
+            } else {
+              key = t.dueDate
+            }
+          } else if ((t as any).updatedAt) {
+            const dt = new Date((t as any).updatedAt)
+            if (!isNaN(dt.getTime())) key = toDateKey(dt)
+          }
+
+          if (!key) key = toDateKey(new Date())
+
+          if (!map[key]) map[key] = []
+          map[key].push(t)
+        })
+        setTasksByDate(map)
+      } catch (err) {
+        // ignore
+      } finally {
+        if (!cancelled) setLoadingTasks(false)
+      }
+    }
+
+    loadTasks()
+    return () => {
+      cancelled = true
+    }
+  }, [currentDate])
 
   return (
     <div className="p-6 space-y-6">
@@ -176,7 +224,16 @@ export function CalendarPage() {
 
             {/* Calendar days */}
             {allDays.map((date, index) => {
-              const dayData = generateMockData(date)
+              const key = toDateKey(date)
+              const tasks = tasksByDate[key] ?? []
+              const completed = tasks.filter((t) => t.status === "completed").length
+              const completionRate = tasks.length > 0 ? (completed / tasks.length) * 100 : 0
+              const dayData: DayData = {
+                date,
+                tasks: tasks.map((t) => ({ id: t._id, title: t.title, status: (t.status as any) || "todo", priority: (t.priority || "low") as any })),
+                note: undefined,
+                completionRate,
+              }
               const isCurrentMonth = isSameMonth(date, currentDate)
               const isCurrentDay = isToday(date)
 
