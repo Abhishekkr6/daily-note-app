@@ -1,6 +1,29 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+// Softer blink + wavy border animation
+const blinkStyle = `
+@keyframes blink-quickadd {
+  0%, 100% {
+    box-shadow: 0 0 0 0 transparent;
+    transform: scale(1);
+    border-width: 1.5px;
+    filter: none;
+  }
+  20%, 80% {
+    box-shadow: 0 0 0 3px #D86D38;
+    transform: scale(1.01);
+    border-width: 1.5px;
+    filter: url(#wavy-border);
+  }
+  40%, 60% {
+    box-shadow: 0 0 0 0 transparent;
+    transform: scale(1);
+    border-width: 1.5px;
+    filter: none;
+  }
+}
+`;
 
 type MoodEntry = {
   date: string;
@@ -42,6 +65,15 @@ type Task = {
 };
 
 export function TodayDashboard() {
+  const [blinkQuickAdd, setBlinkQuickAdd] = useState(false);
+  // Blink quick add if sessionStorage flag is set
+  useEffect(() => {
+    if (typeof window !== "undefined" && sessionStorage.getItem("quickAddBlink") === "true") {
+      setBlinkQuickAdd(true);
+      sessionStorage.removeItem("quickAddBlink");
+      setTimeout(() => setBlinkQuickAdd(false), 1200); // 2-3 blinks (600ms per blink)
+    }
+  }, []);
   // Get today's date in YYYY-MM-DD format
   const todayDate = new Date().toISOString().slice(0, 10);
 
@@ -451,7 +483,19 @@ export function TodayDashboard() {
   return (
     <div className="p-6 space-y-6">
       {/* Quick Add Section */}
-      <Card className="bg-card border-border shadow-sm">
+      {/* Quick Add Section with blink animation */}
+      <style>{blinkStyle}</style>
+      {/* SVG filter for wavy border */}
+      <svg width="0" height="0">
+        <filter id="wavy-border">
+          <feTurbulence id="turb" baseFrequency="0.025 0.05" numOctaves="2" result="turb" seed="2"/>
+          <feDisplacementMap in2="turb" in="SourceGraphic" scale="2.2" xChannelSelector="R" yChannelSelector="G"/>
+        </filter>
+      </svg>
+      <Card
+        style={blinkQuickAdd ? { filter: "url(#wavy-border)" } : {}}
+        className={`bg-card border-border shadow-sm ${blinkQuickAdd ? "animate-[blink-quickadd_0.6s_cubic-bezier(0.4,0.0,0.2,1)_0s_2] border border-[#D86D38]" : ""}`}
+      >
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
             <Plus className="w-5 h-5 text-primary" />

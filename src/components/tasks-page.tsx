@@ -1,6 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
+import ConfirmDialog from "@/components/confirm-dialog";
+import { useRouter } from "next/navigation"
+import { toast } from "sonner" // If you use a toast library, otherwise use alert
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -34,81 +37,48 @@ interface Task {
   createdAt: string
 }
 
-const mockTasks: Task[] = [
-  {
-    id: "1",
-    title: "Review quarterly reports",
-    description: "Go through Q3 financial reports and prepare summary",
-    priority: "high",
-    status: "todo",
-    tags: ["work", "finance"],
-    dueDate: "2024-01-15",
-    createdAt: "2024-01-10",
-  },
-  {
-    id: "2",
-    title: "Call dentist for appointment",
-    description: "Schedule routine cleaning appointment",
-    priority: "medium",
-    status: "todo",
-    tags: ["personal", "health"],
-    dueDate: "2024-01-12",
-    createdAt: "2024-01-08",
-  },
-  {
-    id: "3",
-    title: "Prepare presentation slides",
-    description: "Create slides for Monday's client meeting",
-    priority: "high",
-    status: "in-progress",
-    tags: ["work", "presentation"],
-    dueDate: "2024-01-16",
-    createdAt: "2024-01-11",
-  },
-  {
-    id: "4",
-    title: "Buy groceries",
-    priority: "low",
-    status: "todo",
-    tags: ["personal", "shopping"],
-    dueDate: "2024-01-16",
-    createdAt: "2024-01-15",
-  },
-  {
-    id: "5",
-    title: "Read chapter 5",
-    description: "Continue reading 'Atomic Habits'",
-    priority: "medium",
-    status: "todo",
-    tags: ["learning", "books"],
-    dueDate: "2024-01-16",
-    createdAt: "2024-01-14",
-  },
-  {
-    id: "6",
-    title: "Morning workout",
-    priority: "medium",
-    status: "completed",
-    tags: ["health", "fitness"],
-    createdAt: "2024-01-15",
-  },
-  {
-    id: "7",
-    title: "Check emails",
-    priority: "low",
-    status: "completed",
-    tags: ["work", "communication"],
-    createdAt: "2024-01-15",
-  },
-]
+// ...existing code...
 
 export function TasksPage() {
-  const [tasks, setTasks] = useState<Task[]>(mockTasks)
+  const router = useRouter();
+  const [tasks, setTasks] = useState<Task[]>([])
+  // Fetch tasks from backend on mount
+  useEffect(() => {
+    async function fetchTasks() {
+      try {
+        const res = await fetch("/api/tasks", { credentials: "include" })
+        if (!res.ok) throw new Error("Failed to fetch tasks")
+        const data = await res.json()
+        // Map backend _id to id for frontend
+        setTasks(data.map((t: any) => ({
+          id: t._id,
+          title: t.title,
+          description: t.description,
+          // Map priority to backend enum
+          priority: t.priority || "Low",
+          // Map status to backend enum
+          status: t.status,
+          tags: t.tag ? [t.tag] : [],
+          dueDate: t.dueDate,
+          createdAt: t.createdAt,
+        })))
+      } catch (err) {
+        setError("Could not load tasks")
+      }
+    }
+    fetchTasks()
+  }, [])
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [priorityFilter, setPriorityFilter] = useState<string>("all")
   const [tagFilter, setTagFilter] = useState<string>("all")
   const [selectedTasks, setSelectedTasks] = useState<string[]>([])
+  const [loadingTaskId, setLoadingTaskId] = useState<string | null>(null)
+  const [recentlyDeleted, setRecentlyDeleted] = useState<Task[] | null>(null)
+  const recentlyDeletedRef = useRef<Task[] | null>(null)
+  const undoTimeout = useRef<NodeJS.Timeout | null>(null)
+  const [error, setError] = useState<string>("")
+  const [showConfirm, setShowConfirm] = useState(false);
 
   // Get unique tags from all tasks
   const allTags = Array.from(new Set(tasks.flatMap((task) => task.tags)))
@@ -121,18 +91,40 @@ export function TasksPage() {
       task.tags.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase()))
 
     const matchesStatus = statusFilter === "all" || task.status === statusFilter
-    const matchesPriority = priorityFilter === "all" || task.priority === priorityFilter
+  // Compare priority exactly as backend and dropdown values ('Low', 'Medium', 'High')
+  const matchesPriority = priorityFilter === "all" || task.priority === priorityFilter
     const matchesTag = tagFilter === "all" || task.tags.includes(tagFilter)
 
     return matchesSearch && matchesStatus && matchesPriority && matchesTag
   })
 
-  const handleTaskToggle = (taskId: string) => {
-    setTasks(
-      tasks.map((task) =>
-        task.id === taskId ? { ...task, status: task.status === "completed" ? "todo" : "completed" } : task,
-      ),
-    )
+  // Mark as completed with backend update
+  const handleTaskToggle = async (taskId: string) => {
+    setLoadingTaskId(taskId)
+    setError("")
+    const task = tasks.find((t) => t.id === taskId)
+    if (!task) return
+  // Only toggle between "completed" and "today" (backend expects "today" not "todo")
+  const newStatus = task.status === "completed" ? "today" : "completed"
+    try {
+      const res = await fetch("/api/tasks", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ _id: taskId, status: newStatus }),
+      })
+      if (!res.ok) throw new Error("Failed to update task")
+      const updated = await res.json()
+  setTasks(tasks.map((t) => (t.id === taskId ? { ...t, status: updated.status } : t)))
+  if (typeof toast === "function") toast("Task updated successfully")
+  // Dispatch event for heatmap realtime update
+  window.dispatchEvent(new Event("activityChanged"))
+    } catch (err: any) {
+      setError(err.message || "Error updating task")
+      if (typeof toast === "function") toast("Error updating task", { description: err.message })
+    } finally {
+      setLoadingTaskId(null)
+    }
   }
 
   const handleSelectTask = (taskId: string, checked: boolean) => {
@@ -151,14 +143,62 @@ export function TasksPage() {
     }
   }
 
-  const handleBulkComplete = () => {
-    setTasks(tasks.map((task) => (selectedTasks.includes(task.id) ? { ...task, status: "completed" as const } : task)))
+  // Bulk complete with backend update
+  const handleBulkComplete = async () => {
+    setError("")
+    for (const taskId of selectedTasks) {
+      await handleTaskToggle(taskId)
+    }
     setSelectedTasks([])
   }
 
   const handleBulkDelete = () => {
-    setTasks(tasks.filter((task) => !selectedTasks.includes(task.id)))
-    setSelectedTasks([])
+    // Find and store deleted tasks
+    const deleted = tasks.filter((task) => selectedTasks.includes(task.id));
+    setRecentlyDeleted(deleted);
+    recentlyDeletedRef.current = deleted;
+    setTasks(tasks.filter((task) => !selectedTasks.includes(task.id)));
+    setSelectedTasks([]);
+    // Show undo toast
+    if (typeof toast === "function") {
+      let toastId: string | number | undefined = undefined;
+      const UndoToast = () => (
+        <span>
+          Deleted {deleted.length} task{deleted.length > 1 ? "s" : ""}.&nbsp;
+          <button
+            className="underline text-primary font-medium ml-2 cursor-pointer"
+            onClick={() => {
+              if (undoTimeout.current) clearTimeout(undoTimeout.current);
+              setTasks((prev) => [...(recentlyDeletedRef.current || []), ...prev]);
+              setRecentlyDeleted(null);
+              recentlyDeletedRef.current = null;
+              if (toastId !== undefined) toast.dismiss(toastId);
+            }}
+          >
+            Undo
+          </button>
+        </span>
+      );
+      toastId = toast(<UndoToast />, { duration: 5000 });
+    }
+    // After timeout, delete from backend if not undone
+    if (undoTimeout.current) clearTimeout(undoTimeout.current);
+    undoTimeout.current = setTimeout(async () => {
+      if (recentlyDeletedRef.current) {
+        for (const task of recentlyDeletedRef.current) {
+          try {
+            await fetch("/api/tasks", {
+              method: "DELETE",
+              headers: { "Content-Type": "application/json" },
+              credentials: "include",
+              body: JSON.stringify({ _id: task.id }),
+            });
+          } catch {}
+        }
+        setRecentlyDeleted(null);
+        recentlyDeletedRef.current = null;
+      }
+    }, 5000);
   }
 
   const getPriorityColor = (priority: string) => {
@@ -210,7 +250,15 @@ export function TasksPage() {
             {filteredTasks.length} of {tasks.length} tasks
           </p>
         </div>
-        <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
+        <Button
+          className="bg-primary text-primary-foreground hover:bg-primary/90 cursor-pointer"
+          onClick={() => {
+            if (typeof window !== "undefined") {
+              sessionStorage.setItem("quickAddBlink", "true");
+            }
+            router.push("/home");
+          }}
+        >
           <Circle className="w-4 h-4 mr-2" />
           New Task
         </Button>
@@ -239,9 +287,10 @@ export function TasksPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="todo">To Do</SelectItem>
+                  <SelectItem value="today">To Do</SelectItem>
                   <SelectItem value="in-progress">In Progress</SelectItem>
                   <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="overdue">Overdue</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -251,9 +300,9 @@ export function TasksPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Priority</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="low">Low</SelectItem>
+                  <SelectItem value="High">High</SelectItem>
+                  <SelectItem value="Medium">Medium</SelectItem>
+                  <SelectItem value="Low">Low</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -288,10 +337,23 @@ export function TasksPage() {
                   <CheckCircle2 className="w-4 h-4 mr-2" />
                   Mark Complete
                 </Button>
-                <Button variant="outline" size="sm" onClick={handleBulkDelete}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowConfirm(true)}
+                >
                   <Trash2 className="w-4 h-4 mr-2" />
                   Delete
                 </Button>
+                <ConfirmDialog
+                  open={showConfirm}
+                  message={`Are you sure you want to delete the selected tasks?`}
+                  onConfirm={() => {
+                    setShowConfirm(false);
+                    handleBulkDelete();
+                  }}
+                  onCancel={() => setShowConfirm(false)}
+                />
               </div>
             </div>
           </CardContent>
@@ -310,6 +372,7 @@ export function TasksPage() {
               <Checkbox
                 checked={selectedTasks.length === filteredTasks.length && filteredTasks.length > 0}
                 onCheckedChange={handleSelectAll}
+                className="border-2 border-[#D86D38] cursor-pointer"
               />
               <span className="text-sm text-muted-foreground">Select All</span>
             </div>
@@ -322,7 +385,7 @@ export function TasksPage() {
               <p>No tasks found matching your criteria</p>
             </div>
           ) : (
-            filteredTasks.map((task) => (
+            filteredTasks.map((task, idx) => (
               <div
                 key={task.id}
                 className={`flex items-center space-x-3 p-4 rounded-xl border transition-all hover:shadow-md ${
@@ -335,10 +398,11 @@ export function TasksPage() {
                 <Checkbox
                   checked={selectedTasks.includes(task.id)}
                   onCheckedChange={(checked) => handleSelectTask(task.id, checked as boolean)}
+                  className="border-2 border-[#D86D38] cursor-pointer"
                 />
 
                 {/* Status Icon */}
-                <button onClick={() => handleTaskToggle(task.id)} className="hover:scale-110 transition-transform">
+                <button onClick={() => handleTaskToggle(task.id)} className="hover:scale-110 transition-transform cursor-pointer">
                   {getStatusIcon(task.status)}
                 </button>
 
@@ -381,24 +445,57 @@ export function TasksPage() {
                 {/* Actions Menu */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm">
+                    <button aria-label="Open task menu" type="button" className="p-1 rounded hover:bg-accent focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer">
                       <MoreHorizontal className="w-4 h-4" />
-                    </Button>
+                    </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem>
-                      <Edit className="w-4 h-4 mr-2" />
-                      Edit Task
-                    </DropdownMenuItem>
-                    <DropdownMenuItem>
-                      <Copy className="w-4 h-4 mr-2" />
-                      Duplicate
-                    </DropdownMenuItem>
-                    <DropdownMenuItem>
-                      <Archive className="w-4 h-4 mr-2" />
-                      Archive
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="text-destructive">
+                    <DropdownMenuItem
+                      className="text-destructive"
+                      onClick={() => {
+                        // Remove from UI and show undo toast
+                        setTasks(tasks.filter((t) => t.id !== task.id));
+                        setRecentlyDeleted([task]);
+                        recentlyDeletedRef.current = [task];
+                        if (typeof toast === "function") {
+                          let toastId: string | number | undefined = undefined;
+                          const UndoToast = () => (
+                            <span>
+                              Task deleted.&nbsp;
+                              <button
+                                className="underline text-primary font-medium ml-2 cursor-pointer"
+                                onClick={() => {
+                                  if (undoTimeout.current) clearTimeout(undoTimeout.current);
+                                  setTasks((prev) => [task, ...prev]);
+                                  setRecentlyDeleted(null);
+                                  recentlyDeletedRef.current = null;
+                                  if (toastId !== undefined) toast.dismiss(toastId);
+                                }}
+                              >
+                                Undo
+                              </button>
+                            </span>
+                          );
+                          toastId = toast(<UndoToast />, { duration: 5000 });
+                        }
+                        // After timeout, delete from backend if not undone
+                        if (undoTimeout.current) clearTimeout(undoTimeout.current);
+                        undoTimeout.current = setTimeout(async () => {
+                          if (recentlyDeletedRef.current) {
+                            try {
+                              await fetch("/api/tasks", {
+                                method: "DELETE",
+                                headers: { "Content-Type": "application/json" },
+                                credentials: "include",
+                                body: JSON.stringify({ _id: task.id }),
+                              });
+                            } catch {}
+                            setRecentlyDeleted(null);
+                            recentlyDeletedRef.current = null;
+                          }
+                        }, 5000);
+                      }}
+                    >
                       <Trash2 className="w-4 h-4 mr-2" />
                       Delete
                     </DropdownMenuItem>

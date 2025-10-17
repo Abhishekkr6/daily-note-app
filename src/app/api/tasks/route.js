@@ -38,6 +38,10 @@ export async function PUT(req) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
   const body = await req.json();
+  // If marking as completed (case-insensitive), update updatedAt to now
+  if (body.status && body.status.toLowerCase() === "completed") {
+    body.updatedAt = Date.now();
+  }
   // Only allow update if the task belongs to the user
   const updatedTask = await Task.findOneAndUpdate({ _id: body._id, userId }, body, { new: true });
   if (!updatedTask) {

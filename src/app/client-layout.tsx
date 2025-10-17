@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { SessionProvider } from "next-auth/react";
 import { Analytics } from "@vercel/analytics/next";
 import ClickSpark from "@/components/ClickSpark";
+import SonnerToaster from "@/components/sonner-toaster";
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -17,6 +18,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
         >
           <div className="relative w-full h-full">
             {children}
+            <SonnerToaster />
             <div className="fixed inset-0 w-full h-full z-[99999] pointer-events-none">
               <ClickSpark
                 sparkColor="#fff"

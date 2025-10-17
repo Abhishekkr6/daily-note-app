@@ -242,7 +242,7 @@ export function CalendarPage() {
                   key={index}
                   onClick={() => handleDayClick(date)}
                   className={`
-                    relative p-2 h-20 rounded-xl border transition-all hover:shadow-md hover:scale-105
+                    relative p-2 h-20 rounded-xl border transition-all hover:shadow-md hover:scale-105 cursor-pointer
                     ${isCurrentMonth ? "bg-background border-border" : "bg-muted/20 border-muted"}
                     ${isCurrentDay ? "ring-2 ring-primary ring-offset-2" : ""}
                     ${getCompletionColor(dayData.completionRate)}
