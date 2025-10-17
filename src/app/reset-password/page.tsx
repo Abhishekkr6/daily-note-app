@@ -9,11 +9,12 @@ import { Button } from "@/components/ui/button";
 
 export default function ResetPasswordPage() {
   const [csrfToken, setCsrfToken] = useState("");
-  // Fetch CSRF token on mount
+  // Fetch CSRF token on mount and include credentials
   React.useEffect(() => {
-    fetch("/api/csrf-token")
+    fetch("/api/csrf-token", { credentials: "include" })
       .then(res => res.json())
-      .then(data => setCsrfToken(data.csrfToken));
+      .then(data => setCsrfToken(data.csrfToken))
+      .catch(err => console.error("Failed to fetch CSRF token:", err));
   }, []);
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
@@ -49,9 +50,16 @@ export default function ResetPasswordPage() {
     setDisabled(true);
     setLoading(true);
     try {
+      if (!csrfToken) {
+        setMessage("CSRF token not available. Please refresh the page.");
+        setDisabled(false);
+        setLoading(false);
+        return;
+      }
       const res = await fetch("/api/users/resetpassword", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "x-csrf-token": csrfToken },
+        credentials: "include",
         body: JSON.stringify({ token, password, csrfToken, email }),
       });
       const data = await res.json();

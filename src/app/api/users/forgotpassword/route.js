@@ -14,10 +14,18 @@ export async function POST(req) {
   if (!rateLimit(ip)) {
     return NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 });
   }
-  // CSRF protection
-  const { csrfToken, email } = await req.json();
+  // CSRF protection: accept token from body or x-csrf-token header
+  const body = await req.json();
+  const csrfToken = body.csrfToken || req.headers.get("x-csrf-token");
+  const email = body.email;
   const cookieCsrfToken = req.cookies.get("csrfToken")?.value;
   if (!verifyCSRFToken(csrfToken, cookieCsrfToken)) {
+    console.warn("CSRF verification failed for forgotpassword", {
+      provided: csrfToken ? csrfToken.slice(0, 8) + "..." : null,
+      cookie: cookieCsrfToken ? cookieCsrfToken.slice(0, 8) + "..." : null,
+      ip,
+      path: req.url || "/api/users/forgotpassword",
+    });
     return NextResponse.json({ error: "Invalid CSRF token" }, { status: 403 });
   }
   try {

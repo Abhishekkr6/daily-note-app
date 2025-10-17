@@ -20,9 +20,19 @@ export async function POST(req) {
   try {
     const reqBody = await req.json();
     const { email, password, csrfToken } = reqBody;
-    // Double-submit CSRF protection
+    // Double-submit CSRF protection: prefer body token, fall back to header.
+    const headerCsrf = req.headers.get("x-csrf-token");
+    const providedToken = csrfToken || headerCsrf;
     const cookieCsrfToken = req.cookies.get("csrfToken")?.value;
-    if (!verifyCSRFToken(csrfToken, cookieCsrfToken)) {
+    const ok = verifyCSRFToken(providedToken, cookieCsrfToken);
+    if (!ok) {
+      // Log tokens to server logs to help debug intermittent failures in production.
+      console.warn("CSRF verification failed", {
+        providedToken: providedToken ? providedToken.slice(0, 8) + "..." : null,
+        cookieToken: cookieCsrfToken ? cookieCsrfToken.slice(0, 8) + "..." : null,
+        ip,
+        path: req.url || "/api/users/login",
+      });
       return NextResponse.json({ error: "Invalid CSRF token" }, { status: 403 });
     }
 

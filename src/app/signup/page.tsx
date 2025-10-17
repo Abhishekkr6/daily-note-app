@@ -92,11 +92,12 @@ const SignupPage = () => {
     confirmPasswordError,
   ]);
   const [csrfToken, setCsrfToken] = useState("");
-  // Fetch CSRF token on mount
+  // Fetch CSRF token on mount (include credentials so cookie is set)
   useEffect(() => {
-    fetch("/api/csrf-token")
+    fetch("/api/csrf-token", { credentials: "include" })
       .then((res) => res.json())
-      .then((data) => setCsrfToken(data.csrfToken));
+      .then((data) => setCsrfToken(data.csrfToken))
+      .catch((err) => console.error("Failed to fetch CSRF token:", err));
   }, []);
   const router = useRouter();
   const [user, setUser] = useState({
@@ -150,11 +151,24 @@ const SignupPage = () => {
         setInputsDisabled(false);
         return;
       }
+      if (!csrfToken) {
+        toast.error("CSRF token missing. Please refresh the page.");
+        setInputsDisabled(false);
+        setLoading(false);
+        return;
+      }
       setLoading(true);
-      const response = await axios.post("/api/users/signup", {
-        ...user,
-        csrfToken,
-      });
+      const response = await axios.post(
+        "/api/users/signup",
+        {
+          ...user,
+          csrfToken,
+        },
+        {
+          withCredentials: true,
+          headers: { "x-csrf-token": csrfToken },
+        }
+      );
       toast.success("Signup successful");
       setUser({ email: "", username: "", password: "", confirmPassword: "" });
       setEmailError("");

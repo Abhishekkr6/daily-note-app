@@ -20,9 +20,13 @@ const LoginPage = () => {
   const [csrfToken, setCsrfToken] = useState("");
   // Fetch CSRF token on mount
   useEffect(() => {
-    fetch("/api/csrf-token")
+    // Fetch CSRF token and include credentials so cookie is set in browsers.
+    fetch("/api/csrf-token", { credentials: "include" })
       .then((res) => res.json())
-      .then((data) => setCsrfToken(data.csrfToken));
+      .then((data) => setCsrfToken(data.csrfToken))
+      .catch((err) => {
+        console.error("Failed to fetch CSRF token:", err);
+      });
   }, []);
   const router = useRouter();
   const [user, setUser] = useState({
@@ -62,10 +66,24 @@ const LoginPage = () => {
     setInputsDisabled(true);
     try {
       setLoading(true);
+      // Ensure we have a CSRF token before sending login request.
+      if (!csrfToken) {
+        toast.error("CSRF token not available. Please refresh the page.");
+        setInputsDisabled(false);
+        setLoading(false);
+        return;
+      }
+
       const response = await axios.post(
         "/api/users/login",
         { ...user, csrfToken },
-        { withCredentials: true }
+        {
+          withCredentials: true,
+          headers: {
+            // also send as header (double-submit fallback)
+            "x-csrf-token": csrfToken,
+          },
+        }
       );
       toast.success("Login successful");
       setUser({ email: "", password: "" });

@@ -7,11 +7,12 @@ import { Button } from "@/components/ui/button";
 
 export default function ForgotPasswordPage() {
   const [csrfToken, setCsrfToken] = useState("");
-  // Fetch CSRF token on mount
+  // Fetch CSRF token on mount and include credentials
   React.useEffect(() => {
-    fetch("/api/csrf-token")
+    fetch("/api/csrf-token", { credentials: "include" })
       .then(res => res.json())
-      .then(data => setCsrfToken(data.csrfToken));
+      .then(data => setCsrfToken(data.csrfToken))
+      .catch(err => console.error("Failed to fetch CSRF token:", err));
   }, []);
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
@@ -25,9 +26,16 @@ export default function ForgotPasswordPage() {
     setInputsDisabled(true);
     setMessage("");
     try {
+      if (!csrfToken) {
+        setMessage("CSRF token missing. Please refresh the page.");
+        setInputsDisabled(false);
+        setLoading(false);
+        return;
+      }
       const res = await fetch("/api/users/forgotpassword", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        headers: { "Content-Type": "application/json", "x-csrf-token": csrfToken },
         body: JSON.stringify({ email, csrfToken }),
       });
       const data = await res.json();
