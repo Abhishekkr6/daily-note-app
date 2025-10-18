@@ -3,6 +3,7 @@ import Task from "@/models/taskModel";
 import Mood from "@/models/moodModel";
 import { getDataFromToken } from "@/helpers/getDataFromToken";
 import { NextResponse } from "next/server";
+import mongoose from "mongoose";
 
 // GET: Return activity data for last 49 days
 export async function GET(req) {
@@ -28,7 +29,7 @@ export async function GET(req) {
   startDate.setHours(0, 0, 0, 0);
 
   const tasks = await Task.aggregate([
-    { $match: { userId: userId, status: "completed", updatedAt: { $gte: startDate } } },
+    { $match: { userId: new mongoose.Types.ObjectId(userId), status: "completed", updatedAt: { $gte: startDate } } },
     // Project date string in YYYY-MM-DD format from updatedAt
     { $project: { dateStr: { $dateToString: { format: "%Y-%m-%d", date: "$updatedAt" } } } },
     { $group: { _id: "$dateStr", count: { $sum: 1 } } }
