@@ -13,8 +13,8 @@ interface DayData {
   tasks: Array<{
     id: string
     title: string
-    status: "todo" | "in-progress" | "completed"
-    priority: "low" | "medium" | "high"
+    status: "todo" | "in-progress" | "completed" | "overdue" | "today"
+    priority: "low" | "medium" | "high" | "Low" | "Medium" | "High"
   }>
   note?: string
   completionRate: number
@@ -26,6 +26,7 @@ interface TaskFromApi {
   status: string
   priority?: string
   dueDate?: string
+  updatedAt?: string
 }
 
 // Helper to convert Date -> YYYY-MM-DD using local timezone (avoids UTC shifts)
@@ -92,7 +93,18 @@ export function CalendarPage() {
 
     const dayData: DayData = {
       date,
-      tasks: tasks.map((t) => ({ id: t._id, title: t.title, status: (t.status as any) || "todo", priority: (t.priority || "low") as any })),
+      tasks: tasks.map((t) => ({
+        id: t._id,
+        title: t.title,
+        status: (t.status === "completed"
+          ? "completed"
+          : t.status === "today"
+          ? "in-progress"
+          : t.status === "overdue"
+          ? "todo"
+          : t.status) as "todo" | "in-progress" | "completed" | "overdue" | "today",
+        priority: (t.priority ? t.priority.toLowerCase() : "low") as "low" | "medium" | "high" | "Low" | "Medium" | "High"
+      })),
       note,
       completionRate,
     }
@@ -121,7 +133,7 @@ export function CalendarPage() {
   }
 
   const getPriorityColor = (priority: string) => {
-    switch (priority) {
+    switch (priority.toLowerCase()) {
       case "high":
         return "destructive"
       case "medium":
@@ -153,15 +165,20 @@ export function CalendarPage() {
               const dt = new Date(t.dueDate)
               key = toDateKey(dt)
             } else {
-              key = t.dueDate
+              // If dueDate is DD-MM-YYYY or other, try to parse
+              if (/\d{4}-\d{2}-\d{2}/.test(t.dueDate)) {
+                key = t.dueDate
+              } else {
+                // Try to parse other formats
+                const dt = new Date(t.dueDate)
+                if (!isNaN(dt.getTime())) key = toDateKey(dt)
+              }
             }
-          } else if ((t as any).updatedAt) {
-            const dt = new Date((t as any).updatedAt)
+          } else if (t.updatedAt) {
+            const dt = new Date(t.updatedAt)
             if (!isNaN(dt.getTime())) key = toDateKey(dt)
           }
-
           if (!key) key = toDateKey(new Date())
-
           if (!map[key]) map[key] = []
           map[key].push(t)
         })
