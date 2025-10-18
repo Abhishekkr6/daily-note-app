@@ -65,6 +65,7 @@ import {
 type Task = {
   _id?: string;
   title: string;
+  description?: string;
   status: "overdue" | "today" | "completed";
   tag?: string;
   priority?: "High" | "Medium" | "Low";
@@ -99,6 +100,11 @@ export function TodayDashboard() {
   const [quickAddValue, setQuickAddValue] = useState("");
   const [quickAddPriority, setQuickAddPriority] = useState<string>("");
   const [quickAddDescription, setQuickAddDescription] = useState("");
+  const [quickAddTag, setQuickAddTag] = useState("");
+  // Get all unique tags from tasks, ensuring only strings
+  const allTags = Array.from(
+    new Set(tasks.map((t) => t.tag).filter((tag): tag is string => typeof tag === "string"))
+  );
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
   const [deletedTask, setDeletedTask] = useState<Task | null>(null);
@@ -212,10 +218,21 @@ export function TodayDashboard() {
   const handleQuickAdd = async () => {
     const title = quickAddValue.replace(/#\w+/g, "").trim();
     const description = quickAddDescription.trim();
-    if (!isValidTitle(title) || !isValidDescription(description) || !quickAddPriority) return;
+    if (
+      !isValidTitle(title) ||
+      !isValidDescription(description) ||
+      !quickAddPriority
+    )
+      return;
     const tagMatch = quickAddValue.match(/#(\w+)/);
-    const tag = tagMatch ? tagMatch[1] : undefined;
-    const newTask = { title, description, status: "today", priority: quickAddPriority, tag };
+    const tag = quickAddTag || undefined;
+    const newTask = {
+      title,
+      description,
+      status: "today",
+      priority: quickAddPriority,
+      tag,
+    };
     try {
       await fetch("/api/tasks", {
         method: "POST",
@@ -229,9 +246,10 @@ export function TodayDashboard() {
     } catch (error) {
       console.error("Failed to add task", error);
     }
-  setQuickAddValue("");
-  setQuickAddPriority("");
-  setQuickAddDescription("");
+    setQuickAddValue("");
+    setQuickAddPriority("");
+    setQuickAddDescription("");
+    setQuickAddTag("");
   };
 
   // Delete task with undo
@@ -492,14 +510,22 @@ export function TodayDashboard() {
 
   // Error messages for quick add inputs
   const titleError =
-    quickAddValue.trim() && !isValidTitle(quickAddValue.replace(/#\w+/g, "").trim())
+    quickAddValue.trim() &&
+    !isValidTitle(quickAddValue.replace(/#\w+/g, "").trim())
       ? "Title must be at least 2 letters, start with a letter, and contain only letters and spaces."
       : "";
 
   const descError =
-    quickAddDescription.trim() && !isValidDescription(quickAddDescription.trim())
+    quickAddDescription.trim() &&
+    !isValidDescription(quickAddDescription.trim())
       ? "Description must be at least 5 letters, start with a letter, and contain only letters and spaces."
       : "";
+
+  // Optional: Fade-in style for error messages
+  const errorFadeStyle: React.CSSProperties = {
+    transition: "opacity 0.3s",
+    opacity: 1,
+  };
 
   return (
     <div className="p-6 space-y-6">
@@ -549,7 +575,12 @@ export function TodayDashboard() {
               onKeyDown={(e) => e.key === "Enter" && handleQuickAdd()}
             />
             {titleError && (
-              <span className="text-xs text-red-600 mt-2 ml-2 font-light block">{titleError}</span>
+              <span
+                className="text-xs text-red-600 mt-2 ml-2 font-light block"
+                style={errorFadeStyle}
+              >
+                {titleError}
+              </span>
             )}
           </div>
           <div className="flex flex-col flex-1">
@@ -561,8 +592,37 @@ export function TodayDashboard() {
               onKeyDown={(e) => e.key === "Enter" && handleQuickAdd()}
             />
             {descError && (
-              <span className="text-xs text-red-600 mt-2 ml-2 font-light block">{descError}</span>
+              <span
+                className="text-xs text-red-600 mt-2 ml-2 font-light block"
+                style={errorFadeStyle}
+              >
+                {descError}
+              </span>
             )}
+          </div>
+          <div className="flex flex-col flex-1 min-w-[120px] max-w-[120px]">
+            <Select value={quickAddTag} onValueChange={setQuickAddTag}>
+              <SelectTrigger className="w-full h-10 text-xs">
+                <SelectValue placeholder="#Tag" />
+              </SelectTrigger>
+              <SelectContent>
+                {allTags.map((tag) => (
+                  <SelectItem key={tag} value={tag}>{`#${tag}`}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Input
+              value={quickAddTag ? `#${quickAddTag.replace(/^#/, "")}` : ""}
+              onChange={(e) => {
+                // Always keep # at the start, but store value without #
+                const val = e.target.value.startsWith("#") ? e.target.value.slice(1) : e.target.value;
+                setQuickAddTag(val);
+              }}
+              placeholder="Add new #tag"
+              className="text-xs mt-1 bg-background border-border focus:border-primary transition-colors placeholder:text-muted-foreground h-8 px-2"
+              onKeyDown={(e) => e.key === "Enter" && handleQuickAdd()}
+              style={{ maxWidth: 120 }}
+            />
           </div>
           <Select value={quickAddPriority} onValueChange={setQuickAddPriority}>
             <SelectTrigger className="w-28">
@@ -580,7 +640,8 @@ export function TodayDashboard() {
               loading ||
               !isValidTitle(quickAddValue.replace(/#\w+/g, "").trim()) ||
               !isValidDescription(quickAddDescription.trim()) ||
-              !quickAddPriority
+              !quickAddPriority ||
+              !quickAddTag.trim()
             }
             className="cursor-pointer"
           >
@@ -975,6 +1036,11 @@ function TaskSection({
                     >
                       {task.title}
                     </p>
+                    {task.description && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {task.description}
+                      </p>
+                    )}
                     {task.tag && (
                       <p className="text-sm text-muted-foreground">
                         #{task.tag}
