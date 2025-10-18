@@ -193,7 +193,12 @@ export function CalendarHeatmap({ className }: HeatmapProps) {
                       {activity && selectedDay?.date === activity.date && (
                         <div className="p-4 min-w-[180px]">
                           <div className="font-semibold mb-2">{format(parseISO(activity.date), "MMM d, yyyy")}</div>
-                          <div className="mb-1">Completed Tasks: <span className="font-bold text-primary">{activity.completed}</span></div>
+                          <div className="mb-1 flex items-center gap-2">
+                            Completed Tasks:
+                            <span className="font-bold text-primary bg-primary/10 px-2 py-1 rounded-full text-sm">
+                              {activity.completed}
+                            </span>
+                          </div>
                           <div>Mood: <span className="text-2xl">{activity.mood !== null ? ["😢", "😞", "😐", "😊", "😄"][activity.mood + 2] : "-"}</span></div>
                         </div>
                       )}
