@@ -107,6 +107,9 @@ export function TodayDashboard() {
   );
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [editTag, setEditTag] = useState("");
+  const [editPriority, setEditPriority] = useState<string>("");
   const [deletedTask, setDeletedTask] = useState<Task | null>(null);
   const [showUndo, setShowUndo] = useState(false);
   const undoTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -310,13 +313,22 @@ export function TodayDashboard() {
   const startEditTask = (task: Task) => {
     setEditingTaskId(task._id ?? "");
     setEditValue(task.title);
+    setEditDescription(task.description || "");
+    setEditTag(task.tag || "");
+    setEditPriority(task.priority || "");
   };
 
   const saveEditTask = async (id: string) => {
     const task = tasks.find((t) => t._id === id);
     if (!task) return;
 
-    const updated = { ...task, title: editValue };
+    const updated = {
+      ...task,
+      title: editValue,
+      description: editDescription,
+      tag: editTag,
+      priority: editPriority,
+    };
 
     setLoading(true);
     try {
@@ -334,6 +346,9 @@ export function TodayDashboard() {
     } finally {
       setEditingTaskId(null);
       setEditValue("");
+      setEditDescription("");
+      setEditTag("");
+      setEditPriority("");
       setLoading(false);
     }
   };
@@ -341,6 +356,9 @@ export function TodayDashboard() {
   const cancelEditTask = () => {
     setEditingTaskId(null);
     setEditValue("");
+    setEditDescription("");
+    setEditTag("");
+    setEditPriority("");
   };
 
   const completeTask = async (id: string) => {
@@ -675,6 +693,8 @@ export function TodayDashboard() {
             editingTaskId={editingTaskId}
             editValue={editValue}
             setEditValue={setEditValue}
+            editDescription={editDescription}
+            setEditDescription={setEditDescription}
             saveEditTask={saveEditTask}
             cancelEditTask={cancelEditTask}
             showUndo={showUndo}
@@ -936,8 +956,6 @@ function PomodoroTimer({
     </Card>
   );
 }
-
-// Move TaskSection outside so it is in scope for TodayDashboard
 function TaskSection({
   title,
   color,
@@ -949,12 +967,19 @@ function TaskSection({
   editingTaskId,
   editValue,
   setEditValue,
+  editDescription,
+  setEditDescription,
   saveEditTask,
   cancelEditTask,
   showUndo,
   deletedTask,
   handleUndo,
   onReopen,
+  allTags = [],
+  editTag,
+  setEditTag,
+  editPriority,
+  setEditPriority,
 }: any) {
   // Show newest tasks at the top
   const orderedTasks = [...tasks].reverse();
@@ -1005,25 +1030,66 @@ function TaskSection({
               )}
               <div className="flex-1">
                 {editingTaskId === task._id && title !== "Completed" ? (
-                  <div className="flex gap-2 items-center">
+                  <div className="flex flex-col gap-2 items-start">
                     <Input
                       value={editValue}
                       onChange={(e) => setEditValue(e.target.value)}
+                      className="mb-1"
                     />
-                    <Button
-                      size="sm"
-                      variant="default"
-                      onClick={() => saveEditTask(task._id ?? "")}
-                    >
-                      Save
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={cancelEditTask}
-                    >
-                      Cancel
-                    </Button>
+                    <Input
+                      value={editDescription}
+                      onChange={(e) => setEditDescription(e.target.value)}
+                      placeholder="Description"
+                      className="mb-1 text-xs"
+                    />
+                    <div className="flex gap-2 w-full">
+                      <Select value={editTag} onValueChange={setEditTag}>
+                        <SelectTrigger className="w-24 h-8 text-xs">
+                          <SelectValue placeholder="#Tag" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {allTags.map((tag: string) => (
+                            <SelectItem key={tag} value={tag}>{`#${tag}`}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Input
+                        value={editTag ? `#${editTag.replace(/^#/, "")}` : ""}
+                        onChange={(e) => {
+                          const val = e.target.value.startsWith("#") ? e.target.value.slice(1) : e.target.value;
+                          setEditTag(val);
+                        }}
+                        placeholder="Add new #tag"
+                        className="text-xs h-8 px-2"
+                        style={{ maxWidth: 90 }}
+                      />
+                      <Select value={editPriority} onValueChange={setEditPriority}>
+                        <SelectTrigger className="w-20 h-8 text-xs">
+                          <SelectValue placeholder="Priority" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="High">High</SelectItem>
+                          <SelectItem value="Medium">Medium</SelectItem>
+                          <SelectItem value="Low">Low</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex gap-2 mt-2">
+                      <Button
+                        size="sm"
+                        variant="default"
+                        onClick={() => saveEditTask(task._id ?? "")}
+                      >
+                        Save
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={cancelEditTask}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
                   </div>
                 ) : (
                   <>
