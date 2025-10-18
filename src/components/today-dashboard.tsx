@@ -54,6 +54,13 @@ import {
   RotateCcw,
 } from "lucide-react";
 import { CalendarHeatmap } from "./calendar-heatmap";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 
 type Task = {
   _id?: string;
@@ -65,10 +72,20 @@ type Task = {
 };
 
 export function TodayDashboard() {
+  // Validation helpers
+  function isValidTitle(title: string) {
+    return /^[a-zA-Z][a-zA-Z ]{1,}$/.test(title.trim()); // at least 2 chars, starts with a-z, no special chars
+  }
+  function isValidDescription(desc: string) {
+    return /^[a-zA-Z][a-zA-Z ]{4,}$/.test(desc.trim()); // at least 5 chars, starts with a-z, no special chars
+  }
   const [blinkQuickAdd, setBlinkQuickAdd] = useState(false);
   // Blink quick add if sessionStorage flag is set
   useEffect(() => {
-    if (typeof window !== "undefined" && sessionStorage.getItem("quickAddBlink") === "true") {
+    if (
+      typeof window !== "undefined" &&
+      sessionStorage.getItem("quickAddBlink") === "true"
+    ) {
       setBlinkQuickAdd(true);
       sessionStorage.removeItem("quickAddBlink");
       setTimeout(() => setBlinkQuickAdd(false), 1200); // 2-3 blinks (600ms per blink)
@@ -80,6 +97,8 @@ export function TodayDashboard() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [quickAddValue, setQuickAddValue] = useState("");
+  const [quickAddPriority, setQuickAddPriority] = useState<string>("");
+  const [quickAddDescription, setQuickAddDescription] = useState("");
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
   const [deletedTask, setDeletedTask] = useState<Task | null>(null);
@@ -191,22 +210,12 @@ export function TodayDashboard() {
 
   // Quick Add handler
   const handleQuickAdd = async () => {
-    if (!quickAddValue.trim()) return;
-    const priority = quickAddValue.includes("!high")
-      ? "High"
-      : quickAddValue.includes("!medium")
-      ? "Medium"
-      : quickAddValue.includes("!low")
-      ? "Low"
-      : undefined;
+    const title = quickAddValue.replace(/#\w+/g, "").trim();
+    const description = quickAddDescription.trim();
+    if (!isValidTitle(title) || !isValidDescription(description) || !quickAddPriority) return;
     const tagMatch = quickAddValue.match(/#(\w+)/);
     const tag = tagMatch ? tagMatch[1] : undefined;
-    const title = quickAddValue
-      .replace(/#\w+/g, "")
-      .replace(/!\w+/g, "")
-      .trim();
-
-    const newTask = { title, status: "today", priority, tag };
+    const newTask = { title, description, status: "today", priority: quickAddPriority, tag };
     try {
       await fetch("/api/tasks", {
         method: "POST",
@@ -216,12 +225,13 @@ export function TodayDashboard() {
       const res = await fetch("/api/tasks");
       const data = await res.json();
       setTasks(data);
-      // Notify other components (heatmap) that activity changed
       window.dispatchEvent(new Event("activityChanged"));
     } catch (error) {
       console.error("Failed to add task", error);
     }
-    setQuickAddValue("");
+  setQuickAddValue("");
+  setQuickAddPriority("");
+  setQuickAddDescription("");
   };
 
   // Delete task with undo
@@ -431,8 +441,8 @@ export function TodayDashboard() {
       const historyData = await historyRes.json();
       setMoodHistory(Array.isArray(historyData) ? historyData : []);
       setMoodSaved(true);
-  // Notify heatmap/activity listeners to refetch activity (tasks+mood)
-  window.dispatchEvent(new Event("activityChanged"));
+      // Notify heatmap/activity listeners to refetch activity (tasks+mood)
+      window.dispatchEvent(new Event("activityChanged"));
       setTimeout(() => setMoodSaved(false), 2000);
     } catch (err) {
       // Optionally show error
@@ -480,6 +490,17 @@ export function TodayDashboard() {
     // finish effect
   }, [todayTasks, pomodoroActive, pomodoroDuration]);
 
+  // Error messages for quick add inputs
+  const titleError =
+    quickAddValue.trim() && !isValidTitle(quickAddValue.replace(/#\w+/g, "").trim())
+      ? "Title must be at least 2 letters, start with a letter, and contain only letters and spaces."
+      : "";
+
+  const descError =
+    quickAddDescription.trim() && !isValidDescription(quickAddDescription.trim())
+      ? "Description must be at least 5 letters, start with a letter, and contain only letters and spaces."
+      : "";
+
   return (
     <div className="p-6 space-y-6">
       {/* Quick Add Section */}
@@ -488,13 +509,29 @@ export function TodayDashboard() {
       {/* SVG filter for wavy border */}
       <svg width="0" height="0">
         <filter id="wavy-border">
-          <feTurbulence id="turb" baseFrequency="0.025 0.05" numOctaves="2" result="turb" seed="2"/>
-          <feDisplacementMap in2="turb" in="SourceGraphic" scale="2.2" xChannelSelector="R" yChannelSelector="G"/>
+          <feTurbulence
+            id="turb"
+            baseFrequency="0.025 0.05"
+            numOctaves="2"
+            result="turb"
+            seed="2"
+          />
+          <feDisplacementMap
+            in2="turb"
+            in="SourceGraphic"
+            scale="2.2"
+            xChannelSelector="R"
+            yChannelSelector="G"
+          />
         </filter>
       </svg>
       <Card
         style={blinkQuickAdd ? { filter: "url(#wavy-border)" } : {}}
-        className={`bg-card border-border shadow-sm ${blinkQuickAdd ? "animate-[blink-quickadd_0.6s_cubic-bezier(0.4,0.0,0.2,1)_0s_2] border border-[#D86D38]" : ""}`}
+        className={`bg-card border-border shadow-sm ${
+          blinkQuickAdd
+            ? "animate-[blink-quickadd_0.6s_cubic-bezier(0.4,0.0,0.2,1)_0s_2] border border-[#D86D38]"
+            : ""
+        }`}
       >
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
@@ -503,16 +540,48 @@ export function TodayDashboard() {
           </CardTitle>
         </CardHeader>
         <CardContent className="flex gap-2">
-          <Input
-            value={quickAddValue}
-            onChange={(e) => setQuickAddValue(e.target.value)}
-            placeholder="Add a task or note... (e.g., 'Finish report tomorrow 2pm #work !high')"
-            className="text-base bg-background border-border focus:border-primary transition-colors"
-            onKeyDown={(e) => e.key === "Enter" && handleQuickAdd()}
-          />
+          <div className="flex flex-col flex-1">
+            <Input
+              value={quickAddValue}
+              onChange={(e) => setQuickAddValue(e.target.value)}
+              placeholder="Task Title"
+              className="text-base bg-background border-border focus:border-primary transition-colors placeholder:text-muted-foreground"
+              onKeyDown={(e) => e.key === "Enter" && handleQuickAdd()}
+            />
+            {titleError && (
+              <span className="text-xs text-red-600 mt-2 ml-2 font-light block">{titleError}</span>
+            )}
+          </div>
+          <div className="flex flex-col flex-1">
+            <Input
+              value={quickAddDescription}
+              onChange={(e) => setQuickAddDescription(e.target.value)}
+              placeholder="Description"
+              className="text-base bg-background border-border focus:border-primary transition-colors placeholder:text-muted-foreground"
+              onKeyDown={(e) => e.key === "Enter" && handleQuickAdd()}
+            />
+            {descError && (
+              <span className="text-xs text-red-600 mt-2 ml-2 font-light block">{descError}</span>
+            )}
+          </div>
+          <Select value={quickAddPriority} onValueChange={setQuickAddPriority}>
+            <SelectTrigger className="w-28">
+              <SelectValue placeholder="Priority" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="High">High</SelectItem>
+              <SelectItem value="Medium">Medium</SelectItem>
+              <SelectItem value="Low">Low</SelectItem>
+            </SelectContent>
+          </Select>
           <Button
             onClick={handleQuickAdd}
-            disabled={loading}
+            disabled={
+              loading ||
+              !isValidTitle(quickAddValue.replace(/#\w+/g, "").trim()) ||
+              !isValidDescription(quickAddDescription.trim()) ||
+              !quickAddPriority
+            }
             className="cursor-pointer"
           >
             Add
