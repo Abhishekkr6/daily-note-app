@@ -1,5 +1,7 @@
 "use client";
 
+;
+import { Spinner } from "@heroui/spinner";
 import { useEffect, useRef, useState } from "react";
 // Softer blink + wavy border animation
 const blinkStyle = `
@@ -73,12 +75,15 @@ type Task = {
 };
 
 export function TodayDashboard() {
+  const [quickAddStatus, setQuickAddStatus] = useState<'idle' | 'loading' | 'added'>('idle');
   // Validation helpers
   function isValidTitle(title: string) {
-    return /^[a-zA-Z][a-zA-Z ]{1,}$/.test(title.trim()); // at least 2 chars, starts with a-z, no special chars
+    // Allow numbers anywhere except the first character
+    return /^[^\d][\w\s\d]{1,}$/.test(title.trim()); // at least 2 chars, first char not a digit
   }
   function isValidDescription(desc: string) {
-    return /^[a-zA-Z][a-zA-Z ]{4,}$/.test(desc.trim()); // at least 5 chars, starts with a-z, no special chars
+    // Allow numbers anywhere except the first character
+    return /^[^\d][\w\s\d]{4,}$/.test(desc.trim()); // at least 5 chars, first char not a digit
   }
   const [blinkQuickAdd, setBlinkQuickAdd] = useState(false);
   // Blink quick add if sessionStorage flag is set
@@ -97,6 +102,7 @@ export function TodayDashboard() {
 
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
+  const [quickAddLoading, setQuickAddLoading] = useState(false);
   const [quickAddValue, setQuickAddValue] = useState("");
   const [quickAddPriority, setQuickAddPriority] = useState<string>("");
   const [quickAddDescription, setQuickAddDescription] = useState("");
@@ -219,14 +225,17 @@ export function TodayDashboard() {
 
   // Quick Add handler
   const handleQuickAdd = async () => {
+  setQuickAddStatus('loading');
     const title = quickAddValue.replace(/#\w+/g, "").trim();
     const description = quickAddDescription.trim();
     if (
       !isValidTitle(title) ||
       !isValidDescription(description) ||
       !quickAddPriority
-    )
+    ) {
+      setQuickAddStatus('idle');
       return;
+    }
     const tagMatch = quickAddValue.match(/#(\w+)/);
     const tag = quickAddTag || undefined;
     const newTask = {
@@ -249,10 +258,12 @@ export function TodayDashboard() {
     } catch (error) {
       console.error("Failed to add task", error);
     }
-    setQuickAddValue("");
-    setQuickAddPriority("");
-    setQuickAddDescription("");
-    setQuickAddTag("");
+  setQuickAddValue("");
+  setQuickAddPriority("");
+  setQuickAddDescription("");
+  setQuickAddTag("");
+  setQuickAddStatus('added');
+  setTimeout(() => setQuickAddStatus('idle'), 1200);
   };
 
   // Delete task with undo
@@ -530,13 +541,13 @@ export function TodayDashboard() {
   const titleError =
     quickAddValue.trim() &&
     !isValidTitle(quickAddValue.replace(/#\w+/g, "").trim())
-      ? "Title must be at least 2 letters, start with a letter, and contain only letters and spaces."
+      ? "Title must be at least 2 characters and cannot start with a number. Numbers are allowed elsewhere."
       : "";
 
   const descError =
     quickAddDescription.trim() &&
     !isValidDescription(quickAddDescription.trim())
-      ? "Description must be at least 5 letters, start with a letter, and contain only letters and spaces."
+      ? "Description must be at least 5 characters and cannot start with a number. Numbers are allowed elsewhere."
       : "";
 
   // Optional: Fade-in style for error messages
@@ -655,15 +666,17 @@ export function TodayDashboard() {
           <Button
             onClick={handleQuickAdd}
             disabled={
-              loading ||
+              quickAddStatus === 'loading' ||
               !isValidTitle(quickAddValue.replace(/#\w+/g, "").trim()) ||
               !isValidDescription(quickAddDescription.trim()) ||
               !quickAddPriority ||
               !quickAddTag.trim()
             }
-            className="cursor-pointer"
+            className="cursor-pointer flex items-center gap-2 min-w-[70px]"
           >
-            Add
+            {quickAddStatus === 'loading'
+              ? (<span className="inline-block w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>)
+              : quickAddStatus === 'added' ? 'Added' : 'Add'}
           </Button>
         </CardContent>
       </Card>

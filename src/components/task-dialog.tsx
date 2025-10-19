@@ -33,8 +33,10 @@ export function TaskDialog({ trigger, task, onSave }: TaskDialogProps) {
   const [open, setOpen] = useState(false)
   const [title, setTitle] = useState(task?.title || "")
   const [description, setDescription] = useState(task?.description || "")
-  const [priority, setPriority] = useState(task?.priority || "medium")
-  const [status, setStatus] = useState(task?.status || "todo")
+  const [titleError, setTitleError] = useState("");
+  const [descError, setDescError] = useState("");
+  const [priority, setPriority] = useState<"low" | "medium" | "high">(task?.priority || "medium")
+  const [status, setStatus] = useState<"todo" | "in-progress" | "completed">(task?.status || "todo")
   const [tags, setTags] = useState<string[]>(task?.tags || [])
   const [dueDate, setDueDate] = useState<Date | undefined>(task?.dueDate ? new Date(task.dueDate) : undefined)
   const [newTag, setNewTag] = useState("")
@@ -50,7 +52,27 @@ export function TaskDialog({ trigger, task, onSave }: TaskDialogProps) {
     setTags(tags.filter((tag) => tag !== tagToRemove))
   }
 
+  // Allow numbers anywhere except the first character
+  const validateNoLeadingNumber = (value: string) => {
+    if (!value) return true;
+    return !/^[0-9]/.test(value[0] || "");
+  };
+
   const handleSave = () => {
+    let valid = true;
+    if (!validateNoLeadingNumber(title.trim())) {
+      setTitleError("Title cannot start with a number.");
+      valid = false;
+    } else {
+      setTitleError("");
+    }
+    if (description.trim() && !validateNoLeadingNumber(description.trim())) {
+      setDescError("Description cannot start with a number.");
+      valid = false;
+    } else {
+      setDescError("");
+    }
+    if (!valid) return;
     const taskData = {
       id: task?.id,
       title,
@@ -60,21 +82,19 @@ export function TaskDialog({ trigger, task, onSave }: TaskDialogProps) {
       tags,
       dueDate: dueDate?.toISOString(),
       createdAt: task?.id ? undefined : new Date().toISOString(),
-    }
-
-    onSave?.(taskData)
-    setOpen(false)
-
+    };
+    onSave?.(taskData);
+    setOpen(false);
     // Reset form if creating new task
     if (!task?.id) {
-      setTitle("")
-      setDescription("")
-      setPriority("medium")
-      setStatus("todo")
-      setTags([])
-      setDueDate(undefined)
+      setTitle("");
+      setDescription("");
+      setPriority("medium");
+      setStatus("todo");
+      setTags([]);
+      setDueDate(undefined);
     }
-  }
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -99,8 +119,18 @@ export function TaskDialog({ trigger, task, onSave }: TaskDialogProps) {
               id="title"
               placeholder="Enter task title..."
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e) => {
+                setTitle(e.target.value);
+                if (!validateNoLeadingNumber(e.target.value.trim())) {
+                  setTitleError("Title cannot start with a number.");
+                } else {
+                  setTitleError("");
+                }
+              }}
             />
+            {titleError && (
+              <span className="text-xs text-red-500">{titleError}</span>
+            )}
           </div>
 
           {/* Description */}
@@ -110,16 +140,26 @@ export function TaskDialog({ trigger, task, onSave }: TaskDialogProps) {
               id="description"
               placeholder="Add a description..."
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={(e) => {
+                setDescription(e.target.value);
+                if (e.target.value.trim() && !validateNoLeadingNumber(e.target.value.trim())) {
+                  setDescError("Description cannot start with a number.");
+                } else {
+                  setDescError("");
+                }
+              }}
               rows={3}
             />
+            {descError && (
+              <span className="text-xs text-red-500">{descError}</span>
+            )}
           </div>
 
           {/* Priority and Status */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Priority</Label>
-              <Select value={priority} onValueChange={setPriority}>
+              <Select value={priority} onValueChange={(val) => setPriority(val as "low" | "medium" | "high") }>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -133,7 +173,7 @@ export function TaskDialog({ trigger, task, onSave }: TaskDialogProps) {
 
             <div className="space-y-2">
               <Label>Status</Label>
-              <Select value={status} onValueChange={setStatus}>
+              <Select value={status} onValueChange={(val) => setStatus(val as "todo" | "in-progress" | "completed") }>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
