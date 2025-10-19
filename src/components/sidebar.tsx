@@ -28,14 +28,7 @@ export function Sidebar({ className }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
 
-  const handleLogout = async () => {
-    try {
-      await axios.post("/api/users/logout");
-      router.replace("/login");
-    } catch (err) {
-      // Optionally show error toast
-    }
-  };
+  // Logout logic moved to settings page
 
   return (
     <div
@@ -88,16 +81,7 @@ export function Sidebar({ className }: SidebarProps) {
             );
           })}
         </nav>
-        {/* Logout Button */}
-        <div className="mt-6">
-          <Button
-            variant="destructive"
-            className="w-full"
-            onClick={handleLogout}
-          >
-            Logout
-          </Button>
-        </div>
+        {/* Logout Button removed from sidebar */}
       </ScrollArea>
 
       {/* Footer */}

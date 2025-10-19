@@ -9,11 +9,19 @@ import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
-import { Settings, User, Bell, Palette, Download, Upload, Trash2, Clock, Database } from "lucide-react"
+import { Settings, User, Bell, Palette, Download, Upload, Trash2, Clock, Database, LogOut } from "lucide-react"
 import { Check } from "lucide-react"
 import { useTheme } from "next-themes"
 
 export function SettingsPage() {
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/users/logout", { method: "POST", credentials: "include" });
+      window.location.href = "/login";
+    } catch (err) {
+      // Optionally show error toast
+    }
+  };
   const [saveStatus, setSaveStatus] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -514,78 +522,90 @@ export function SettingsPage() {
                   <p className="text-sm text-muted-foreground mb-3">
                     Permanently delete all your data. This action cannot be undone.
                   </p>
-                  <Button variant="destructive" className="cursor-pointer">
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Delete All Data
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button variant="destructive" className="cursor-pointer">
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Delete All Data
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      className="cursor-pointer"
+                      onClick={handleLogout}
+                    >
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Logout
+                    </Button>
+                  </div>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           {/* Save Changes */}
-          <div className="flex justify-end">
-            <Button
-              onClick={async () => {
-                setSaveStatus(null);
-                setIsSaving(true);
-                let success = false;
-                // Save avatar if selected
-                if (selectedFile) {
-                  const formData = new FormData();
-                  formData.append("avatar", selectedFile);
-                  const res = await fetch("/api/users/avatar", {
-                    method: "POST",
-                    body: formData,
-                    credentials: "include"
+          <div className="flex flex-col gap-2 justify-end">
+            <div className="flex justify-end">
+              <Button
+                onClick={async () => {
+                  setSaveStatus(null);
+                  setIsSaving(true);
+                  let success = false;
+                  // Save avatar if selected
+                  if (selectedFile) {
+                    const formData = new FormData();
+                    formData.append("avatar", selectedFile);
+                    const res = await fetch("/api/users/avatar", {
+                      method: "POST",
+                      body: formData,
+                      credentials: "include"
+                    });
+                    if (res.ok) {
+                      const data = await res.json();
+                      setAvatarUrl(data.avatarUrl);
+                      window.dispatchEvent(new CustomEvent("avatarUrlChanged", { detail: { avatarUrl: data.avatarUrl } }));
+                      success = true;
+                    }
+                  }
+                  // Save name, timezone, working hours
+                  const res = await fetch("/api/users/profile", {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    credentials: "include",
+                    body: JSON.stringify({
+                      name: profile.name,
+                      timezone: profile.timezone,
+                      workingHours: profile.workingHours
+                    })
                   });
                   if (res.ok) {
-                    const data = await res.json();
-                    setAvatarUrl(data.avatarUrl);
-                    window.dispatchEvent(new CustomEvent("avatarUrlChanged", { detail: { avatarUrl: data.avatarUrl } }));
                     success = true;
                   }
-                }
-                // Save name, timezone, working hours
-                const res = await fetch("/api/users/profile", {
-                  method: "PUT",
-                  headers: { "Content-Type": "application/json" },
-                  credentials: "include",
-                  body: JSON.stringify({
-                    name: profile.name,
-                    timezone: profile.timezone,
-                    workingHours: profile.workingHours
-                  })
-                });
-                if (res.ok) {
-                  success = true;
-                }
-                setIsSaving(false);
-                if (success) {
-                  setSaveStatus("Saved Changes");
-                  setTimeout(() => setSaveStatus(null), 2500);
-                } else {
-                  setSaveStatus(null);
-                }
-              }}
-              className={saveStatus ? "bg-green-100 text-green-700 cursor-pointer" : "cursor-pointer"}
-              disabled={isSaving}
-            >
-              {isSaving ? (
-                <span className="flex items-center gap-2">
-                  <svg className="animate-spin h-5 w-5 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M12 2a10 10 0 1 1-9.95 9.05" />
-                  </svg>
-                  Saving...
-                </span>
-              ) : saveStatus ? (
-                <span className="flex items-center gap-2">
-                  {saveStatus}
-                  <Check className="w-4 h-4" />
-                </span>
-              ) : "Save Changes"}
-            </Button>
+                  setIsSaving(false);
+                  if (success) {
+                    setSaveStatus("Saved Changes");
+                    setTimeout(() => setSaveStatus(null), 2500);
+                  } else {
+                    setSaveStatus(null);
+                  }
+                }}
+                className={saveStatus ? "bg-green-100 text-green-700 cursor-pointer" : "cursor-pointer"}
+                disabled={isSaving}
+              >
+                {isSaving ? (
+                  <span className="flex items-center gap-2">
+                    <svg className="animate-spin h-5 w-5 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M12 2a10 10 0 1 1-9.95 9.05" />
+                    </svg>
+                    Saving...
+                  </span>
+                ) : saveStatus ? (
+                  <span className="flex items-center gap-2">
+                    {saveStatus}
+                    <Check className="w-4 h-4" />
+                  </span>
+                ) : "Save Changes"}
+              </Button>
+            </div>
           </div>
         </div>
       </div>
