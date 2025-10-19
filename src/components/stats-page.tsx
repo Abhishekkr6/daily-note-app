@@ -47,11 +47,23 @@ export function StatsPage() {
         const activity = await resActivity.json();
 
         // --- Calculate key metrics ---
-        // 1. Current streak (consecutive days with completed > 0, ending today)
+        // 1. Current streak: reset to 1 after a gap (missed day)
         let streak = 0;
+        let gapFound = false;
         for (let i = 0; i < activity.length; i++) {
-          if (activity[i].completed > 0) streak++;
-          else break;
+          if (activity[i].completed > 0) {
+            if (gapFound) {
+              streak = 1;
+              gapFound = false;
+            } else {
+              streak++;
+            }
+          } else {
+            if (streak > 0) {
+              gapFound = true;
+              streak = 0;
+            }
+          }
         }
         setCurrentStreak(streak);
 

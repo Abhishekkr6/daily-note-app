@@ -86,13 +86,29 @@ export function TopBar() {
         const res = await fetch("/api/activity");
         if (!res.ok) return;
         const activity = await res.json();
-        // Calculate current streak (consecutive days with completed > 0, ending today)
-        let currentStreak = 0;
-        for (let i = 0; i < activity.length; i++) {
-          if (activity[i].completed > 0) currentStreak++;
-          else break;
-        }
-        setStreak(currentStreak);
+          // Calculate streak: reset to 1 after a gap (missed day)
+          let currentStreak = 0;
+          let gapFound = false;
+          for (let i = 0; i < activity.length; i++) {
+            if (activity[i].completed > 0) {
+              if (gapFound) {
+                // After a gap, streak starts from 1
+                currentStreak = 1;
+                gapFound = false;
+              } else {
+                currentStreak++;
+              }
+            } else {
+              if (currentStreak > 0) {
+                // First gap found, reset streak
+                gapFound = true;
+                currentStreak = 0;
+              }
+            }
+          }
+          // If streak is 0 (no activity today), show 0
+          // If user resumes after gap, streak starts from 1
+          setStreak(currentStreak);
       } catch {}
     }
     fetchStreak();
