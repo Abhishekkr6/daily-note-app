@@ -3,7 +3,7 @@
 
 import { Sidebar } from "@/components/sidebar";
 import { TopBar } from "@/components/top-bar";
-import { TasksPage } from "@/components/tasks-page";
+import TasksPage from "@/components/tasks-page";
 import { AppSkeleton } from "@/components/AppSkeleton";
 import { useState, useEffect } from "react";
 

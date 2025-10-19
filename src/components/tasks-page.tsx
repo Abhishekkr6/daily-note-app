@@ -1,16 +1,27 @@
-"use client"
+"use client";
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef } from "react";
 import ConfirmDialog from "@/components/confirm-dialog";
-import { useRouter } from "next/navigation"
-import { toast } from "sonner" // If you use a toast library, otherwise use alert
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { useRouter, useSearchParams } from "next/navigation";
+import { toast } from "sonner"; // If you use a toast library, otherwise use alert
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Search,
   Filter,
@@ -24,133 +35,154 @@ import {
   Edit,
   Copy,
   Archive,
-} from "lucide-react"
+} from "lucide-react";
 
 interface Task {
-  id: string
-  title: string
-  description?: string
-  priority: "low" | "medium" | "high"
-  status: "todo" | "in-progress" | "completed"
-  tags: string[]
-  dueDate?: string
-  createdAt: string
+  id: string;
+  title: string;
+  description?: string;
+  priority: "low" | "medium" | "high";
+  status: "todo" | "in-progress" | "completed";
+  tags: string[];
+  dueDate?: string;
+  createdAt: string;
 }
 
 // ...existing code...
 
-export function TasksPage() {
+function TasksPage() {
   const router = useRouter();
-  const [tasks, setTasks] = useState<Task[]>([])
+  const searchParams = useSearchParams();
+  const [activeHighlight, setActiveHighlight] = useState<string | null>(null);
+  useEffect(() => {
+    const highlightId = searchParams.get("highlight");
+    if (highlightId) {
+      setActiveHighlight(highlightId);
+      const timeout = setTimeout(() => setActiveHighlight(null), 1600);
+      return () => clearTimeout(timeout);
+    }
+  }, [searchParams]);
+  const [tasks, setTasks] = useState<Task[]>([]);
   // Fetch tasks from backend on mount
   useEffect(() => {
     async function fetchTasks() {
       try {
-        const res = await fetch("/api/tasks", { credentials: "include" })
-        if (!res.ok) throw new Error("Failed to fetch tasks")
-        const data = await res.json()
+        const res = await fetch("/api/tasks", { credentials: "include" });
+        if (!res.ok) throw new Error("Failed to fetch tasks");
+        const data = await res.json();
         // Map backend _id to id for frontend
-        setTasks(data.map((t: any) => ({
-          id: t._id,
-          title: t.title,
-          description: t.description,
-          // Map priority to backend enum
-          priority: t.priority || "Low",
-          // Map status to backend enum
-          status: t.status,
-          tags: t.tag ? [t.tag] : [],
-          dueDate: t.dueDate,
-          createdAt: t.createdAt,
-        })))
+        setTasks(
+          data.map((t: any) => ({
+            id: t._id,
+            title: t.title,
+            description: t.description,
+            // Map priority to backend enum
+            priority: t.priority || "Low",
+            // Map status to backend enum
+            status: t.status,
+            tags: t.tag ? [t.tag] : [],
+            dueDate: t.dueDate,
+            createdAt: t.createdAt,
+          }))
+        );
       } catch (err) {
-        setError("Could not load tasks")
+        setError("Could not load tasks");
       }
     }
-    fetchTasks()
-  }, [])
-  const [searchQuery, setSearchQuery] = useState("")
-  const [statusFilter, setStatusFilter] = useState<string>("all")
-  const [priorityFilter, setPriorityFilter] = useState<string>("all")
-  const [tagFilter, setTagFilter] = useState<string>("all")
-  const [selectedTasks, setSelectedTasks] = useState<string[]>([])
-  const [loadingTaskId, setLoadingTaskId] = useState<string | null>(null)
-  const [recentlyDeleted, setRecentlyDeleted] = useState<Task[] | null>(null)
-  const recentlyDeletedRef = useRef<Task[] | null>(null)
-  const undoTimeout = useRef<NodeJS.Timeout | null>(null)
-  const [error, setError] = useState<string>("")
+    fetchTasks();
+  }, []);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [priorityFilter, setPriorityFilter] = useState<string>("all");
+  const [tagFilter, setTagFilter] = useState<string>("all");
+  const [selectedTasks, setSelectedTasks] = useState<string[]>([]);
+  const [loadingTaskId, setLoadingTaskId] = useState<string | null>(null);
+  const [recentlyDeleted, setRecentlyDeleted] = useState<Task[] | null>(null);
+  const recentlyDeletedRef = useRef<Task[] | null>(null);
+  const undoTimeout = useRef<NodeJS.Timeout | null>(null);
+  const [error, setError] = useState<string>("");
   const [showConfirm, setShowConfirm] = useState(false);
 
   // Get unique tags from all tasks
-  const allTags = Array.from(new Set(tasks.flatMap((task) => task.tags)))
+  const allTags = Array.from(new Set(tasks.flatMap((task) => task.tags)));
 
   // Filter tasks based on search and filters
   const filteredTasks = tasks.filter((task) => {
     const matchesSearch =
       task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       task.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      task.tags.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+      task.tags.some((tag) =>
+        tag.toLowerCase().includes(searchQuery.toLowerCase())
+      );
 
-    const matchesStatus = statusFilter === "all" || task.status === statusFilter
-  // Compare priority exactly as backend and dropdown values ('Low', 'Medium', 'High')
-  const matchesPriority = priorityFilter === "all" || task.priority === priorityFilter
-    const matchesTag = tagFilter === "all" || task.tags.includes(tagFilter)
+    const matchesStatus =
+      statusFilter === "all" || task.status === statusFilter;
+    // Compare priority exactly as backend and dropdown values ('Low', 'Medium', 'High')
+    const matchesPriority =
+      priorityFilter === "all" || task.priority === priorityFilter;
+    const matchesTag = tagFilter === "all" || task.tags.includes(tagFilter);
 
-    return matchesSearch && matchesStatus && matchesPriority && matchesTag
-  })
+    return matchesSearch && matchesStatus && matchesPriority && matchesTag;
+  });
 
   // Mark as completed with backend update
   const handleTaskToggle = async (taskId: string) => {
-    setLoadingTaskId(taskId)
-    setError("")
-    const task = tasks.find((t) => t.id === taskId)
-    if (!task) return
-  // Only toggle between "completed" and "today" (backend expects "today" not "todo")
-  const newStatus = task.status === "completed" ? "today" : "completed"
+    setLoadingTaskId(taskId);
+    setError("");
+    const task = tasks.find((t) => t.id === taskId);
+    if (!task) return;
+    // Only toggle between "completed" and "today" (backend expects "today" not "todo")
+    const newStatus = task.status === "completed" ? "today" : "completed";
     try {
       const res = await fetch("/api/tasks", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({ _id: taskId, status: newStatus }),
-      })
-      if (!res.ok) throw new Error("Failed to update task")
-      const updated = await res.json()
-  setTasks(tasks.map((t) => (t.id === taskId ? { ...t, status: updated.status } : t)))
-  if (typeof toast === "function") toast("Task updated successfully")
-  // Dispatch event for heatmap realtime update
-  window.dispatchEvent(new Event("activityChanged"))
+      });
+      if (!res.ok) throw new Error("Failed to update task");
+      const updated = await res.json();
+      setTasks(
+        tasks.map((t) =>
+          t.id === taskId ? { ...t, status: updated.status } : t
+        )
+      );
+      if (typeof toast === "function") toast("Task updated successfully");
+      // Dispatch event for heatmap realtime update
+      window.dispatchEvent(new Event("activityChanged"));
     } catch (err: any) {
-      setError(err.message || "Error updating task")
-      if (typeof toast === "function") toast("Error updating task", { description: err.message })
+      setError(err.message || "Error updating task");
+      if (typeof toast === "function")
+        toast("Error updating task", { description: err.message });
     } finally {
-      setLoadingTaskId(null)
+      setLoadingTaskId(null);
     }
-  }
+  };
 
   const handleSelectTask = (taskId: string, checked: boolean) => {
     if (checked) {
-      setSelectedTasks([...selectedTasks, taskId])
+      setSelectedTasks([...selectedTasks, taskId]);
     } else {
-      setSelectedTasks(selectedTasks.filter((id) => id !== taskId))
+      setSelectedTasks(selectedTasks.filter((id) => id !== taskId));
     }
-  }
+  };
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedTasks(filteredTasks.map((task) => task.id))
+      setSelectedTasks(filteredTasks.map((task) => task.id));
     } else {
-      setSelectedTasks([])
+      setSelectedTasks([]);
     }
-  }
+  };
 
   // Bulk complete with backend update
   const handleBulkComplete = async () => {
-    setError("")
+    setError("");
     for (const taskId of selectedTasks) {
-      await handleTaskToggle(taskId)
+      await handleTaskToggle(taskId);
     }
-    setSelectedTasks([])
-  }
+    setSelectedTasks([]);
+  };
 
   const handleBulkDelete = () => {
     // Find and store deleted tasks
@@ -169,7 +201,10 @@ export function TasksPage() {
             className="underline text-primary font-medium ml-2 cursor-pointer"
             onClick={() => {
               if (undoTimeout.current) clearTimeout(undoTimeout.current);
-              setTasks((prev) => [...(recentlyDeletedRef.current || []), ...prev]);
+              setTasks((prev) => [
+                ...(recentlyDeletedRef.current || []),
+                ...prev,
+              ]);
               setRecentlyDeleted(null);
               recentlyDeletedRef.current = null;
               if (toastId !== undefined) toast.dismiss(toastId);
@@ -199,46 +234,49 @@ export function TasksPage() {
         recentlyDeletedRef.current = null;
       }
     }, 5000);
-  }
+  };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case "high":
-        return "destructive"
+        return "destructive";
       case "medium":
-        return "secondary"
+        return "secondary";
       case "low":
-        return "outline"
+        return "outline";
       default:
-        return "secondary"
+        return "secondary";
     }
-  }
+  };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "completed":
-        return <CheckCircle2 className="w-5 h-5 text-primary" />
+        return <CheckCircle2 className="w-5 h-5 text-primary" />;
       case "in-progress":
-        return <Clock className="w-5 h-5 text-amber-500" />
+        return <Clock className="w-5 h-5 text-amber-500" />;
       default:
-        return <Circle className="w-5 h-5 text-muted-foreground" />
+        return <Circle className="w-5 h-5 text-muted-foreground" />;
     }
-  }
+  };
 
   const highlightText = (text: string, query: string) => {
-    if (!query) return text
-    const regex = new RegExp(`(${query})`, "gi")
-    const parts = text.split(regex)
+    if (!query) return text;
+    const regex = new RegExp(`(${query})`, "gi");
+    const parts = text.split(regex);
     return parts.map((part, index) =>
       regex.test(part) ? (
-        <mark key={index} className="bg-primary/20 text-primary-foreground px-1 rounded">
+        <mark
+          key={index}
+          className="bg-primary/20 text-primary-foreground px-1 rounded"
+        >
           {part}
         </mark>
       ) : (
         part
-      ),
-    )
-  }
+      )
+    );
+  };
 
   return (
     <div className="p-6 space-y-6">
@@ -330,10 +368,15 @@ export function TasksPage() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium text-foreground">
-                {selectedTasks.length} task{selectedTasks.length > 1 ? "s" : ""} selected
+                {selectedTasks.length} task{selectedTasks.length > 1 ? "s" : ""}{" "}
+                selected
               </span>
               <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={handleBulkComplete}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleBulkComplete}
+                >
                   <CheckCircle2 className="w-4 h-4 mr-2" />
                   Mark Complete
                 </Button>
@@ -370,7 +413,10 @@ export function TasksPage() {
             </CardTitle>
             <div className="flex items-center space-x-2">
               <Checkbox
-                checked={selectedTasks.length === filteredTasks.length && filteredTasks.length > 0}
+                checked={
+                  selectedTasks.length === filteredTasks.length &&
+                  filteredTasks.length > 0
+                }
                 onCheckedChange={handleSelectAll}
                 className="border-2 border-[#D86D38] cursor-pointer"
               />
@@ -392,40 +438,56 @@ export function TasksPage() {
                   task.status === "completed"
                     ? "bg-muted/20 opacity-60"
                     : "bg-background border-border hover:border-primary/30"
-                }`}
+                } ${activeHighlight && activeHighlight === String(task.id) ? "animate-blink" : ""}`}
               >
                 {/* Selection Checkbox */}
                 <Checkbox
                   checked={selectedTasks.includes(task.id)}
-                  onCheckedChange={(checked) => handleSelectTask(task.id, checked as boolean)}
+                  onCheckedChange={(checked) =>
+                    handleSelectTask(task.id, checked as boolean)
+                  }
                   className="border-2 border-[#D86D38] cursor-pointer"
                 />
 
                 {/* Status Icon */}
-                <button onClick={() => handleTaskToggle(task.id)} className="hover:scale-110 transition-transform cursor-pointer">
+                <button
+                  onClick={() => handleTaskToggle(task.id)}
+                  className="hover:scale-110 transition-transform cursor-pointer"
+                >
                   {getStatusIcon(task.status)}
                 </button>
 
                 {/* Task Content */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center space-x-2 mb-1">
-                    <h3 className={`font-medium text-foreground ${task.status === "completed" ? "line-through" : ""}`}>
+                    <h3
+                      className={`font-medium text-foreground ${
+                        task.status === "completed" ? "line-through" : ""
+                      }`}
+                    >
                       {highlightText(task.title, searchQuery)}
                     </h3>
-                    <Badge variant={getPriorityColor(task.priority)} className="text-xs">
+                    <Badge
+                      variant={getPriorityColor(task.priority)}
+                      className="text-xs"
+                    >
                       {task.priority}
                     </Badge>
                   </div>
 
                   {task.description && (
-                    <p className="text-sm text-muted-foreground mb-2">{highlightText(task.description, searchQuery)}</p>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      {highlightText(task.description, searchQuery)}
+                    </p>
                   )}
 
                   <div className="flex items-center space-x-4 text-xs text-muted-foreground">
                     {task.dueDate && (
                       <div className="flex items-center space-x-1">
                         <Calendar className="w-3 h-3" />
-                        <span>Due {new Date(task.dueDate).toLocaleDateString()}</span>
+                        <span>
+                          Due {new Date(task.dueDate).toLocaleDateString()}
+                        </span>
                       </div>
                     )}
 
@@ -445,7 +507,11 @@ export function TasksPage() {
                 {/* Actions Menu */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button aria-label="Open task menu" type="button" className="p-1 rounded hover:bg-accent focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer">
+                    <button
+                      aria-label="Open task menu"
+                      type="button"
+                      className="p-1 rounded hover:bg-accent focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
+                    >
                       <MoreHorizontal className="w-4 h-4" />
                     </button>
                   </DropdownMenuTrigger>
@@ -465,11 +531,13 @@ export function TasksPage() {
                               <button
                                 className="underline text-primary font-medium ml-2 cursor-pointer"
                                 onClick={() => {
-                                  if (undoTimeout.current) clearTimeout(undoTimeout.current);
+                                  if (undoTimeout.current)
+                                    clearTimeout(undoTimeout.current);
                                   setTasks((prev) => [task, ...prev]);
                                   setRecentlyDeleted(null);
                                   recentlyDeletedRef.current = null;
-                                  if (toastId !== undefined) toast.dismiss(toastId);
+                                  if (toastId !== undefined)
+                                    toast.dismiss(toastId);
                                 }}
                               >
                                 Undo
@@ -479,7 +547,8 @@ export function TasksPage() {
                           toastId = toast(<UndoToast />, { duration: 5000 });
                         }
                         // After timeout, delete from backend if not undone
-                        if (undoTimeout.current) clearTimeout(undoTimeout.current);
+                        if (undoTimeout.current)
+                          clearTimeout(undoTimeout.current);
                         undoTimeout.current = setTimeout(async () => {
                           if (recentlyDeletedRef.current) {
                             try {
@@ -507,5 +576,7 @@ export function TasksPage() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
+
+export default TasksPage;

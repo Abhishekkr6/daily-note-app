@@ -7,8 +7,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useTheme } from "next-themes";
 import { Badge } from "@/components/ui/badge";
 import React, { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export function TopBar() {
+  const router = useRouter();
   // User profile fetch logic
   const [profile, setProfile] = useState<{ name: string; email: string; avatarUrl: string | null }>({ name: "", email: "", avatarUrl: null });
   const [avatarLoading, setAvatarLoading] = useState(true);
@@ -53,97 +55,50 @@ export function TopBar() {
   const inputRef = useRef<HTMLDivElement>(null);
   const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
 
-  // Mock local data (replace with actual notes/tasks)
-  // Add createdAt and status for streak logic
-  const localData = [
-    {
-      id: 1,
-      type: "note",
-      title: "Meeting notes",
-      content: "Discuss project timeline",
-      createdAt: "2025-09-10",
-      status: "completed",
-    },
-    {
-      id: 2,
-      type: "task",
-      title: "Buy groceries",
-      content: "Milk, eggs, bread",
-      createdAt: "2025-09-10",
-      status: "completed",
-    },
-    {
-      id: 3,
-      type: "note",
-      title: "React tips",
-      content: "Use hooks for state",
-      createdAt: "2025-09-09",
-      status: "completed",
-    },
-    {
-      id: 4,
-      type: "task",
-      title: "Finish report",
-      content: "Due by Friday",
-      createdAt: "2025-09-08",
-      status: "completed",
-    },
-    {
-      id: 5,
-      type: "note",
-      title: "Daily reflection",
-      content: "What went well today?",
-      createdAt: "2025-09-07",
-      status: "completed",
-    },
-    {
-      id: 6,
-      type: "task",
-      title: "Read chapter 5",
-      content: "Continue reading 'Atomic Habits'",
-      createdAt: "2025-09-06",
-      status: "completed",
-    },
-    {
-      id: 7,
-      type: "task",
-      title: "Morning workout",
-      content: "Exercise routine",
-      createdAt: "2025-09-05",
-      status: "completed",
-    },
-  ];
-
-  // Streak counter logic
-  const [streak, setStreak] = useState(0);
-
+  // Fetch all user tasks for search
+  const [allTasks, setAllTasks] = useState<Item[]>([]);
   useEffect(() => {
-    // Get all completed items with createdAt
-    const completed = localData.filter(
-      (item) => item.status === "completed" && item.createdAt
-    );
-    // Get unique days with completed items
-    const days = Array.from(
-      new Set(completed.map((item) => item.createdAt))
-    ).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
-    // Calculate streak: how many consecutive days from today backwards have completed items
-    let currentStreak = 0;
-    let date = new Date();
-    for (let i = 0; i < days.length; i++) {
-      const streakDate = new Date(
-        date.getFullYear(),
-        date.getMonth(),
-        date.getDate() - i
-      );
-      const streakDateStr = streakDate.toISOString().slice(0, 10);
-      if (days.includes(streakDateStr)) {
-        currentStreak++;
-      } else {
-        break;
-      }
+    async function fetchTasks() {
+      try {
+        const res = await fetch("/api/tasks");
+        if (!res.ok) return;
+        const data = await res.json();
+        // Normalize to Item type (if needed)
+        const mapped = data.map((t: any) => ({
+          id: t._id || t.id,
+          type: "task",
+          title: t.title || "",
+          content: t.description || t.content || "",
+          createdAt: t.createdAt || "",
+          status: t.status || "",
+        }));
+        setAllTasks(mapped);
+      } catch {}
     }
-    setStreak(currentStreak);
-  }, [localData]);
+    fetchTasks();
+  }, []);
+
+  // Real streak logic: fetch activity and calculate streak like StatsPage
+  const [streak, setStreak] = useState<number | null>(null);
+  useEffect(() => {
+    async function fetchStreak() {
+      try {
+        const res = await fetch("/api/activity");
+        if (!res.ok) return;
+        const activity = await res.json();
+        // Calculate current streak (consecutive days with completed > 0, ending today)
+        let currentStreak = 0;
+        for (let i = 0; i < activity.length; i++) {
+          if (activity[i].completed > 0) currentStreak++;
+          else break;
+        }
+        setStreak(currentStreak);
+      } catch {}
+    }
+    fetchStreak();
+  }, []);
+
+  // ...existing code...
 
   // Debounced search handler
   useEffect(() => {
@@ -156,7 +111,7 @@ export function TopBar() {
     }
     setLoading(true);
     debounceTimeout.current = setTimeout(() => {
-      const filtered = localData.filter(
+      const filtered = allTasks.filter(
         (item) =>
           item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
           item.content.toLowerCase().includes(searchQuery.toLowerCase())
@@ -170,7 +125,7 @@ export function TopBar() {
         clearTimeout(debounceTimeout.current);
       }
     };
-  }, [searchQuery]);
+  }, [searchQuery, allTasks]);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -217,7 +172,7 @@ export function TopBar() {
             autoComplete="off"
           />
           {showDropdown && (
-            <div className="absolute left-0 right-0 mt-2 bg-background border border-border rounded shadow-lg z-10">
+            <div className="absolute left-0 right-0 mt-2 bg-background border border-border rounded shadow-lg z-10 max-h-80 overflow-y-auto">
               {loading ? (
                 <div className="p-4 text-center text-muted-foreground text-sm">
                   Searching...
@@ -232,6 +187,7 @@ export function TopBar() {
                     <li
                       key={item.id}
                       className="px-4 py-2 hover:bg-muted cursor-pointer flex flex-col border-b last:border-b-0"
+                      onClick={() => router.push(`/tasks?highlight=${item.id}`)}
                     >
                       <span className="font-medium text-foreground">
                         {item.title}
@@ -259,7 +215,7 @@ export function TopBar() {
           className="flex items-center space-x-1 px-3 py-1"
         >
           <Flame className="w-3 h-3 text-primary" />
-          <span className="text-sm font-medium">{streak} day streak</span>
+          <span className="text-sm font-medium">{streak !== null ? streak : "-"} day streak</span>
         </Badge>
 
         {/* Theme Toggle */}

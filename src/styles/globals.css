@@ -1,3 +1,11 @@
+@keyframes highlight-green {
+  0% { background-color: #bbf7d0; }
+  100% { background-color: inherit; }
+}
+.animate-blink {
+  animation: highlight-green 1.5s ease;
+  background-color: #bbf7d0 !important;
+}
 @keyframes spin-slow {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
