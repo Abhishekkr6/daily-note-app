@@ -69,7 +69,7 @@ export function Sidebar({ className }: SidebarProps) {
                 <Button
                   variant={isActive ? "default" : "ghost"}
                   className={cn(
-                    "w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent",
+                    "w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent cursor-pointer",
                     isActive && "bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90",
                     collapsed && "px-2",
                   )}
