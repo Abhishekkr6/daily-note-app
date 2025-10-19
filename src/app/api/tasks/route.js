@@ -10,6 +10,22 @@ export async function GET(req) {
   } catch (err) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  // Get today's date in YYYY-MM-DD format
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const todayStr = today.toISOString().slice(0, 10);
+
+  // Find all 'today' tasks with dueDate before today and mark them as 'overdue'
+  await Task.updateMany(
+    {
+      userId,
+      status: "today",
+      dueDate: { $lt: todayStr }
+    },
+    { $set: { status: "overdue" } }
+  );
+
   const tasks = await Task.find({ userId });
   return Response.json(tasks);
 }
