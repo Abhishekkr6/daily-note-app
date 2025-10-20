@@ -232,6 +232,8 @@ function TasksPage() {
         }
         setRecentlyDeleted(null);
         recentlyDeletedRef.current = null;
+        // Notify other tabs/pages
+        window.dispatchEvent(new Event("activityChanged"));
       }
     }, 5000);
   };
@@ -563,6 +565,8 @@ function TasksPage() {
                             } catch {}
                             setRecentlyDeleted(null);
                             recentlyDeletedRef.current = null;
+                            // Notify other tabs/pages
+                            window.dispatchEvent(new Event("activityChanged"));
                           }
                         }, 5000);
                       }}

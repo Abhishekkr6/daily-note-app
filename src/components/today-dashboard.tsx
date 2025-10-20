@@ -134,19 +134,30 @@ export function TodayDashboard() {
   const [noteSaved, setNoteSaved] = useState(false); // Add this line
 
   // Fetch all tasks on mount
+  const fetchTasks = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/tasks");
+      const data = await res.json();
+      setTasks(data);
+    } catch (error) {
+      console.error("Failed to fetch tasks", error);
+    }
+    setLoading(false);
+  };
   useEffect(() => {
-    const fetchTasks = async () => {
-      setLoading(true);
-      try {
-        const res = await fetch("/api/tasks");
-        const data = await res.json();
-        setTasks(data);
-      } catch (error) {
-        console.error("Failed to fetch tasks", error);
-      }
-      setLoading(false);
-    };
     fetchTasks();
+  }, []);
+
+  // Listen for activityChanged event to refetch tasks in realtime
+  useEffect(() => {
+    const handleActivityChanged = () => {
+      fetchTasks();
+    };
+    window.addEventListener("activityChanged", handleActivityChanged);
+    return () => {
+      window.removeEventListener("activityChanged", handleActivityChanged);
+    };
   }, []);
 
   // Fetch Pomodoro data on mount
