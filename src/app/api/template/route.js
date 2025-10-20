@@ -32,6 +32,28 @@ export async function POST(req) {
     ...body,
     userId,
   });
+
+  // Streak logic: using a template counts as a streak
+  const User = require("@/models/userModel").default;
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const user = await User.findById(userId);
+  if (user) {
+    const lastDate = user.lastStreakDate;
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toISOString().slice(0, 10);
+    if (lastDate === todayStr) {
+      // Already counted today, do nothing
+    } else if (lastDate === yesterdayStr) {
+      user.currentStreak += 1;
+      if (user.currentStreak > user.longestStreak) user.longestStreak = user.currentStreak;
+      user.lastStreakDate = todayStr;
+    } else {
+      user.currentStreak = 1;
+      user.lastStreakDate = todayStr;
+    }
+    await user.save();
+  }
   return Response.json(template);
 }
 

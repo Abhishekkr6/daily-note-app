@@ -42,6 +42,9 @@ export interface IUser extends Document {
   emailVerified?: boolean;
   emailVerificationToken?: string;
   emailVerificationExpires?: Date;
+  currentStreak?: number;
+  longestStreak?: number;
+  lastStreakDate?: string;
 }
 
 const UserSchema = new Schema<IUser>({
@@ -124,6 +127,19 @@ const UserSchema = new Schema<IUser>({
     },
     emailVerificationExpires: {
       type: Date,
+      default: null,
+    },
+    // Streak fields
+    currentStreak: {
+      type: Number,
+      default: 0,
+    },
+    longestStreak: {
+      type: Number,
+      default: 0,
+    },
+    lastStreakDate: {
+      type: String,
       default: null,
     },
   },

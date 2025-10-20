@@ -42,6 +42,30 @@ export async function POST(req) {
   if (body._id) delete body._id;
   body.userId = userId;
   const newTask = await Task.create(body);
+
+  // Streak logic
+  const User = require("@/models/userModel").default;
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const user = await User.findById(userId);
+  if (user) {
+    // If lastStreakDate is yesterday or today, increment streak
+    const lastDate = user.lastStreakDate;
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toISOString().slice(0, 10);
+    if (lastDate === todayStr) {
+      // Already counted today, do nothing
+    } else if (lastDate === yesterdayStr) {
+      user.currentStreak += 1;
+      if (user.currentStreak > user.longestStreak) user.longestStreak = user.currentStreak;
+      user.lastStreakDate = todayStr;
+    } else {
+      // Missed a day, reset streak
+      user.currentStreak = 1;
+      user.lastStreakDate = todayStr;
+    }
+    await user.save();
+  }
   return Response.json(newTask);
 }
 
@@ -55,13 +79,38 @@ export async function PUT(req) {
   }
   const body = await req.json();
   // If marking as completed (case-insensitive), update updatedAt to now
+  let streakUpdated = false;
   if (body.status && body.status.toLowerCase() === "completed") {
     body.updatedAt = Date.now();
+    streakUpdated = true;
   }
   // Only allow update if the task belongs to the user
   const updatedTask = await Task.findOneAndUpdate({ _id: body._id, userId }, body, { new: true });
   if (!updatedTask) {
     return Response.json({ error: "Task not found or unauthorized" }, { status: 404 });
+  }
+  // Streak logic for completion
+  if (streakUpdated) {
+    const User = require("@/models/userModel").default;
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const user = await User.findById(userId);
+    if (user) {
+      const lastDate = user.lastStreakDate;
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayStr = yesterday.toISOString().slice(0, 10);
+      if (lastDate === todayStr) {
+        // Already counted today, do nothing
+      } else if (lastDate === yesterdayStr) {
+        user.currentStreak += 1;
+        if (user.currentStreak > user.longestStreak) user.longestStreak = user.currentStreak;
+        user.lastStreakDate = todayStr;
+      } else {
+        user.currentStreak = 1;
+        user.lastStreakDate = todayStr;
+      }
+      await user.save();
+    }
   }
   return Response.json(updatedTask);
 }
