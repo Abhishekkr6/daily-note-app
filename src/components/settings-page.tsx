@@ -48,20 +48,39 @@ export function SettingsPage() {
     reader.readAsDataURL(file);
   };
   const { theme, setTheme } = useTheme()
+  const [profile, setProfile] = useState({
+    name: "",
+    email: "",
+    timezone: "America/New_York",
+    workingHours: { start: "09:00", end: "17:00" },
+  });
+
   const [notifications, setNotifications] = useState({
     taskReminders: true,
     dailyDigest: true,
     weeklyReport: false,
     streakAlerts: true,
     focusBreaks: true,
-  })
+  });
 
-  const [profile, setProfile] = useState({
-    name: "",
-    email: "",
-    timezone: "America/New_York",
-    workingHours: { start: "09:00", end: "17:00" },
-  })
+  // Fetch notification settings from backend using auth token
+  const fetchNotifications = async () => {
+    try {
+      const res = await fetch(`/api/users/notifications`, { credentials: "include" });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.notifications) {
+          setNotifications(data.notifications);
+        }
+      }
+    } catch (err) {
+      // Optionally handle error
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+  }, [profile.email]);
 
   const [preferences, setPreferences] = useState({
     defaultTaskPriority: "medium",
@@ -109,8 +128,25 @@ export function SettingsPage() {
     }
   }, [selectedFile, avatarUrl]);
 
-  const handleNotificationChange = (key: string, value: boolean) => {
-    setNotifications((prev) => ({ ...prev, [key]: value }))
+  const handleNotificationChange = async (key: string, value: boolean) => {
+    setNotifications((prev) => ({ ...prev, [key]: value }));
+    // Only send email when enabling a notification
+    if (value && profile.email) {
+      try {
+        await fetch("/api/notifications/email", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: profile.email,
+            notificationType: key,
+            extraData: {}, // You can pass more info if needed
+          }),
+        });
+        // Optionally show a toast/alert for success
+      } catch (err) {
+        // Optionally show a toast/alert for error
+      }
+    }
   }
 
   const handleExportData = () => {
@@ -282,6 +318,18 @@ export function SettingsPage() {
                     className="w-32"
                   />
                 </div>
+              </div>
+
+              {/* Logout button moved here */}
+              <div className="flex justify-end pt-2">
+                <Button
+                  variant="destructive"
+                  className="cursor-pointer"
+                  onClick={handleLogout}
+                >
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Logout
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -527,14 +575,6 @@ export function SettingsPage() {
                       <Trash2 className="w-4 h-4 mr-2" />
                       Delete All Data
                     </Button>
-                    <Button
-                      variant="destructive"
-                      className="cursor-pointer"
-                      onClick={handleLogout}
-                    >
-                      <LogOut className="w-4 h-4 mr-2" />
-                      Logout
-                    </Button>
                   </div>
                 </div>
               </div>
@@ -578,6 +618,22 @@ export function SettingsPage() {
                   });
                   if (res.ok) {
                     success = true;
+                  }
+                  // Save notification settings
+                  try {
+                    const notifRes = await fetch("/api/users/notifications", {
+                      method: "PUT",
+                      headers: { "Content-Type": "application/json" },
+                      credentials: "include",
+                      body: JSON.stringify({ notifications }),
+                    });
+                    if (notifRes.ok) {
+                      success = true;
+                      // Refetch notifications to ensure state is up-to-date
+                      await fetchNotifications();
+                    }
+                  } catch (err) {
+                    // Optionally handle error
                   }
                   setIsSaving(false);
                   if (success) {

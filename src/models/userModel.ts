@@ -35,6 +35,14 @@ export interface IUser extends Document {
       end?: string;
     };
   };
+  notifications?: {
+    taskReminders?: boolean;
+    dailyDigest?: boolean;
+    weeklyReport?: boolean;
+    streakAlerts?: boolean;
+    focusBreaks?: boolean;
+    [key: string]: any;
+  };
   resetPasswordToken?: string;
   resetPasswordExpires?: Date;
   deletedAt?: Date;
@@ -48,6 +56,16 @@ export interface IUser extends Document {
 }
 
 const UserSchema = new Schema<IUser>({
+  notifications: {
+    type: Object,
+    default: {
+      taskReminders: true,
+      dailyDigest: true,
+      weeklyReport: false,
+      streakAlerts: true,
+      focusBreaks: true,
+    },
+  },
     twoFactorEnabled: {
       type: Boolean,
       default: false,
