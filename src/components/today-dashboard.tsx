@@ -691,6 +691,7 @@ export function TodayDashboard() {
             icon={<Clock className="w-5 h-5" />}
             tasks={overdueTasks}
             completeTask={completeTask}
+            deleteTask={deleteTask}
             setTasks={setTasks}
           />
 
@@ -1028,7 +1029,11 @@ function TaskSection({
                   className="focus:outline-none cursor-pointer"
                   title="Complete task"
                 >
-                  <Circle className="w-5 h-5 text-primary" />
+                  {title === "Overdue" ? (
+                    <Clock className="w-5 h-5 text-destructive" />
+                  ) : (
+                    <Circle className="w-5 h-5 text-primary" />
+                  )}
                 </button>
               )}
               {onReopen && title === "Completed" && (
@@ -1133,7 +1138,8 @@ function TaskSection({
                   {task.priority}
                 </Badge>
               )}
-              {deleteTask && title === "Completed" && (
+              {/* Three-dot menu for Overdue and Completed tasks */}
+              {deleteTask && (title === "Completed" || title === "Overdue") && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button
@@ -1154,7 +1160,7 @@ function TaskSection({
                   </DropdownMenuContent>
                 </DropdownMenu>
               )}
-              {startEditTask && deleteTask && title !== "Completed" && (
+              {startEditTask && deleteTask && title !== "Completed" && title !== "Overdue" && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button
@@ -1187,7 +1193,8 @@ function TaskSection({
         {showUndo &&
           deletedTask &&
           ((title === "Completed" && deletedTask.status === "completed") ||
-            (title === "Today" && deletedTask.status === "today")) && (
+            (title === "Today" && deletedTask.status === "today") ||
+            (title === "Overdue" && deletedTask.status === "overdue")) && (
             <div className="mt-2 flex items-center gap-2">
               <span className="text-sm text-destructive">Task deleted</span>
               <Button size="sm" variant="outline" onClick={handleUndo}>

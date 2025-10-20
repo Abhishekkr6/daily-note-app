@@ -252,11 +252,13 @@ function TasksPage() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "completed":
-        return <CheckCircle2 className="w-5 h-5 text-primary" />;
+        return <CheckCircle2 className="w-4 h-4 text-primary" />;
       case "in-progress":
         return <Clock className="w-5 h-5 text-amber-500" />;
+      case "overdue":
+        return <Clock className="w-4 h-4 text-destructive" />;
       default:
-        return <Circle className="w-5 h-5 text-muted-foreground" />;
+        return <Circle className="w-4 h-4 text-muted-foreground" />;
     }
   };
 
