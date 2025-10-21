@@ -7,6 +7,8 @@ import ClickSpark from "@/components/ClickSpark";
 import SonnerToaster from "@/components/sonner-toaster";
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
+  // Add global task notification popup so it shows everywhere
+  const TaskNotificationGlobal = require("@/components/task-notification-global").default;
   return (
     <Suspense fallback={null}>
       <SessionProvider>
@@ -17,6 +19,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
           disableTransitionOnChange
         >
           <div className="relative w-full h-full">
+            <TaskNotificationGlobal />
             {children}
             <SonnerToaster />
             <div className="fixed inset-0 w-full h-full z-[99999] pointer-events-none">

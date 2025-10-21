@@ -72,9 +72,58 @@ type Task = {
   tag?: string;
   priority?: "High" | "Medium" | "Low";
   dueDate?: string;
+  notificationTime?: string; // Add this line
 };
 
 export function TodayDashboard() {
+  // Refetch tasks every minute for real-time notification
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchTasks();
+    }, 60000); // every 60 seconds
+    return () => clearInterval(interval);
+  }, []);
+  // Notification popup and alarm logic
+  const [activeNotification, setActiveNotification] = useState<{ id: string; title: string; time: string } | null>(null);
+  const alarmAudioRef = useRef<HTMLAudioElement>(null);
+  // Track dismissed notifications for this session (taskId+time)
+  const dismissedNotificationsRef = useRef<Set<string>>(new Set());
+  const [tasks, setTasks] = useState<Task[]>([]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = new Date();
+      const currentTime = now.toTimeString().slice(0, 5); // "HH:MM"
+      const todayStr = now.toISOString().slice(0, 10);
+      // Check for any today task with notificationTime matching current time
+      const match = tasks.find(
+        (t) => t.status === "today" && t.notificationTime === currentTime && (!t.dueDate || t.dueDate === todayStr)
+      );
+      if (match) {
+        const key = `${match._id}_${currentTime}`;
+        if (!dismissedNotificationsRef.current.has(key) && (!activeNotification || activeNotification.id !== match._id || activeNotification.time !== currentTime)) {
+          setActiveNotification({ id: match._id ?? "", title: match.title, time: currentTime });
+          if (alarmAudioRef.current) {
+            alarmAudioRef.current.currentTime = 0;
+            alarmAudioRef.current.play();
+          }
+        }
+      }
+    }, 1000); // check every second for accuracy
+    return () => clearInterval(interval);
+  }, [tasks, activeNotification]);
+
+  // Auto-dismiss notification after 10 seconds
+  useEffect(() => {
+    if (activeNotification) {
+      const timer = setTimeout(() => {
+        // Mark as dismissed for this session
+        dismissedNotificationsRef.current.add(`${activeNotification.id}_${activeNotification.time}`);
+        setActiveNotification(null);
+      }, 10000);
+      return () => clearTimeout(timer);
+    }
+  }, [activeNotification]);
   const [quickAddStatus, setQuickAddStatus] = useState<'idle' | 'loading' | 'added'>('idle');
   // Validation helpers
   function isValidTitle(title: string) {
@@ -100,7 +149,6 @@ export function TodayDashboard() {
   // Get today's date in YYYY-MM-DD format
   const todayDate = new Date().toISOString().slice(0, 10);
 
-  const [tasks, setTasks] = useState<Task[]>([]);
   // Persist notification times from backend
   const [emailTime, setEmailTime] = useState<{ [key: string]: string }>({});
   const [loading, setLoading] = useState(true);
@@ -579,6 +627,32 @@ export function TodayDashboard() {
 
   return (
     <div className="p-6 space-y-6">
+      {/* Task Reminder Notification Popup */}
+      {activeNotification && (
+        <div className="fixed top-1/2 left-1/2 z-50 transform -translate-x-1/2 -translate-y-1/2 bg-white border border-primary shadow-2xl rounded-2xl px-8 py-6 flex flex-col items-center animate-fade-in">
+          <div className="flex items-center gap-3 mb-2">
+            <svg width="32" height="32" fill="none" viewBox="0 0 24 24"><path fill="#2563eb" d="M12 2a6 6 0 0 0-6 6v4.586l-.707.707A1 1 0 0 0 6 16h12a1 1 0 0 0 .707-1.707L18 12.586V8a6 6 0 0 0-6-6Zm0 20a2 2 0 0 0 2-2h-4a2 2 0 0 0 2 2Z"/></svg>
+            <span className="text-xl font-bold text-primary">Task Reminder</span>
+          </div>
+          <div className="text-lg font-semibold mb-2">{activeNotification.title}</div>
+          <div className="text-sm text-muted-foreground mb-4">It's time for your scheduled task!</div>
+          <button
+            className="mt-2 px-4 py-2 rounded bg-primary text-white font-medium shadow cursor-pointer hover:bg-primary/80 transition"
+            onClick={() => {
+              dismissedNotificationsRef.current.add(`${activeNotification.id}_${activeNotification.time}`);
+              setActiveNotification(null);
+            }}
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+      {/* Alarm sound for notification */}
+      <audio
+        ref={alarmAudioRef}
+        src="https://cdn.pixabay.com/audio/2022/10/16/audio_12b6b1b2b2.mp3"
+        preload="auto"
+      />
       {/* Quick Add Section */}
       {/* Quick Add Section with blink animation */}
       <style>{blinkStyle}</style>
