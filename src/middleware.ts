@@ -38,7 +38,8 @@ export function middleware(request: NextRequest) {
           issuedDate.getUTCDate() !== now.getUTCDate()
         ) {
           const url = request.nextUrl.clone();
-          url.pathname = "/login";
+          // Redirect expired/old tokens to /landing instead of /login
+          url.pathname = "/landing";
           // Clear cookies
           const response = NextResponse.redirect(url);
           response.cookies.set("authToken", "", { maxAge: 0, path: "/" });
