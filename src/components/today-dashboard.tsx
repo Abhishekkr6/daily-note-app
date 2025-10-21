@@ -313,6 +313,7 @@ export function TodayDashboard() {
       status: "today",
       priority: quickAddPriority,
       tag,
+      dueDate: todayDate, // Default dueDate set to today
     };
     try {
       await fetch("/api/tasks", {
