@@ -80,38 +80,36 @@ export function TopBar() {
 
   // Real streak logic: fetch activity and calculate streak like StatsPage
   const [streak, setStreak] = useState<number | null>(null);
+  // Streak fetcher function
+  const fetchStreak = async () => {
+    try {
+      const res = await fetch("/api/activity");
+      if (!res.ok) return;
+      let activity = await res.json();
+      // Sort activity by date descending (latest first)
+      activity = activity.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      // Calculate streak: count consecutive days from today with completed > 0
+      let currentStreak = 0;
+      const todayStr = new Date().toISOString().slice(0, 10);
+      for (let i = 0; i < activity.length; i++) {
+        // Only count streak if starting from today
+        if (i === 0 && activity[i].date !== todayStr) break;
+        if (activity[i].completed > 0) {
+          currentStreak++;
+        } else {
+          break;
+        }
+      }
+      setStreak(currentStreak);
+    } catch {}
+  };
+
   useEffect(() => {
-    async function fetchStreak() {
-      try {
-        const res = await fetch("/api/activity");
-        if (!res.ok) return;
-        const activity = await res.json();
-          // Calculate streak: reset to 1 after a gap (missed day)
-          let currentStreak = 0;
-          let gapFound = false;
-          for (let i = 0; i < activity.length; i++) {
-            if (activity[i].completed > 0) {
-              if (gapFound) {
-                // After a gap, streak starts from 1
-                currentStreak = 1;
-                gapFound = false;
-              } else {
-                currentStreak++;
-              }
-            } else {
-              if (currentStreak > 0) {
-                // First gap found, reset streak
-                gapFound = true;
-                currentStreak = 0;
-              }
-            }
-          }
-          // If streak is 0 (no activity today), show 0
-          // If user resumes after gap, streak starts from 1
-          setStreak(currentStreak);
-      } catch {}
-    }
     fetchStreak();
+    // Listen for activityChanged event for realtime streak update
+    const handler = () => fetchStreak();
+    window.addEventListener('activityChanged', handler);
+    return () => window.removeEventListener('activityChanged', handler);
   }, []);
 
   // ...existing code...

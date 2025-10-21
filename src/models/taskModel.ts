@@ -1,5 +1,6 @@
 import mongoose, { Schema, Document } from "mongoose";
 
+
 export interface ITask extends Document {
   title: string;
   description?: string;
@@ -8,7 +9,9 @@ export interface ITask extends Document {
   priority?: "High" | "Medium" | "Low";
   status: "overdue" | "today" | "completed";
   userId?: string;
+  notificationTime?: string;
 }
+
 
 const TaskSchema: Schema = new Schema({
   title: { type: String, required: true },
@@ -18,6 +21,7 @@ const TaskSchema: Schema = new Schema({
   priority: { type: String, enum: ["High", "Medium", "Low"] },
   status: { type: String, enum: ["overdue", "today", "completed"], default: "today" },
   userId: { type: Schema.Types.ObjectId, ref: "User" },
+  notificationTime: { type: String },
 }, { timestamps: true });
 
 export default mongoose.models.Task || mongoose.model<ITask>("Task", TaskSchema);

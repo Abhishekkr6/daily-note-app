@@ -94,6 +94,7 @@ export async function PUT(req) {
     const User = require("@/models/userModel").default;
     const todayStr = new Date().toISOString().slice(0, 10);
     const user = await User.findById(userId);
+    let streakJustStarted = false;
     if (user) {
       const lastDate = user.lastStreakDate;
       const yesterday = new Date();
@@ -105,11 +106,21 @@ export async function PUT(req) {
         user.currentStreak += 1;
         if (user.currentStreak > user.longestStreak) user.longestStreak = user.currentStreak;
         user.lastStreakDate = todayStr;
+        streakJustStarted = true;
       } else {
         user.currentStreak = 1;
         user.lastStreakDate = todayStr;
+        streakJustStarted = true;
       }
       await user.save();
+    }
+    // If streak just started for today, delete all previous days' completed tasks
+    if (streakJustStarted) {
+      await Task.deleteMany({
+        userId,
+        status: "completed",
+        updatedAt: { $lt: new Date(todayStr) }
+      });
     }
   }
   return Response.json(updatedTask);

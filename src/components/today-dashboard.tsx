@@ -101,6 +101,8 @@ export function TodayDashboard() {
   const todayDate = new Date().toISOString().slice(0, 10);
 
   const [tasks, setTasks] = useState<Task[]>([]);
+  // Persist notification times from backend
+  const [emailTime, setEmailTime] = useState<{ [key: string]: string }>({});
   const [loading, setLoading] = useState(true);
   const [quickAddLoading, setQuickAddLoading] = useState(false);
   const [quickAddValue, setQuickAddValue] = useState("");
@@ -140,6 +142,14 @@ export function TodayDashboard() {
       const res = await fetch("/api/tasks");
       const data = await res.json();
       setTasks(data);
+      // Set notification times from backend
+      const times: { [key: string]: string } = {};
+      data.forEach((task: any) => {
+        if (task._id && task.notificationTime) {
+          times[task._id] = task.notificationTime;
+        }
+      });
+      setEmailTime(times);
     } catch (error) {
       console.error("Failed to fetch tasks", error);
     }
@@ -704,9 +714,10 @@ export function TodayDashboard() {
             completeTask={completeTask}
             deleteTask={deleteTask}
             setTasks={setTasks}
+            emailTime={emailTime}
+            setEmailTime={setEmailTime}
           />
 
-          {/* Today Tasks */}
           <TaskSection
             title="Today"
             color="text-primary"
@@ -726,9 +737,9 @@ export function TodayDashboard() {
             deletedTask={deletedTask}
             handleUndo={handleUndo}
             setTasks={setTasks}
+            emailTime={emailTime}
+            setEmailTime={setEmailTime}
           />
-
-          {/* Completed Tasks */}
           <TaskSection
             title="Completed"
             color="text-muted-foreground"
@@ -757,6 +768,8 @@ export function TodayDashboard() {
               setLoading(false);
             }}
             setTasks={setTasks}
+            emailTime={emailTime}
+            setEmailTime={setEmailTime}
           />
 
           <CalendarHeatmap />
@@ -981,6 +994,18 @@ function PomodoroTimer({
     </Card>
   );
 }
+
+
+// Helper to format time as 12-hour with AM/PM
+function formatTime12(time: string) {
+  if (!time) return "";
+  const [hour, minute] = time.split(":");
+  let h = parseInt(hour, 10);
+  const ampm = h >= 12 ? "PM" : "AM";
+  h = h % 12;
+  if (h === 0) h = 12;
+  return `${h}:${minute} ${ampm}`;
+}
 function TaskSection({
   title,
   color,
@@ -1005,9 +1030,36 @@ function TaskSection({
   setEditTag,
   editPriority,
   setEditPriority,
+  emailTime,
+  setEmailTime,
 }: any) {
   // Show newest tasks at the top
   const orderedTasks = [...tasks].reverse();
+  // Email notification state
+  const [showEmailPicker, setShowEmailPicker] = useState<string | null>(null);
+  // Use emailTime from parent props
+  const [emailLoading, setEmailLoading] = useState(false);
+  const [emailSaved, setEmailSaved] = useState<{ [key: string]: boolean }>({});
+
+  // Handler to save notification time (stub API)
+  const handleSetEmailNotification = async (taskId: string) => {
+    setEmailLoading(true);
+    // Save notificationTime to backend
+    try {
+      await fetch("/api/tasks", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ _id: taskId, notificationTime: emailTime[taskId] })
+      });
+    } catch (err) {}
+    setEmailLoading(false);
+    setEmailSaved(prev => ({ ...prev, [taskId]: true }));
+    setTimeout(() => {
+      setEmailSaved(prev => ({ ...prev, [taskId]: false }));
+      setShowEmailPicker(null);
+    }, 1200);
+  };
+
   return (
     <Card className="bg-card border-border shadow-sm">
       <CardHeader>
@@ -1027,10 +1079,10 @@ function TaskSection({
           orderedTasks.map((task: Task) => (
             <div
               key={task._id}
-              className={`flex items-center space-x-3 p-3 rounded-xl border relative z-10 ${
+              className={`flex items-center space-x-3 p-3 rounded-xl border relative z-10 shadow-sm ${
                 title === "Completed"
-                  ? "bg-muted/40 border-muted text-muted-foreground opacity-70"
-                  : "bg-accent/30 border-accent"
+                  ? "bg-muted/40 border border-border text-muted-foreground opacity-70"
+                  : "bg-accent/30 border border-border"
               }`}
             >
               {completeTask && title !== "Completed" && (
@@ -1122,15 +1174,69 @@ function TaskSection({
                   </div>
                 ) : (
                   <>
-                    <p
-                      className={`font-medium ${
-                        title === "Completed"
-                          ? "line-through"
-                          : "text-foreground"
-                      }`}
-                    >
-                      {task.title}
-                    </p>
+                    <div className="flex items-center">
+                      <p
+                        className={`font-medium ${
+                          title === "Completed"
+                            ? "line-through"
+                            : "text-foreground"
+                        }`}
+                      >
+                        {task.title}
+                      </p>
+                      {/* Add extra margin between title and button */}
+                      {title === "Today" && (
+                        <div className="ml-6 flex items-center">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setShowEmailPicker(task._id ?? "")}
+                            className="flex items-center gap-1 px-2 py-1 h-7 cursor-pointer"
+                            title={emailTime[task._id ?? ""] ? `Notification set for ${formatTime12(emailTime[task._id ?? ""])} ` : "Notify Me"}
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a6 6 0 0 0-6 6v4.586l-.707.707A1 1 0 0 0 6 16h12a1 1 0 0 0 .707-1.707L18 12.586V8a6 6 0 0 0-6-6Zm0 20a2 2 0 0 0 2-2h-4a2 2 0 0 0 2 2Z"/></svg>
+                            <span className="text-xs">
+                              {emailTime[task._id ?? ""] ? formatTime12(emailTime[task._id ?? ""]) : "Notify Me"}
+                            </span>
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                    {/* Centered Popup for Time Picker, no overlay */}
+                    {showEmailPicker === task._id && (
+                      <div style={{position: 'fixed', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', zIndex: 9999}}>
+                        <div className="bg-white rounded-lg shadow-lg p-6 flex flex-col items-center min-w-[260px] border border-border">
+                          <h3 className="text-base font-semibold mb-4">Set Notification Time</h3>
+                          <input
+                            type="time"
+                            value={emailTime[task._id ?? ""] || ""}
+                            onChange={e => setEmailTime((prev: { [key: string]: string }) => ({ ...prev, [task._id ?? ""]: e.target.value }))}
+                            className="border rounded px-2 py-1 text-sm mb-4 w-full"
+                            required
+                            placeholder="Select time"
+                          />
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="default"
+                              disabled={emailLoading || !(emailTime[task._id ?? ""])}
+                              onClick={() => handleSetEmailNotification(task._id ?? "")}
+                              className="cursor-pointer"
+                            >
+                              {emailLoading ? "Saving..." : emailSaved[task._id ?? ""] ? "Saved!" : "Save"}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setShowEmailPicker(null)}
+                              className="cursor-pointer"
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                     {task.description && (
                       <p className="text-xs text-muted-foreground mt-1">
                         {task.description}
