@@ -56,13 +56,26 @@ export function StatsPage() {
         // 1. Current streak: count consecutive days from today with completed > 0
         let streak = 0;
         const todayStr = new Date().toISOString().slice(0, 10);
-        for (let i = 0; i < activity.length; i++) {
-          // Only count streak if starting from today
-          if (i === 0 && activity[i].date !== todayStr) break;
-          if (activity[i].completed > 0) {
-            streak++;
-          } else {
-            break;
+        if (activity.length > 0 && activity[0].date === todayStr && activity[0].completed > 0) {
+          for (let i = 0; i < activity.length; i++) {
+            if (activity[i].completed > 0) {
+              streak++;
+            } else {
+              break;
+            }
+          }
+        } else {
+          // Otherwise, show last streak (from yesterday or last streak period)
+          let found = false;
+          for (let i = 0; i < activity.length; i++) {
+            if (activity[i].completed > 0) {
+              streak++;
+              found = true;
+            } else if (found) {
+              break;
+            } else {
+              streak = 0;
+            }
           }
         }
         setCurrentStreak(streak);

@@ -88,19 +88,32 @@ export function TopBar() {
       let activity = await res.json();
       // Sort activity by date descending (latest first)
       activity = activity.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
-      // Calculate streak: count consecutive days from today with completed > 0
-      let currentStreak = 0;
+      let streak = 0;
       const todayStr = new Date().toISOString().slice(0, 10);
-      for (let i = 0; i < activity.length; i++) {
-        // Only count streak if starting from today
-        if (i === 0 && activity[i].date !== todayStr) break;
-        if (activity[i].completed > 0) {
-          currentStreak++;
-        } else {
-          break;
+      // If today is completed, count streak from today
+      if (activity.length > 0 && activity[0].date === todayStr && activity[0].completed > 0) {
+        for (let i = 0; i < activity.length; i++) {
+          if (activity[i].completed > 0) {
+            streak++;
+          } else {
+            break;
+          }
+        }
+      } else {
+        // Otherwise, show last streak (from yesterday or last streak period)
+        let found = false;
+        for (let i = 0; i < activity.length; i++) {
+          if (activity[i].completed > 0) {
+            streak++;
+            found = true;
+          } else if (found) {
+            break;
+          } else {
+            streak = 0;
+          }
         }
       }
-      setStreak(currentStreak);
+      setStreak(streak);
     } catch {}
   };
 
