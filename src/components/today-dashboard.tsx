@@ -83,6 +83,21 @@ export function TodayDashboard() {
     }, 60000); // every 60 seconds
     return () => clearInterval(interval);
   }, []);
+
+  // Refetch tasks at midnight to update overdue status automatically
+  useEffect(() => {
+    // Calculate ms until next midnight
+    const now = new Date();
+    const nextMidnight = new Date(now);
+    nextMidnight.setHours(24, 0, 0, 0);
+    const msUntilMidnight = nextMidnight.getTime() - now.getTime();
+    const timeout = setTimeout(() => {
+      fetchTasks();
+      // Set interval for future midnights
+      setInterval(fetchTasks, 24 * 60 * 60 * 1000);
+    }, msUntilMidnight);
+    return () => clearTimeout(timeout);
+  }, []);
   // Notification popup and alarm logic
   const [activeNotification, setActiveNotification] = useState<{ id: string; title: string; time: string } | null>(null);
   const alarmAudioRef = useRef<HTMLAudioElement>(null);
