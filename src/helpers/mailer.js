@@ -30,6 +30,10 @@ export const sendEmail = async ({
         subject = "Reset your password";
         htmlContent = `<p style="font-family:sans-serif;font-size:16px;">Click <a href="${resetUrl}">here</a> to reset your password<br>or copy and paste the link below in your browser.<br><br><span style='color:#555;'>${resetUrl}</span></p>`;
         break;
+      case "LOGIN_SUCCESS":
+        subject = "Login Successful 🎉";
+        htmlContent = `<p style="font-family:sans-serif;font-size:16px;">Hi <b>${extraData.username || "User"}</b>,<br><br>You have successfully logged in to <b>Daily Note</b>.<br>Time: ${extraData.loginTime || "now"}</p>`;
+        break;
       case "TASK_REMINDER":
         subject = "Task Reminder: Stay on Track!";
         htmlContent = `<p style="font-family:sans-serif;font-size:16px;">Dear User,<br><br>This is a friendly reminder about your upcoming task: <b>${extraData.taskTitle || "Task"}</b>.<br>Due: <b>${extraData.dueDate || "soon"}</b>.<br><br>Stay productive!<br><br>Best regards,<br>Daily Note Team</p>`;

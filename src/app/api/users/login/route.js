@@ -64,10 +64,8 @@ export async function POST(req) {
     // ✅ Send login success email using Resend helper
     await sendEmail({
       email: user.email,
-      subject: "Login Successful 🎉",
-      html: `<p>Hi <b>${user.username}</b>,</p>
-             <p>You have successfully logged in to <b>Daily Note</b>.</p>
-             <p>Time: ${new Date().toLocaleString()}</p>`,
+      emailType: "LOGIN_SUCCESS",
+      extraData: { username: user.username, loginTime: new Date().toLocaleString() }
     });
 
     // Set cookies for authToken and refreshToken
