@@ -1,4 +1,3 @@
-import nodemailer from "nodemailer";
 import { connect } from "../../../../dbConfig/dbConfig.js";
 import bcryptjs from "bcryptjs";
 import User from "../../../../models/userModel.ts";
@@ -8,116 +7,91 @@ import { rateLimit } from "../../../../utils/rateLimit.js";
 import { verifyCSRFToken } from "../../../../utils/csrf.js";
 import { signAccessToken, signRefreshToken } from "../../../../utils/token.js";
 import { needsRehash } from "../../../../helpers/rehashCheck.js";
-
-connect();
+import { sendEmail } from "../../../../helpers/mailer.js"; // ✅ only one import
 
 export async function POST(req) {
-    // Rate limiting (per IP)
-    const ip = req.headers.get("x-forwarded-for") || req.ip || "unknown";
-    if (!rateLimit(ip)) {
-      return NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 });
-    }
+  // Rate limiting (per IP)
+  const ip = req.headers.get("x-forwarded-for") || req.ip || "unknown";
+  if (!rateLimit(ip)) {
+    return NextResponse.json(
+      { error: "Too many requests. Please try again later." },
+      { status: 429 }
+    );
+  }
+
   try {
     const reqBody = await req.json();
     const { email, password, csrfToken } = reqBody;
-    // Double-submit CSRF protection: prefer body token, fall back to header.
+
+    // CSRF Protection
     const headerCsrf = req.headers.get("x-csrf-token");
     const providedToken = csrfToken || headerCsrf;
     const cookieCsrfToken = req.cookies.get("csrfToken")?.value;
-    const ok = verifyCSRFToken(providedToken, cookieCsrfToken);
-    if (!ok) {
-      // Log tokens to server logs to help debug intermittent failures in production.
+    if (!verifyCSRFToken(providedToken, cookieCsrfToken)) {
       console.warn("CSRF verification failed", {
-        providedToken: providedToken ? providedToken.slice(0, 8) + "..." : null,
-        cookieToken: cookieCsrfToken ? cookieCsrfToken.slice(0, 8) + "..." : null,
+        providedToken: providedToken?.slice(0, 8) + "...",
+        cookieToken: cookieCsrfToken?.slice(0, 8) + "...",
         ip,
-        path: req.url || "/api/users/login",
       });
       return NextResponse.json({ error: "Invalid CSRF token" }, { status: 403 });
     }
 
+    // User lookup
     const user = await User.findOne({ email });
-
     if (!user) {
-      return NextResponse.json(
-        { error: "User does not exists" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "User does not exist" }, { status: 400 });
     }
 
-    console.log("User exists");
-
-
+    // Password check
     const validPassword = await bcryptjs.compare(password, user.password);
     if (!validPassword) {
-      return NextResponse.json(
-        { error: "Check your credentials" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Check your credentials" }, { status: 400 });
     }
+
     // Password rehashing if cost factor increased
     if (needsRehash(user.password, 12)) {
-      const newHash = await bcryptjs.hash(password, 12);
-      user.password = newHash;
+      user.password = await bcryptjs.hash(password, 12);
       await user.save();
     }
 
-    const tokenData = {
-      id: user._id,
-      username: user.username,
+    // Generate tokens
+    const tokenData = { id: user._id, username: user.username, email: user.email };
+    const accessToken = signAccessToken(tokenData, "30d");
+    const refreshToken = signRefreshToken({ id: user._id }, "30d");
+    user.refreshToken = await bcryptjs.hash(refreshToken, 12);
+    await user.save();
+
+    // ✅ Send login success email using Resend helper
+    await sendEmail({
       email: user.email,
-    };
-  // Long-lived access token (30d)
-  const accessToken = signAccessToken(tokenData, "30d");
-  // Long-lived refresh token (30d)
-  const refreshToken = signRefreshToken({ id: user._id }, "30d");
-  // Store hashed refresh token in DB for rotation/revocation
-  const refreshTokenHash = await bcryptjs.hash(refreshToken, 12);
-  user.refreshToken = refreshTokenHash;
-  await user.save();
-
-    // ✅ Email bhejne ke liye transporter
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.EMAIL_SMTP_USER,
-        pass: process.env.EMAIL_SMTP_PASS,
-      },
-    });
-
-    // ✅ Login success email
-    await transporter.sendMail({
-      from: `"Daily Note App" <${process.env.GMAIL_USER}>`,
-      to: email,
       subject: "Login Successful 🎉",
-      text: `Hi ${user.username}, you have successfully logged in to Daily Note.`,
       html: `<p>Hi <b>${user.username}</b>,</p>
              <p>You have successfully logged in to <b>Daily Note</b>.</p>
              <p>Time: ${new Date().toLocaleString()}</p>`,
     });
 
+    // Set cookies for authToken and refreshToken
     const response = NextResponse.json({
       message: "Logged In Success & Email Sent",
-      success: true,
+      success: true
     });
-    // Set access token (long-lived)
     response.cookies.set("authToken", accessToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production" ? true : false,
+      secure: process.env.NODE_ENV === "production",
       path: "/",
       sameSite: "lax",
       maxAge: 30 * 24 * 60 * 60, // 30 days
     });
-    // Set refresh token (long-lived)
     response.cookies.set("refreshToken", refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      path: "/api/users/refresh-token", // Only sent to refresh endpoint
+      path: "/api/users/refresh-token",
       sameSite: "lax",
       maxAge: 30 * 24 * 60 * 60, // 30 days
     });
     return response;
   } catch (error) {
+    console.error("Login API Error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

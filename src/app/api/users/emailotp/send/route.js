@@ -1,4 +1,4 @@
-import nodemailer from "nodemailer";
+import { sendEmail } from "../../../../../helpers/mailer.js";
 import { MongoClient } from "mongodb";
 import User from "../../../../../models/userModel.ts";
 import { connect } from "../../../../../dbConfig/dbConfig.js";
@@ -29,21 +29,12 @@ export async function POST(req) {
       { $set: { otp, expiresAt: Date.now() + 10 * 60 * 1000 } },
       { upsert: true }
     );
-    const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_SMTP_HOST,
-      port: process.env.EMAIL_SMTP_PORT,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_SMTP_USER,
-        pass: process.env.EMAIL_SMTP_PASS,
-      },
-    });
-    await transporter.sendMail({
-      from: process.env.EMAIL_FROM,
-      to: email,
-      subject: "Your DailyNote Email Verification OTP",
-      text: `Your OTP is: ${otp}. It is valid for 10 minutes.`,
-    });
+      // ✅ Send OTP email using Resend
+      await sendEmail({
+        email,
+        subject: "Your DailyNote Email Verification OTP",
+        html: `<p>Your OTP is: <b>${otp}</b>. It is valid for 10 minutes.</p>`
+      });
     return new Response(JSON.stringify({ message: "OTP sent successfully" }), { status: 200 });
   } catch (err) {
     return new Response(JSON.stringify({ error: "Failed to send OTP" }), { status: 500 });

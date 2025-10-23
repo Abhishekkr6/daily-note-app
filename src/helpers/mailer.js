@@ -1,20 +1,30 @@
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 
+const resend = new Resend(process.env.RESEND_API_KEY);
 
-export const sendEmail = async ({ email, emailType, userId, token, resetUrl, extraData = {} }) => {
+/**
+ * Send Email (Production Ready using Resend)
+ * @param {Object} options
+ * @param {string} options.email - recipient email
+ * @param {string} options.emailType - email type (RESET, TASK_REMINDER, etc.)
+ * @param {string} [options.userId] - optional user ID
+ * @param {string} [options.token] - optional token
+ * @param {string} [options.resetUrl] - reset link (for RESET type)
+ * @param {Object} [options.extraData] - additional template data
+ */
+export const sendEmail = async ({
+  email,
+  emailType,
+  userId,
+  token,
+  resetUrl,
+  extraData = {},
+}) => {
   try {
-    // 1. Gmail SMTP transporter
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.EMAIL_SMTP_USER,
-        pass: process.env.EMAIL_SMTP_PASS,
-      },
-    });
-
-    // 2. Prepare email HTML and subject for each notification type
+    // 1️⃣ Prepare email subject and HTML (same as before)
     let htmlContent = "";
     let subject = "";
+
     switch (emailType) {
       case "RESET":
         subject = "Reset your password";
@@ -45,16 +55,20 @@ export const sendEmail = async ({ email, emailType, userId, token, resetUrl, ext
         htmlContent = `<p style="font-family:sans-serif;font-size:16px;">You have a new notification.</p>`;
     }
 
-    // 3. Send mail
-    const mailOptions = {
-      from: `"Daily Note" <${process.env.EMAIL_SMTP_USER}>`,
+    // 2️⃣ Send mail through Resend
+    const data = await resend.emails.send({
+      from: "Daily Note <onboarding@resend.dev>", // use this for testing
+      // ✅ Once your domain is verified, replace it with your domain address:
+      // from: "Daily Note <noreply@yourdomain.com>",
       to: email,
       subject,
       html: htmlContent,
-    };
+    });
 
-    return await transporter.sendMail(mailOptions);
+    console.log("✅ Email sent:", data);
+    return data;
   } catch (error) {
+    console.error("❌ Email send failed:", error.message);
     throw new Error(error.message);
   }
 };

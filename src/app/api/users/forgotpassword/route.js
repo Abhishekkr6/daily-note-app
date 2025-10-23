@@ -1,5 +1,5 @@
 import User from "@/models/userModel.ts";
-import nodemailer from "nodemailer";
+// Removed nodemailer import. All email logic uses sendEmail helper.
 import crypto from "crypto";
 import { NextResponse } from "next/server";
 import { sendEmail } from "@/helpers/mailer";
