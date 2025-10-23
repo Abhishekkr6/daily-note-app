@@ -18,11 +18,15 @@ export default function AllTasksPage() {
   if (loading) return <AppSkeleton />;
 
   return (
-    <div className="flex h-screen bg-background">
-      <Sidebar />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <TopBar />
-        <main className="flex-1 overflow-auto">
+    <div className="flex min-h-screen bg-background">
+      <div className="h-screen flex flex-col sticky top-0">
+        <Sidebar />
+      </div>
+      <div className="flex-1 flex flex-col">
+        <div className="sticky top-0 z-10">
+          <TopBar />
+        </div>
+        <main className="flex-1 overflow-y-auto">
           <TasksPage />
         </main>
       </div>

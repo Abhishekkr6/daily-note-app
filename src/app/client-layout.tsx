@@ -6,9 +6,35 @@ import { Analytics } from "@vercel/analytics/next";
 import ClickSpark from "@/components/ClickSpark";
 import SonnerToaster from "@/components/sonner-toaster";
 
+import { useEffect } from "react";
+import Lenis from "lenis";
+
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   // Add global task notification popup so it shows everywhere
   const TaskNotificationGlobal = require("@/components/task-notification-global").default;
+
+  useEffect(() => {
+    const lenis = new Lenis({
+      lerp: 0.1,
+      direction: "vertical",
+      gestureDirection: "vertical",
+      mouseMultiplier: 1,
+      smoothTouch: false,
+      touchMultiplier: 2,
+      infinite: false,
+    } as any);
+
+    function raf(time: number) {
+      lenis.raf(time);
+      requestAnimationFrame(raf);
+    }
+    requestAnimationFrame(raf);
+
+    return () => {
+      lenis.destroy();
+    };
+  }, []);
+
   return (
     <Suspense fallback={null}>
       <SessionProvider>
