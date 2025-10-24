@@ -1,7 +1,6 @@
 "use client";
 
 ;
-import { Spinner } from "@heroui/spinner";
 import { useEffect, useRef, useState } from "react";
 // Softer blink + wavy border animation
 const blinkStyle = `
@@ -670,7 +669,7 @@ export function TodayDashboard() {
       {/* Alarm sound for notification */}
       <audio
         ref={alarmAudioRef}
-        src="https://cdn.pixabay.com/audio/2022/10/16/audio_12b6b1b2b2.mp3"
+        src="/sound.mp3"
         preload="auto"
       />
       {/* Quick Add Section */}
