@@ -72,6 +72,7 @@ type Task = {
   tag?: string;
   priority?: "High" | "Medium" | "Low";
   dueDate?: string;
+  completedDate?: string;
   notificationTime?: string; // Add this line
 };
 
@@ -522,7 +523,10 @@ export function TodayDashboard() {
   // Filter tasks by status
   const todayTasks = tasks.filter((t) => t.status === "today");
   const overdueTasks = tasks.filter((t) => t.status === "overdue");
-  const completedTasks = tasks.filter((t) => t.status === "completed");
+  // Only show completed tasks for today
+  const completedTasks = tasks.filter(
+    (t) => t.status === "completed" && (t.completedDate === todayDate || t.dueDate === todayDate)
+  );
 
   // Mood tracker state and data
   const moodEmojis = ["😢", "😞", "😐", "😊", "😄"];
