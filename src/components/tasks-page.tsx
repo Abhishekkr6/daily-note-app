@@ -63,6 +63,7 @@ function TasksPage() {
     }
   }, [searchParams]);
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [searchDate, setSearchDate] = useState<string>("");
   // Fetch tasks from backend on mount
   useEffect(() => {
     async function fetchTasks() {
@@ -122,7 +123,10 @@ function TasksPage() {
       priorityFilter === "all" || task.priority === priorityFilter;
     const matchesTag = tagFilter === "all" || task.tags.includes(tagFilter);
 
-    return matchesSearch && matchesStatus && matchesPriority && matchesTag;
+    // Date filter: match if searchDate is empty or matches the task's dueDate (YYYY-MM-DD)
+    const matchesDate = !searchDate || (task.dueDate && task.dueDate.startsWith(searchDate));
+
+    return matchesSearch && matchesStatus && matchesPriority && matchesTag && matchesDate;
   });
 
   // Mark as completed with backend update
@@ -361,6 +365,16 @@ function TasksPage() {
                   ))}
                 </SelectContent>
               </Select>
+
+              {/* Date filter */}
+              <input
+                type="date"
+                value={searchDate}
+                onChange={e => setSearchDate(e.target.value)}
+                className="border rounded px-2 py-1 min-w-[140px]"
+                placeholder="Filter by date"
+                title="Filter tasks by date"
+              />
             </div>
           </div>
         </CardContent>

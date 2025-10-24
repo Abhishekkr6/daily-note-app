@@ -26,7 +26,15 @@ export async function GET(req) {
     { $set: { status: "overdue" } }
   );
 
-  const tasks = await Task.find({ userId });
+  // Date-based search
+  const { searchParams } = new URL(req.url, 'http://localhost');
+  const date = searchParams.get('date');
+  let query = { userId };
+  if (date) {
+    // Match tasks where dueDate starts with the selected date (YYYY-MM-DD)
+    query.dueDate = { $regex: `^${date}` };
+  }
+  const tasks = await Task.find(query);
   return Response.json(tasks);
 }
 
