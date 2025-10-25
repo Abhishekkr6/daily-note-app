@@ -520,8 +520,22 @@ export function TodayDashboard() {
   };
 
   // Filter tasks by status
-  const todayTasks = tasks.filter((t) => t.status === "today");
-  const overdueTasks = tasks.filter((t) => t.status === "overdue");
+  // Overdue tasks: status is 'overdue', dueDate is before today
+  const todayDateObj = new Date(todayDate);
+  const overdueTasks = tasks.filter((t) => {
+    if (t.status !== "overdue") return false;
+    if (!t.dueDate) return true; // If no dueDate, still show as overdue
+    const due = new Date(t.dueDate);
+    return due < todayDateObj;
+  });
+
+  // Today tasks: status is 'today' and dueDate is today or future
+  const todayTasks = tasks.filter((t) => {
+    if (t.status !== "today") return false;
+    if (!t.dueDate) return true;
+    const due = new Date(t.dueDate);
+    return due >= todayDateObj;
+  });
   // Only show completed tasks for today
   const completedTasks = tasks.filter(
     (t) => t.status === "completed" && (t.completedDate === todayDate || t.dueDate === todayDate)
