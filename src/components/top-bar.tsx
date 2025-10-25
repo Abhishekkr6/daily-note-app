@@ -80,6 +80,7 @@ export function TopBar() {
 
   // Real streak logic: fetch activity and calculate streak like StatsPage
   const [streak, setStreak] = useState<number | null>(null);
+  const [lastStreak, setLastStreak] = useState<number>(0);
   // Streak fetcher function
   const fetchStreak = async () => {
     try {
@@ -89,11 +90,13 @@ export function TopBar() {
       // Sort activity by date descending (latest first)
       activity = activity.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
       let streak = 0;
+      let lastStreak = 0;
       const todayStr = new Date().toISOString().slice(0, 10);
+      const yesterdayStr = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+      // Calculate streak from today
       let started = false;
       for (let i = 0; i < activity.length; i++) {
         if (!started) {
-          // Start streak only if today is completed
           if (activity[i].date === todayStr && activity[i].completed > 0) {
             started = true;
             streak = 1;
@@ -106,7 +109,31 @@ export function TopBar() {
           }
         }
       }
-      setStreak(streak);
+      // Calculate last streak (ending yesterday)
+      let lastStarted = false;
+      for (let i = 0; i < activity.length; i++) {
+        if (!lastStarted) {
+          if (activity[i].date === yesterdayStr && activity[i].completed > 0) {
+            lastStarted = true;
+            lastStreak = 1;
+          }
+        } else {
+          if (activity[i].completed > 0) {
+            lastStreak++;
+          } else {
+            break;
+          }
+        }
+      }
+      setLastStreak(lastStreak);
+      // If today is completed, show current streak, else show last streak (if yesterday was completed), else 0
+      if (activity[0]?.date === todayStr && activity[0]?.completed > 0) {
+        setStreak(streak);
+      } else if (activity[0]?.date === todayStr && activity[0]?.completed === 0 && lastStreak > 0) {
+        setStreak(0); // If today missed, show 0
+      } else {
+        setStreak(0);
+      }
     } catch {}
   };
 
@@ -235,7 +262,13 @@ export function TopBar() {
           className="flex items-center space-x-1 px-3 py-1"
         >
           <Flame className="w-3 h-3 text-primary" />
-          <span className="text-sm font-medium">{streak !== null ? streak : "-"} day streak</span>
+          <span className="text-sm font-medium">
+            {streak !== null && streak > 0
+              ? streak
+              : lastStreak > 0
+                ? lastStreak
+                : 0} day streak
+          </span>
         </Badge>
 
         {/* Theme Toggle */}

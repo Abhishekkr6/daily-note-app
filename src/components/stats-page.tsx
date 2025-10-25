@@ -32,6 +32,7 @@ function getWeekday(dateStr: string) {
 
 export function StatsPage() {
   const [currentStreak, setCurrentStreak] = useState(0);
+  const [lastStreak, setLastStreak] = useState(0);
   const [longestStreak, setLongestStreak] = useState(0);
   const [totalTasks, setTotalTasks] = useState(0);
 
@@ -52,14 +53,17 @@ export function StatsPage() {
         // Sort activity by date descending (latest first)
   activity = activity.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
+
         // --- Calculate key metrics ---
-        // 1. Current streak: count consecutive days from today with completed > 0
+        // 1. Streak logic: show current streak if today is completed, else show last streak (ending yesterday), else 0
         let streak = 0;
+        let lastStreak = 0;
         const todayStr = new Date().toISOString().slice(0, 10);
+        const yesterdayStr = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+        // Calculate streak from today
         let started = false;
         for (let i = 0; i < activity.length; i++) {
           if (!started) {
-            // Start streak only if today is completed
             if (activity[i].date === todayStr && activity[i].completed > 0) {
               started = true;
               streak = 1;
@@ -72,7 +76,31 @@ export function StatsPage() {
             }
           }
         }
-        setCurrentStreak(streak);
+        // Calculate last streak (ending yesterday)
+        let lastStarted = false;
+        for (let i = 0; i < activity.length; i++) {
+          if (!lastStarted) {
+            if (activity[i].date === yesterdayStr && activity[i].completed > 0) {
+              lastStarted = true;
+              lastStreak = 1;
+            }
+          } else {
+            if (activity[i].completed > 0) {
+              lastStreak++;
+            } else {
+              break;
+            }
+          }
+        }
+        setLastStreak(lastStreak);
+        // If today is completed, show current streak, else show last streak (if yesterday was completed), else 0
+        if (activity[0]?.date === todayStr && activity[0]?.completed > 0) {
+          setCurrentStreak(streak);
+        } else if (activity[0]?.date === todayStr && activity[0]?.completed === 0 && lastStreak > 0) {
+          setCurrentStreak(0); // If today missed, show 0
+        } else {
+          setCurrentStreak(0);
+        }
 
         // 2. Longest streak (max consecutive days with completed > 0)
         let maxStreak = 0, curr = 0;
@@ -219,8 +247,14 @@ export function StatsPage() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Current Streak</p>
-                <p className="text-3xl font-bold text-primary">{currentStreak}</p>
+                <p className="text-sm font-medium text-muted-foreground">Streak</p>
+                <p className="text-3xl font-bold text-primary">
+                  {currentStreak > 0
+                    ? currentStreak
+                    : lastStreak > 0
+                      ? lastStreak
+                      : 0}
+                </p>
                 <p className="text-xs text-muted-foreground mt-1">days in a row</p>
               </div>
               <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center">
