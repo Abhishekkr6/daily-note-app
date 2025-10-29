@@ -76,7 +76,141 @@ type Task = {
 };
 
 export function TodayDashboard() {
-  // Refetch tasks every minute for real-time notification
+  // --- Voice Input State & Handlers ---
+  /**
+   * Which field is being recorded: 'title' | 'description' | null
+   * Used to control which input is filled and which mic animates.
+   */
+  const [listeningField, setListeningField] = useState<null | 'title' | 'description'>(null);
+  /**
+   * UI feedback message (e.g., 'Listening for title...')
+   */
+  const [listeningMsg, setListeningMsg] = useState<string>("");
+  /**
+   * For mic animation (red pulse when recording)
+   */
+  const [isRecording, setIsRecording] = useState(false);
+  /**
+   * Controls visibility of the voice input popup (prevents premature close)
+   */
+  const [showVoicePopup, setShowVoicePopup] = useState(false);
+  /**
+   * Web Speech API recognition instance (ref so we can stop it from anywhere)
+   */
+  const recognitionRef = useRef<any>(null);
+  /**
+   * Silence timer (to auto-stop after 2.5s of no speech)
+   */
+  const silenceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  /**
+   * Start voice recording for a field (title or description)
+   * @param fieldType Which field to listen for
+   */
+  const startRecording = (fieldType: 'title' | 'description') => {
+    if (typeof window === 'undefined') {
+      alert('Voice input not supported in this environment.');
+      return;
+    }
+    // Try both webkitSpeechRecognition and SpeechRecognition
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert('Voice input not supported in this browser.');
+      return;
+    }
+    stopRecording();
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
+    recognition.onresult = (event: any) => handleSpeechResult(event, fieldType);
+    recognition.onend = () => {
+      setIsRecording(false);
+      // Do not close popup here; wait for result or explicit stop
+    };
+    recognition.onerror = (event: any) => {
+      setIsRecording(false);
+      setListeningMsg('Voice input error. Try again.');
+      // Optionally log error for debugging
+      if (event && event.error) {
+        console.error('SpeechRecognition error:', event.error);
+      }
+      // Do not close popup here; wait for explicit stop
+    };
+    recognition.onstart = () => {
+      setIsRecording(true);
+      setListeningField(fieldType);
+      setListeningMsg(`Listening for ${fieldType === 'title' ? 'title' : 'description'}...`);
+      setShowVoicePopup(true);
+    };
+    recognition.onspeechend = () => {
+      if (silenceTimeoutRef.current) clearTimeout(silenceTimeoutRef.current);
+      silenceTimeoutRef.current = setTimeout(() => {
+        stopRecording();
+      }, 2500);
+    };
+    recognitionRef.current = recognition;
+    try {
+      recognition.start();
+    } catch (err) {
+      setShowVoicePopup(false);
+      setIsRecording(false);
+      setListeningMsg('Could not start voice input.');
+      console.error('SpeechRecognition start error:', err);
+    }
+  };
+
+  /**
+   * Stop voice recording and reset state
+   */
+  const stopRecording = () => {
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.stop();
+      } catch {}
+      recognitionRef.current = null;
+    }
+    setIsRecording(false);
+    setListeningField(null);
+    setListeningMsg("");
+    setShowVoicePopup(false);
+    if (silenceTimeoutRef.current) clearTimeout(silenceTimeoutRef.current);
+  };
+
+  /**
+   * Handle speech result and update the correct field
+   * @param event SpeechRecognitionEvent
+   * @param fieldType 'title' or 'description'
+   */
+  const handleSpeechResult = (event: any, fieldType: 'title' | 'description') => {
+    let transcript = '';
+    // Try to get the best transcript from all results
+    if (event.results && event.results[0] && event.results[0][0]) {
+      transcript = event.results[0][0].transcript.trim();
+    } else if (event.results && event.results.length > 0) {
+      transcript = Array.from(event.results)
+        .map((r: any) => r[0]?.transcript)
+        .filter(Boolean)
+        .join(' ');
+    }
+    if (transcript) {
+      if (fieldType === 'title') {
+        setQuickAddValue(transcript);
+      } else if (fieldType === 'description') {
+        setQuickAddDescription(transcript);
+      }
+    } else {
+      setListeningMsg('No speech detected. Try again.');
+    }
+    stopRecording();
+  };
+
+  // Clean up on unmount (stop any ongoing recognition)
+  useEffect(() => {
+    return () => {
+      stopRecording();
+    };
+  }, []);
   useEffect(() => {
     const interval = setInterval(() => {
       fetchTasks();
@@ -652,11 +786,6 @@ export function TodayDashboard() {
       ? "Description must be at least 5 characters and cannot start with a number. Numbers are allowed elsewhere."
       : "";
 
-  // Optional: Fade-in style for error messages
-  const errorFadeStyle: React.CSSProperties = {
-    transition: "opacity 0.3s",
-    opacity: 1,
-  };
 
   return (
     <div className="p-6 space-y-6">
@@ -724,34 +853,64 @@ export function TodayDashboard() {
         </CardHeader>
         <CardContent className="flex gap-2">
           <div className="flex flex-col flex-1">
-            <Input
-              value={quickAddValue}
-              onChange={(e) => setQuickAddValue(e.target.value)}
-              placeholder="Task Title"
-              className="text-base bg-background border-border focus:border-primary transition-colors placeholder:text-muted-foreground"
-              onKeyDown={(e) => e.key === "Enter" && handleQuickAdd()}
-            />
+            <div className="relative flex items-center">
+              <Input
+                value={quickAddValue}
+                onChange={(e) => setQuickAddValue(e.target.value)}
+                placeholder="Task Title"
+                className="text-base bg-background border-border focus:border-primary transition-colors placeholder:text-muted-foreground pr-10"
+                onKeyDown={(e) => e.key === "Enter" && handleQuickAdd()}
+                aria-label="Task Title"
+              />
+              <button
+                type="button"
+                aria-label="Voice input for title"
+                className={`absolute right-2 top-1/2 -translate-y-1/2 focus:outline-none`}
+                onClick={() => listeningField === 'title' ? stopRecording() : startRecording('title')}
+                tabIndex={0}
+              >
+                <span className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${listeningField === 'title' && isRecording ? 'bg-red-500 animate-pulse' : 'bg-gray-400'}`}>
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 text-white">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.25v1.25m0 0h3m-3 0H9m6-6.5a3 3 0 11-6 0v-4a3 3 0 116 0v4z" />
+                  </svg>
+                </span>
+              </button>
+            </div>
             {titleError && (
               <span
-                className="text-xs text-red-600 mt-2 ml-2 font-light block"
-                style={errorFadeStyle}
+                className="text-xs text-red-600 mt-2 ml-2 font-light block transition-opacity duration-300 opacity-100 animate-fade-in"
               >
                 {titleError}
               </span>
             )}
           </div>
           <div className="flex flex-col flex-1">
-            <Input
-              value={quickAddDescription}
-              onChange={(e) => setQuickAddDescription(e.target.value)}
-              placeholder="Description"
-              className="text-base bg-background border-border focus:border-primary transition-colors placeholder:text-muted-foreground"
-              onKeyDown={(e) => e.key === "Enter" && handleQuickAdd()}
-            />
+            <div className="relative flex items-center">
+              <Input
+                value={quickAddDescription}
+                onChange={(e) => setQuickAddDescription(e.target.value)}
+                placeholder="Description"
+                className="text-base bg-background border-border focus:border-primary transition-colors placeholder:text-muted-foreground pr-10"
+                onKeyDown={(e) => e.key === "Enter" && handleQuickAdd()}
+                aria-label="Task Description"
+              />
+              <button
+                type="button"
+                aria-label="Voice input for description"
+                className={`absolute right-2 top-1/2 -translate-y-1/2 focus:outline-none`}
+                onClick={() => listeningField === 'description' ? stopRecording() : startRecording('description')}
+                tabIndex={0}
+              >
+                <span className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${listeningField === 'description' && isRecording ? 'bg-red-500 animate-pulse' : 'bg-gray-400'}`}>
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 text-white">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.25v1.25m0 0h3m-3 0H9m6-6.5a3 3 0 11-6 0v-4a3 3 0 116 0v4z" />
+                  </svg>
+                </span>
+              </button>
+            </div>
             {descError && (
               <span
-                className="text-xs text-red-600 mt-2 ml-2 font-light block"
-                style={errorFadeStyle}
+                className="text-xs text-red-600 mt-2 ml-2 font-light block transition-opacity duration-300 opacity-100 animate-fade-in"
               >
                 {descError}
               </span>
@@ -808,6 +967,27 @@ export function TodayDashboard() {
           </Button>
         </CardContent>
       </Card>
+      {/* Voice Input UI Feedback as Centered Popup */}
+      {showVoicePopup && listeningField && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 animate-fade-in">
+          <div className="bg-white rounded-2xl shadow-2xl px-8 py-6 flex flex-col items-center border border-red-200 min-w-[280px]">
+            <span className="w-6 h-6 rounded-full bg-red-500 animate-pulse mb-3 flex items-center justify-center">
+              <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' strokeWidth={1.5} stroke='currentColor' className='w-4 h-4 text-white'>
+                <path strokeLinecap='round' strokeLinejoin='round' d='M12 18.25v1.25m0 0h3m-3 0H9m6-6.5a3 3 0 11-6 0v-4a3 3 0 116 0v4z' />
+              </svg>
+            </span>
+            <span className="text-base text-red-600 font-semibold mb-2">{listeningMsg}</span>
+            <span className="text-xs text-gray-500 mb-4">Speak now. Recording will auto-stop after a short pause.</span>
+            <button
+              type="button"
+              onClick={stopRecording}
+              className="px-4 py-1 text-sm rounded bg-gray-200 hover:bg-gray-300 text-gray-700 border border-gray-300 transition"
+            >
+              Stop
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Side - Tasks */}
@@ -1311,7 +1491,7 @@ function TaskSection({
                     </div>
                     {/* Centered Popup for Time Picker, no overlay */}
                     {showEmailPicker === task._id && (
-                      <div style={{position: 'fixed', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', zIndex: 9999}}>
+                      <div className="fixed left-1/2 top-1/2 z-50 transform -translate-x-1/2 -translate-y-1/2">
                         <div className="bg-white rounded-lg shadow-lg p-6 flex flex-col items-center min-w-[260px] border border-border">
                           <h3 className="text-base font-semibold mb-4">Set Notification Time</h3>
                           <input
