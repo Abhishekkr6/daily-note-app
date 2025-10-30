@@ -10,6 +10,14 @@ export interface ITask extends Document {
   status: "overdue" | "today" | "completed";
   userId?: string;
   notificationTime?: string;
+  focusSessions?: [
+    {
+      startedAt: { type: Date, required: true },
+      duration: { type: Number, required: true }, 
+      completed: { type: Boolean, default: false },
+      completedAt: { type: Date }
+    }
+  ];
 }
 
 
@@ -22,6 +30,16 @@ const TaskSchema: Schema = new Schema({
   status: { type: String, enum: ["overdue", "today", "completed"], default: "today" },
   userId: { type: Schema.Types.ObjectId, ref: "User" },
   notificationTime: { type: String },
+  focusSessions: {
+    type: [
+      {
+        startedAt: { type: Date, required: true },
+        duration: { type: Number, required: true }, 
+        completed: { type: Boolean, default: false },
+        completedAt: { type: Date }
+      }
+    ]
+  }
 }, { timestamps: true });
 
 export default mongoose.models.Task || mongoose.model<ITask>("Task", TaskSchema);

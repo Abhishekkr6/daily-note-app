@@ -76,6 +76,47 @@ type Task = {
 };
 
 export function TodayDashboard() {
+  // Focus Mode overlay style
+  const focusOverlayStyle = `
+    .focus-blur {
+      filter: blur(4px) grayscale(0.2) brightness(0.8);
+      pointer-events: none;
+      user-select: none;
+      transition: filter 0.3s;
+    }
+    .focus-highlight {
+      z-index: 50;
+      box-shadow: 0 0 0 4px #22c55e55, 0 8px 32px #0002;
+      transform: scale(1.04) translateY(-12px);
+      border: 2px solid #22c55e;
+      transition: box-shadow 0.3s, transform 0.3s, border 0.3s;
+    }
+  `;
+  
+  // In-place Focus Mode state
+  const [focusTaskId, setFocusTaskId] = useState<string | null>(null);
+  const [focusTimer, setFocusTimer] = useState<number>(25 * 60); // 25 min default
+  const [focusRunning, setFocusRunning] = useState(false);
+  const focusIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Focus Mode timer effect
+  useEffect(() => {
+    if (focusRunning && focusTaskId) {
+      focusIntervalRef.current = setInterval(() => {
+        setFocusTimer((t) => {
+          if (t <= 1) {
+            setFocusRunning(false);
+            setFocusTaskId(null);
+            return 0;
+          }
+          return t - 1;
+        });
+      }, 1000);
+      return () => clearInterval(focusIntervalRef.current!);
+    } else {
+      if (focusIntervalRef.current) clearInterval(focusIntervalRef.current);
+    }
+  }, [focusRunning, focusTaskId]);
   // --- Voice Input State & Handlers ---
   /**
    * Which field is being recorded: 'title' | 'description' | null
@@ -300,6 +341,29 @@ export function TodayDashboard() {
 
   // Persist notification times from backend
   const [emailTime, setEmailTime] = useState<{ [key: string]: string }>({});
+  // Global notification time popup state
+  const [showEmailPicker, setShowEmailPicker] = useState<string | null>(null);
+  const [emailLoading, setEmailLoading] = useState(false);
+  const [emailSaved, setEmailSaved] = useState<{ [key: string]: boolean }>({});
+
+  // Handler to save notification time (stub API)
+  const handleSetEmailNotification = async (taskId: string) => {
+    setEmailLoading(true);
+    // Save notificationTime to backend
+    try {
+      await fetch("/api/tasks", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ _id: taskId, notificationTime: emailTime[taskId] })
+      });
+    } catch (err) {}
+    setEmailLoading(false);
+    setEmailSaved(prev => ({ ...prev, [taskId]: true }));
+    setTimeout(() => {
+      setEmailSaved(prev => ({ ...prev, [taskId]: false }));
+      setShowEmailPicker(null);
+    }, 1200);
+  };
   const [loading, setLoading] = useState(true);
   const [quickAddLoading, setQuickAddLoading] = useState(false);
   const [quickAddValue, setQuickAddValue] = useState("");
@@ -788,7 +852,7 @@ export function TodayDashboard() {
 
 
   return (
-    <div className="p-6 space-y-6">
+  <div className="p-6 space-y-6" style={{ position: 'relative', zIndex: 1 }}>
       {/* Task Reminder Notification Popup */}
       {activeNotification && (
         <div className="fixed top-1/2 left-1/2 z-50 transform -translate-x-1/2 -translate-y-1/2 bg-white border border-primary shadow-2xl rounded-2xl px-8 py-6 flex flex-col items-center animate-fade-in">
@@ -837,6 +901,7 @@ export function TodayDashboard() {
           />
         </filter>
       </svg>
+      <style>{focusOverlayStyle}</style>
       <Card
         style={blinkQuickAdd ? { filter: "url(#wavy-border)" } : {}}
         className={`bg-card border-border shadow-sm ${
@@ -969,7 +1034,7 @@ export function TodayDashboard() {
       </Card>
       {/* Voice Input UI Feedback as Centered Popup */}
       {showVoicePopup && listeningField && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 animate-fade-in">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/30 animate-fade-in">
           <div className="bg-white rounded-2xl shadow-2xl px-8 py-6 flex flex-col items-center border border-red-200 min-w-[280px]">
             <span className="w-6 h-6 rounded-full bg-red-500 animate-pulse mb-3 flex items-center justify-center">
               <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' strokeWidth={1.5} stroke='currentColor' className='w-4 h-4 text-white'>
@@ -989,6 +1054,48 @@ export function TodayDashboard() {
         </div>
       )}
 
+      {/* Notification Time Picker Popup (global, only one at a time) */}
+      {showEmailPicker && (
+        <>
+          <div
+            className="fixed inset-0 z-[100] bg-black/20 transition-opacity duration-200"
+            onClick={() => setShowEmailPicker(null)}
+          />
+          <div className="fixed left-1/2 top-1/2 z-[101] transform -translate-x-1/2 -translate-y-1/2">
+            <div className="bg-white rounded-lg shadow-lg p-6 flex flex-col items-center min-w-[260px] border border-border">
+              <h3 className="text-base font-semibold mb-4">Set Notification Time</h3>
+              <input
+                type="time"
+                value={emailTime[showEmailPicker] || ""}
+                onChange={e => setEmailTime((prev: { [key: string]: string }) => ({ ...prev, [showEmailPicker]: e.target.value }))}
+                className="border rounded px-2 py-1 text-sm mb-4 w-full"
+                required
+                placeholder="Select time"
+              />
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant="default"
+                  disabled={emailLoading || !(emailTime[showEmailPicker])}
+                  onClick={() => handleSetEmailNotification(showEmailPicker)}
+                  className="cursor-pointer"
+                >
+                  {emailLoading ? "Saving..." : emailSaved[showEmailPicker] ? "Saved!" : "Save"}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setShowEmailPicker(null)}
+                  className="cursor-pointer"
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Side - Tasks */}
         <div className="lg:col-span-2 space-y-6">
@@ -1003,8 +1110,10 @@ export function TodayDashboard() {
             setTasks={setTasks}
             emailTime={emailTime}
             setEmailTime={setEmailTime}
+            focusTaskId={focusTaskId}
+            setFocusTaskId={setFocusTaskId}
+            setShowEmailPicker={setShowEmailPicker}
           />
-
           <TaskSection
             title="Today"
             color="text-primary"
@@ -1026,6 +1135,9 @@ export function TodayDashboard() {
             setTasks={setTasks}
             emailTime={emailTime}
             setEmailTime={setEmailTime}
+            focusTaskId={focusTaskId}
+            setFocusTaskId={setFocusTaskId}
+            setShowEmailPicker={setShowEmailPicker}
           />
           <TaskSection
             title="Completed"
@@ -1057,6 +1169,9 @@ export function TodayDashboard() {
             setTasks={setTasks}
             emailTime={emailTime}
             setEmailTime={setEmailTime}
+            focusTaskId={focusTaskId}
+            setFocusTaskId={setFocusTaskId}
+            setShowEmailPicker={setShowEmailPicker}
           />
 
           <CalendarHeatmap />
@@ -1289,10 +1404,10 @@ function formatTime12(time: string) {
   const [hour, minute] = time.split(":");
   let h = parseInt(hour, 10);
   const ampm = h >= 12 ? "PM" : "AM";
-  h = h % 12;
-  if (h === 0) h = 12;
+  h = h % 12 || 12;
   return `${h}:${minute} ${ampm}`;
 }
+
 function TaskSection({
   title,
   color,
@@ -1319,33 +1434,12 @@ function TaskSection({
   setEditPriority,
   emailTime,
   setEmailTime,
+  focusTaskId,
+  setFocusTaskId,
+  setShowEmailPicker,
 }: any) {
   // Show newest tasks at the top
   const orderedTasks = [...tasks].reverse();
-  // Email notification state
-  const [showEmailPicker, setShowEmailPicker] = useState<string | null>(null);
-  // Use emailTime from parent props
-  const [emailLoading, setEmailLoading] = useState(false);
-  const [emailSaved, setEmailSaved] = useState<{ [key: string]: boolean }>({});
-
-  // Handler to save notification time (stub API)
-  const handleSetEmailNotification = async (taskId: string) => {
-    setEmailLoading(true);
-    // Save notificationTime to backend
-    try {
-      await fetch("/api/tasks", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ _id: taskId, notificationTime: emailTime[taskId] })
-      });
-    } catch (err) {}
-    setEmailLoading(false);
-    setEmailSaved(prev => ({ ...prev, [taskId]: true }));
-    setTimeout(() => {
-      setEmailSaved(prev => ({ ...prev, [taskId]: false }));
-      setShowEmailPicker(null);
-    }, 1200);
-  };
 
   return (
     <Card className="bg-card border-border shadow-sm">
@@ -1366,11 +1460,11 @@ function TaskSection({
           orderedTasks.map((task: Task) => (
             <div
               key={task._id}
-              className={`flex items-center space-x-3 p-3 rounded-xl border relative z-10 shadow-sm ${
+              className={`flex items-center space-x-3 p-3 rounded-xl border relative z-10 shadow-sm transition-all duration-300 ${
                 title === "Completed"
                   ? "bg-muted/40 border border-border text-muted-foreground opacity-70"
                   : "bg-accent/30 border border-border"
-              }`}
+              } ${title === 'Today' && (focusTaskId === task._id ? 'focus-highlight' : focusTaskId ? 'focus-blur' : '')}`}
             >
               {completeTask && title !== "Completed" && (
                 <button
@@ -1473,7 +1567,7 @@ function TaskSection({
                       </p>
                       {/* Add extra margin between title and button */}
                       {title === "Today" && (
-                        <div className="ml-6 flex items-center">
+                        <div className="ml-6 flex items-center gap-2">
                           <Button
                             size="sm"
                             variant="outline"
@@ -1486,44 +1580,30 @@ function TaskSection({
                               {emailTime[task._id ?? ""] ? formatTime12(emailTime[task._id ?? ""]) : "Notify Me"}
                             </span>
                           </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className={`flex items-center gap-1 px-1.5 py-0.5 h-6 cursor-pointer rounded border transition-all duration-200 text-[11px] font-semibold shadow-sm
+                              ${focusTaskId === task._id
+                                ? 'bg-green-700 border-green-800 text-white shadow-lg'
+                                : 'bg-white border-green-600 text-green-700 hover:bg-green-50 hover:border-green-700'}
+                              min-w-[54px] sm:min-w-[60px] md:min-w-[70px] lg:min-w-[72px] xl:min-w-[76px] 2xl:min-w-[80px]`
+                            }
+                            onClick={() => setFocusTaskId(focusTaskId === task._id ? null : task._id)}
+                            title={focusTaskId === task._id ? "Unfocus Task" : "Focus on Task"}
+                          >
+                            {focusTaskId === task._id ? (
+                              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" viewBox="0 0 24 24"><path fill="currentColor" d="M9 12l2 2 4-4" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                            ) : (
+                              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" viewBox="0 0 24 24"><path fill="currentColor" d="M13 2.05v2.02A7.001 7.001 0 0 1 19.93 11H21.95A9.003 9.003 0 0 0 13 2.05Zm-2 0A9.003 9.003 0 0 0 2.05 11H4.07A7.001 7.001 0 0 1 11 4.07V2.05ZM2.05 13A9.003 9.003 0 0 0 11 21.95v-2.02A7.001 7.001 0 0 1 4.07 13H2.05Zm17.88 0A7.001 7.001 0 0 1 13 19.93v2.02A9.003 9.003 0 0 0 21.95 13h-2.02ZM12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z"/></svg>
+                            )}
+                            <span>{focusTaskId === task._id ? "Focused" : "Focus"}</span>
+                          </Button>
                         </div>
                       )}
                     </div>
                     {/* Centered Popup for Time Picker, no overlay */}
-                    {showEmailPicker === task._id && (
-                      <div className="fixed left-1/2 top-1/2 z-50 transform -translate-x-1/2 -translate-y-1/2">
-                        <div className="bg-white rounded-lg shadow-lg p-6 flex flex-col items-center min-w-[260px] border border-border">
-                          <h3 className="text-base font-semibold mb-4">Set Notification Time</h3>
-                          <input
-                            type="time"
-                            value={emailTime[task._id ?? ""] || ""}
-                            onChange={e => setEmailTime((prev: { [key: string]: string }) => ({ ...prev, [task._id ?? ""]: e.target.value }))}
-                            className="border rounded px-2 py-1 text-sm mb-4 w-full"
-                            required
-                            placeholder="Select time"
-                          />
-                          <div className="flex gap-2">
-                            <Button
-                              size="sm"
-                              variant="default"
-                              disabled={emailLoading || !(emailTime[task._id ?? ""])}
-                              onClick={() => handleSetEmailNotification(task._id ?? "")}
-                              className="cursor-pointer"
-                            >
-                              {emailLoading ? "Saving..." : emailSaved[task._id ?? ""] ? "Saved!" : "Save"}
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => setShowEmailPicker(null)}
-                              className="cursor-pointer"
-                            >
-                              Cancel
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    )}
+                    {/* Popup is now global, not per-task */}
                     {task.description && (
                       <p className="text-xs text-muted-foreground mt-1">
                         {task.description}

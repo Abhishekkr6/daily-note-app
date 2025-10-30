@@ -1,4 +1,3 @@
-
 import { Schema, model, models, Document } from "mongoose";
 
 /**
@@ -53,6 +52,9 @@ export interface IUser extends Document {
   currentStreak?: number;
   longestStreak?: number;
   lastStreakDate?: string;
+  totalFocusSessions?: number;
+  minutesFocused?: number;
+  lastFocusSessionAt?: Date;
 }
 
 const UserSchema = new Schema<IUser>({
@@ -159,6 +161,17 @@ const UserSchema = new Schema<IUser>({
     lastStreakDate: {
       type: String,
       default: null,
+    },
+    totalFocusSessions: {
+      type: Number,
+      default: 0,
+    },
+    minutesFocused: {
+      type: Number,
+      default: 0,
+    },
+    lastFocusSessionAt: {
+      type: Date,
     },
   },
   { timestamps: true }
