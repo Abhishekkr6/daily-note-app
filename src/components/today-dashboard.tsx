@@ -926,6 +926,7 @@ export function TodayDashboard() {
                 className="text-base bg-background border-border focus:border-primary transition-colors placeholder:text-muted-foreground pr-10"
                 onKeyDown={(e) => e.key === "Enter" && handleQuickAdd()}
                 aria-label="Task Title"
+                maxLength={60}
               />
               <button
                 type="button"
@@ -958,6 +959,7 @@ export function TodayDashboard() {
                 className="text-base bg-background border-border focus:border-primary transition-colors placeholder:text-muted-foreground pr-10"
                 onKeyDown={(e) => e.key === "Enter" && handleQuickAdd()}
                 aria-label="Task Description"
+                maxLength={120}
               />
               <button
                 type="button"
@@ -1557,11 +1559,12 @@ function TaskSection({
                   <>
                     <div className="flex items-center">
                       <p
-                        className={`font-medium ${
+                        className={`font-medium break-words whitespace-pre-line max-w-full overflow-wrap-anywhere ${
                           title === "Completed"
                             ? "line-through"
                             : "text-foreground"
                         }`}
+                        style={{ overflowWrap: 'anywhere', wordBreak: 'break-word', minWidth: 0 }}
                       >
                         {task.title}
                       </p>
@@ -1605,7 +1608,7 @@ function TaskSection({
                     {/* Centered Popup for Time Picker, no overlay */}
                     {/* Popup is now global, not per-task */}
                     {task.description && (
-                      <p className="text-xs text-muted-foreground mt-1">
+                      <p className="text-xs text-muted-foreground mt-1 break-words whitespace-pre-line max-w-full overflow-wrap-anywhere" style={{ overflowWrap: 'anywhere', wordBreak: 'break-word', minWidth: 0 }}>
                         {task.description}
                       </p>
                     )}
