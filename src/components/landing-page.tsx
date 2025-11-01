@@ -299,7 +299,18 @@ export function LandingPage() {
               </div>
               <span className="font-semibold heading">DailyNote</span>
             </div>
-            <p className="text-sm text-muted-foreground">© 2024 DailyNote. Made with ❤️ for productive people.</p>
+            <p className="text-sm text-muted-foreground">
+              © 2025 DailyNote. Made with ❤️ by{" "}
+              <a
+              href="https://abhishektiwari-18.vercel.app/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline hover:text-primary transition-colors"
+              >
+              Abhishek.tiwari
+              </a>{" "}
+              for productive people.
+            </p>
           </div>
         </div>
       </footer>
