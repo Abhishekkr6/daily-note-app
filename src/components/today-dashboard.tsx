@@ -1,6 +1,7 @@
 "use client";
 
-;
+
+import { toast } from "sonner";
 import { useEffect, useRef, useState } from "react";
 // Softer blink + wavy border animation
 const blinkStyle = `
@@ -386,6 +387,8 @@ export function TodayDashboard() {
 
   // Track the current working task id for Pomodoro reset
   const workingTaskIdRef = useRef<string | undefined>(undefined);
+  // Ref for task complete sound
+  const taskCompleteAudioRef = useRef<HTMLAudioElement>(null);
 
   const [pomodoroCycles, setPomodoroCycles] = useState(0);
   const [pomodoroTime, setPomodoroTime] = useState(0); // Add this line
@@ -659,6 +662,27 @@ export function TodayDashboard() {
   const completeTask = async (id: string) => {
     const task = tasks.find((t) => t._id === id);
     if (!task) return;
+    // Only play sound and show toast if task is in 'today' section
+    if (task.status === 'today') {
+      if (taskCompleteAudioRef.current) {
+        try {
+          taskCompleteAudioRef.current.currentTime = 0;
+          await taskCompleteAudioRef.current.play();
+        } catch (e) {
+          // ignore play error (e.g. user gesture required)
+        }
+      }
+      toast.success(
+        <div className="flex items-center gap-3">
+          <CheckCircle2 className="text-green-600 w-6 h-6 flex-shrink-0" />
+          <div>
+            <div className="font-semibold">Task completed</div>
+            <div className="text-xs text-muted-foreground">{task.title}</div>
+          </div>
+        </div>,
+        { position: "bottom-right", duration: 3000 }
+      );
+    }
     setLoading(true);
     try {
       const todayDate = new Date().toISOString().slice(0, 10);
@@ -855,6 +879,13 @@ export function TodayDashboard() {
 
   return (
   <div className="p-6 space-y-6" style={{ position: 'relative', zIndex: 1 }}>
+      {/* Task Complete Sound */}
+      <audio
+        ref={taskCompleteAudioRef}
+        src="/taskComplete.mp3"
+        preload="auto"
+        style={{ display: 'none' }}
+      />
       {/* Task Reminder Notification Popup */}
       {activeNotification && (
         <div className="fixed top-1/2 left-1/2 z-50 transform -translate-x-1/2 -translate-y-1/2 bg-white border border-primary shadow-2xl rounded-2xl px-8 py-6 flex flex-col items-center animate-fade-in">
