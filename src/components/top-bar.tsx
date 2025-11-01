@@ -192,6 +192,20 @@ export function TopBar() {
     day: "numeric",
   });
 
+  // Modern Clock Component
+  const [clockTime, setClockTime] = useState<string>("");
+  useEffect(() => {
+    const updateClock = () => {
+      const now = new Date();
+      setClockTime(
+        now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+      );
+    };
+    updateClock();
+    const interval = setInterval(updateClock, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <header className="flex items-center justify-between px-6 py-4 bg-background border-b border-border">
       {/* Left section - Date */}
@@ -206,51 +220,57 @@ export function TopBar() {
         </div>
       </div>
 
-      {/* Center section - Search */}
-      <div className="flex-1 max-w-md mx-8" ref={inputRef}>
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="Search notes and tasks..."
-            className="pl-10 bg-muted/50 border-border focus:bg-background transition-colors"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onFocus={() => searchQuery && setShowDropdown(true)}
-            autoComplete="off"
-          />
-          {showDropdown && (
-            <div className="absolute left-0 right-0 mt-2 bg-background border border-border rounded shadow-lg z-10 max-h-80 overflow-y-auto">
-              {loading ? (
-                <div className="p-4 text-center text-muted-foreground text-sm">
-                  Searching...
-                </div>
-              ) : results.length === 0 ? (
-                <div className="p-4 text-center text-muted-foreground text-sm">
-                  No results found
-                </div>
-              ) : (
-                <ul>
-                  {results.map((item) => (
-                    <li
-                      key={item.id}
-                      className="px-4 py-2 hover:bg-muted cursor-pointer flex flex-col border-b last:border-b-0"
-                      onClick={() => router.push(`/tasks?highlight=${item.id}`)}
-                    >
-                      <span className="font-medium text-foreground">
-                        {item.title}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        {item.type === "note" ? "Note" : "Task"}
-                      </span>
-                      <span className="text-sm text-muted-foreground">
-                        {item.content}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          )}
+      {/* Center section - Search + Clock */}
+      <div className="flex items-center flex-1 max-w-xl mx-8 gap-8">
+        <div className="flex-1" ref={inputRef}>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Search notes and tasks..."
+              className="pl-10 bg-muted/50 border-border focus:bg-background transition-colors"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onFocus={() => searchQuery && setShowDropdown(true)}
+              autoComplete="off"
+            />
+            {showDropdown && (
+              <div className="absolute left-0 right-0 mt-2 bg-background border border-border rounded shadow-lg z-10 max-h-80 overflow-y-auto">
+                {loading ? (
+                  <div className="p-4 text-center text-muted-foreground text-sm">
+                    Searching...
+                  </div>
+                ) : results.length === 0 ? (
+                  <div className="p-4 text-center text-muted-foreground text-sm">
+                    No results found
+                  </div>
+                ) : (
+                  <ul>
+                    {results.map((item) => (
+                      <li
+                        key={item.id}
+                        className="px-4 py-2 hover:bg-muted cursor-pointer flex flex-col border-b last:border-b-0"
+                        onClick={() => router.push(`/tasks?highlight=${item.id}`)}
+                      >
+                        <span className="font-medium text-foreground">
+                          {item.title}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {item.type === "note" ? "Note" : "Task"}
+                        </span>
+                        <span className="text-sm text-muted-foreground">
+                          {item.content}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+        {/* Modern Clock (extra small) */}
+        <div className="flex items-center justify-center min-w-[60px] px-1 py-0.5 rounded bg-muted/60 border border-border shadow text-xs font-mono text-primary select-none">
+          {clockTime}
         </div>
       </div>
 
