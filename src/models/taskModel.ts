@@ -8,6 +8,7 @@ export interface ITask extends Document {
   tag?: string;
   priority?: "High" | "Medium" | "Low";
   status: "overdue" | "today" | "completed";
+  completedDate?: string;
   userId?: string;
   notificationTime?: string;
   focusSessions?: [
@@ -28,6 +29,7 @@ const TaskSchema: Schema = new Schema({
   tag: { type: String },
   priority: { type: String, enum: ["High", "Medium", "Low"] },
   status: { type: String, enum: ["overdue", "today", "completed"], default: "today" },
+  completedDate: { type: String },
   userId: { type: Schema.Types.ObjectId, ref: "User" },
   notificationTime: { type: String },
   focusSessions: {

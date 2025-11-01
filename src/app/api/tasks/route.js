@@ -86,10 +86,14 @@ export async function PUT(req) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
   const body = await req.json();
-  // If marking as completed (case-insensitive), update updatedAt to now
+  // If marking as completed (case-insensitive), update updatedAt and completedDate to now
   let streakUpdated = false;
   if (body.status && body.status.toLowerCase() === "completed") {
     body.updatedAt = Date.now();
+    if (!body.completedDate) {
+      const todayStr = new Date().toISOString().slice(0, 10);
+      body.completedDate = todayStr;
+    }
     streakUpdated = true;
   }
   // Only allow update if the task belongs to the user

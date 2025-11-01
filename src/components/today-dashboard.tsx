@@ -660,7 +660,8 @@ export function TodayDashboard() {
     if (!task) return;
     setLoading(true);
     try {
-      const updated = { ...task, status: "completed" };
+      const todayDate = new Date().toISOString().slice(0, 10);
+      const updated = { ...task, status: "completed", completedDate: todayDate };
       await fetch("/api/tasks", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
