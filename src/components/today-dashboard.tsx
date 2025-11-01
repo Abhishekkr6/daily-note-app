@@ -53,6 +53,7 @@ import {
   Play,
   Pause,
   RotateCcw,
+  Target,
 } from "lucide-react";
 import { CalendarHeatmap } from "./calendar-heatmap";
 import {
@@ -1217,7 +1218,11 @@ export function TodayDashboard() {
               setPomodoroActive(false);
               setPomodoroTime(pomodoroDuration * 60);
             }}
-            currentTask={todayTasks[0]?.title}
+            currentTask={
+              focusTaskId
+                ? todayTasks.find((t) => t._id === focusTaskId)?.title || todayTasks[0]?.title
+                : todayTasks[0]?.title
+            }
             pomodoroCycles={pomodoroCycles}
             audioRef={audioRef}
             pomodoroDuration={pomodoroDuration}
@@ -1579,29 +1584,22 @@ function TaskSection({
                             className="flex items-center gap-1 px-2 py-1 h-7 cursor-pointer"
                             title={emailTime[task._id ?? ""] ? `Notification set for ${formatTime12(emailTime[task._id ?? ""])} ` : "Notify Me"}
                           >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a6 6 0 0 0-6 6v4.586l-.707.707A1 1 0 0 0 6 16h12a1 1 0 0 0 .707-1.707L18 12.586V8a6 6 0 0 0-6-6Zm0 20a2 2 0 0 0 2-2h-4a2 2 0 0 0 2 2Z"/></svg>
-                            <span className="text-xs">
-                              {emailTime[task._id ?? ""] ? formatTime12(emailTime[task._id ?? ""]) : "Notify Me"}
-                            </span>
+                            {emailTime[task._id ?? ""]
+                              ? <span className="text-xs font-semibold">{formatTime12(emailTime[task._id ?? ""])} </span>
+                              : <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a6 6 0 0 0-6 6v4.586l-.707.707A1 1 0 0 0 6 16h12a1 1 0 0 0 .707-1.707L18 12.586V8a6 6 0 0 0-6-6Zm0 20a2 2 0 0 0 2-2h-4a2 2 0 0 0 2 2Z"/></svg>
+                            }
                           </Button>
                           <Button
-                            size="sm"
+                            size="icon"
                             variant="ghost"
-                            className={`flex items-center gap-1 px-1.5 py-0.5 h-6 cursor-pointer rounded border transition-all duration-200 text-[11px] font-semibold shadow-sm
+                            className={`p-1 h-7 w-7 rounded border transition-all duration-200 cursor-pointer
                               ${focusTaskId === task._id
                                 ? 'bg-green-700 border-green-800 text-white shadow-lg'
-                                : 'bg-white border-green-600 text-green-700 hover:bg-green-50 hover:border-green-700'}
-                              min-w-[54px] sm:min-w-[60px] md:min-w-[70px] lg:min-w-[72px] xl:min-w-[76px] 2xl:min-w-[80px]`
-                            }
+                                : 'bg-white border-green-600 text-green-700 hover:bg-green-50 hover:border-green-700'}`}
                             onClick={() => setFocusTaskId(focusTaskId === task._id ? null : task._id)}
                             title={focusTaskId === task._id ? "Unfocus Task" : "Focus on Task"}
                           >
-                            {focusTaskId === task._id ? (
-                              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" viewBox="0 0 24 24"><path fill="currentColor" d="M9 12l2 2 4-4" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                            ) : (
-                              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" viewBox="0 0 24 24"><path fill="currentColor" d="M13 2.05v2.02A7.001 7.001 0 0 1 19.93 11H21.95A9.003 9.003 0 0 0 13 2.05Zm-2 0A9.003 9.003 0 0 0 2.05 11H4.07A7.001 7.001 0 0 1 11 4.07V2.05ZM2.05 13A9.003 9.003 0 0 0 11 21.95v-2.02A7.001 7.001 0 0 1 4.07 13H2.05Zm17.88 0A7.001 7.001 0 0 1 13 19.93v2.02A9.003 9.003 0 0 0 21.95 13h-2.02ZM12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z"/></svg>
-                            )}
-                            <span>{focusTaskId === task._id ? "Focused" : "Focus"}</span>
+                            <Target className="w-4 h-4" />
                           </Button>
                         </div>
                       )}
