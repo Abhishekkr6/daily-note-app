@@ -16,6 +16,16 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
+/* Desktop-lock helpers: keep mobile browsers from auto-adjusting text size
+   when we force a desktop viewport (meta viewport width=1280). This
+   preserves the desktop typography and prevents iOS/Android from
+   enlarging fonts which can disturb desktop layout. */
+html, body {
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 :root {

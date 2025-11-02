@@ -29,6 +29,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* Force a desktop viewport width so mobile browsers render the desktop layout */}
+        <meta name="viewport" content="width=1280, initial-scale=1" />
+      </head>
       <body className={`${inter.variable} ${poppins.variable} antialiased`}>
         <ClientLayout>{children}</ClientLayout>
       </body>
