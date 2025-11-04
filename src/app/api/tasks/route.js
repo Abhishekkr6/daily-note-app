@@ -1,6 +1,7 @@
 import { connect } from "@/dbConfig/dbConfig";
 import Task from "@/models/taskModel";
 import { getDataFromToken } from "@/helpers/getDataFromToken";
+import { awardPoints } from "@/lib/leaderboardService";
 
 export async function GET(req) {
   await connect();
@@ -126,6 +127,7 @@ export async function PUT(req) {
       }
       await user.save();
     }
+    
     // If streak just started for today, delete all previous days' completed tasks
     if (streakJustStarted) {
       await Task.deleteMany({
@@ -133,6 +135,14 @@ export async function PUT(req) {
         status: "completed",
         updatedAt: { $lt: new Date(todayStr) }
       });
+    }
+  }
+  // Award points for task completion (non-blocking)
+  if (body.status && body.status.toLowerCase() === "completed") {
+    try {
+      await awardPoints({ userId, actionType: 'task_complete', sourceId: body._id || updatedTask?._id, timestamp: new Date().toISOString(), meta: { completedDate: body.completedDate || null } });
+    } catch (err) {
+      console.error('awardPoints error (tasks):', err);
     }
   }
   return Response.json(updatedTask);

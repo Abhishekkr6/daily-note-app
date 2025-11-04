@@ -5,6 +5,7 @@ import { Sidebar } from "@/components/sidebar";
 import { TopBar } from "@/components/top-bar";
 import { TodayDashboard } from "@/components/today-dashboard";
 import { WelcomeToast } from "@/components/welcome-toast";
+import LeaderboardToast from "@/components/leaderboard-toast";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 
@@ -19,6 +20,7 @@ export default function HomePage() {
   const [user, setUser] = useState<UserType | null>(null);
   const [loading, setLoading] = useState(true);
   const [showWelcome, setShowWelcome] = useState(false);
+  const [showLeaderboardToast, setShowLeaderboardToast] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -44,6 +46,14 @@ export default function HomePage() {
       if (sessionStorage.getItem("justLoggedIn") === "true") {
         setShowWelcome(true);
         sessionStorage.removeItem("justLoggedIn");
+      }
+
+      // Show leaderboard one-time toast if not seen
+      try {
+        const seen = !!localStorage.getItem('leaderboard_toast_seen_v1');
+        if (!seen) setShowLeaderboardToast(true);
+      } catch (e) {
+        // ignore
       }
     }
   }, [router]);
@@ -81,6 +91,8 @@ export default function HomePage() {
       {showWelcome && (
         <WelcomeToast name={user?.username || user?.name || "User"} />
       )}
+      {/* Leaderboard one-time toast */}
+      {showLeaderboardToast && <LeaderboardToast />}
     </div>
   );
 }

@@ -1,7 +1,7 @@
-import leaderboardConfig, { getDiminishingMultiplier } from "./leaderboardConfig";
-import ScoreEvent from "../models/scoreEventModel";
-import LeaderboardEntry from "../models/leaderboardModel";
-import User from "../models/userModel";
+import leaderboardConfig, { getDiminishingMultiplier } from "@/lib/leaderboardConfig";
+import ScoreEvent from "@/models/scoreEventModel";
+import LeaderboardEntry from "@/models/leaderboardModel";
+import User from "@/models/userModel";
 import mongoose from "mongoose";
 
 interface ScoreEventInput {
