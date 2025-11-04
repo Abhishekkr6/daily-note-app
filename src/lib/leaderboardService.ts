@@ -131,8 +131,14 @@ export async function awardPoints(input: ScoreEventInput): Promise<AwardResult> 
       if (leaderboardConfig.periods.includes("global" as any)) periods.push("global");
 
       // Create safe snapshots for display name and opt-out status so UI never falls back to raw ObjectId
-      const displayNameSnapshot = user ? ((user as any).name || (user as any).username || (user as any).email || undefined) : undefined;
-      const optOutSnapshot = user ? ((user as any).showOnLeaderboard !== false) : true;
+      const displayNameSnapshot = user ? ((user as any).name ?? (user as any).username ?? (user as any).email) : undefined;
+      const optOutSnapshot = user
+        ? ((user as any).showOnLeaderboard !== undefined
+            ? (user as any).showOnLeaderboard
+            : ((user as any).preferences && (user as any).preferences.showOnLeaderboard !== undefined
+                ? (user as any).preferences.showOnLeaderboard
+                : true))
+        : true;
 
       for (const p of periods) {
         await LeaderboardEntry.findOneAndUpdate(

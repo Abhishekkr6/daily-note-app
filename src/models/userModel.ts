@@ -29,6 +29,7 @@ export interface IUser extends Document {
   preferences?: {
     theme?: string;
     timezone?: string;
+    leaderboardSeen?: boolean;
     workingHours?: {
       start?: string;
       end?: string;

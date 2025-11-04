@@ -30,7 +30,12 @@ const ScoreEventSchema: Schema = new Schema(
 try {
   ScoreEventSchema.index({ userId: 1, actionType: 1, sourceId: 1 }, { unique: true, partialFilterExpression: { sourceId: { $exists: true } } });
 } catch (e) {
-  // index creation may be deferred; swallow in development
+  // Log index creation errors in non-production environments
+  if (process.env.NODE_ENV !== "production") {
+    console.warn("ScoreEventSchema index creation error:", e);
+  } else {
+    throw e;
+  }
 }
 
 export default mongoose.models.ScoreEvent || mongoose.model<IScoreEvent>("ScoreEvent", ScoreEventSchema);

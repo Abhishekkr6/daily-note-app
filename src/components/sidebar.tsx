@@ -57,10 +57,12 @@ export function Sidebar({ className }: SidebarProps) {
   }
 
   // Initialize seen state from server if user is authenticated
+  const [hasFetchedLeaderboardSeen, setHasFetchedLeaderboardSeen] = useState(false);
   useEffect(() => {
-    if (leaderboardSeen) return;
-    try {
-      (async () => {
+    if (leaderboardSeen || hasFetchedLeaderboardSeen) return;
+    setHasFetchedLeaderboardSeen(true);
+    (async () => {
+      try {
         const res = await fetch('/api/users/aboutme', { method: 'POST', credentials: 'include' });
         if (!res.ok) return;
         const json = await res.json();
@@ -69,11 +71,11 @@ export function Sidebar({ className }: SidebarProps) {
           try { localStorage.setItem('leaderboard_seen_v1', '1'); } catch (e) {}
           setLeaderboardSeen(true);
         }
-      })();
-    } catch (e) {
-      // ignore
-    }
-  }, [leaderboardSeen]);
+      } catch (e) {
+        // ignore
+      }
+    })();
+  }, [leaderboardSeen, hasFetchedLeaderboardSeen]);
 
   // Logout logic moved to settings page
 
