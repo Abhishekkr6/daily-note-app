@@ -26,7 +26,7 @@ function getDayRange(ts?: string) {
   return { start, end };
 }
 
-function getWeekKey(ts?: string) {
+export function getWeekKey(ts?: string) {
   const d = ts ? new Date(ts) : new Date();
   // ISO week calculation
   const tmp = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));

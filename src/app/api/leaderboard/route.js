@@ -1,6 +1,6 @@
 import { connect } from '@/dbConfig/dbConfig';
 import LeaderboardEntry from '@/models/leaderboardModel';
-import { getWeekKey } from './leaderboardService';
+import { getWeekKey } from '@/lib/leaderboardService';
 
 export async function GET(req) {
   try {
