@@ -116,6 +116,7 @@ const UserSchema = new Schema<IUser>({
     preferences: {
       theme: { type: String, default: "light" },
       timezone: { type: String, default: "UTC" },
+      leaderboardSeen: { type: Boolean, default: false },
       workingHours: {
         type: Object,
         default: { start: "09:00", end: "17:00" }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import dbConnect from '@/dbConfig/dbConfig';
+import { awardPoints } from '@/lib/leaderboardService';
 import Task from '@/models/taskModel';
 import User from '@/models/userModel';
 import { getServerSession } from 'next-auth';
@@ -90,6 +91,12 @@ export async function PATCH(req) {
     user.minutesFocused = (user.minutesFocused || 0) + focusSession.duration;
     user.lastFocusSessionAt = new Date();
     await user.save();
+  }
+  // Award points for completed focus session (non-blocking)
+  try {
+    await awardPoints({ userId: session.user._id, actionType: 'focus_session_complete', sourceId: sessionId, timestamp: new Date().toISOString(), meta: { duration: focusSession.duration } });
+  } catch (err) {
+    console.error('awardPoints error (focus-session):', err);
   }
   return NextResponse.json({ success: true });
 }
