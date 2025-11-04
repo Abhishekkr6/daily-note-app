@@ -1,5 +1,6 @@
 import { connect } from '@/dbConfig/dbConfig';
 import LeaderboardEntry from '@/models/leaderboardModel';
+import { getWeekKey } from './leaderboardService';
 
 export async function GET(req) {
   try {
@@ -25,15 +26,7 @@ export async function GET(req) {
   const limit = Math.min(parseInt(searchParams.get('limit') || '50', 10), 200);
 
   // compute period key for weekly
-  let periodKey = period === 'global' ? 'global' : (() => {
-    const d = new Date();
-    const tmp = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
-    const dayNum = tmp.getUTCDay() || 7;
-    tmp.setUTCDate(tmp.getUTCDate() + 4 - dayNum);
-    const yearStart = new Date(Date.UTC(tmp.getUTCFullYear(), 0, 1));
-    const weekNo = Math.ceil((((tmp.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
-    return `${tmp.getUTCFullYear()}-W${String(weekNo).padStart(2, '0')}`;
-  })();
+  let periodKey = period === 'global' ? 'global' : getWeekKey();
 
   const entries = await LeaderboardEntry.find({ period: periodKey }).sort({ score: -1 }).limit(limit).lean();
   const data = entries.map((e, idx) => ({ rank: idx + 1, userId: String(e.userId), displayName: e.displayNameSnapshot, avatarUrl: e.avatarSnapshot, score: e.score }));

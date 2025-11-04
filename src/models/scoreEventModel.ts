@@ -27,15 +27,18 @@ const ScoreEventSchema: Schema = new Schema(
 );
 
 // Unique idempotency index when sourceId exists
-try {
-  ScoreEventSchema.index({ userId: 1, actionType: 1, sourceId: 1 }, { unique: true, partialFilterExpression: { sourceId: { $exists: true } } });
-} catch (e) {
-  // Log index creation errors in non-production environments
-  if (process.env.NODE_ENV !== "production") {
-    console.warn("ScoreEventSchema index creation error:", e);
-  } else {
-    throw e;
-  }
-}
+ScoreEventSchema.index(
+  { userId: 1, actionType: 1, sourceId: 1 },
+  { unique: true, partialFilterExpression: { sourceId: { $exists: true } } }
+);
 
-export default mongoose.models.ScoreEvent || mongoose.model<IScoreEvent>("ScoreEvent", ScoreEventSchema);
+const ScoreEventModel = mongoose.models.ScoreEvent || mongoose.model<IScoreEvent>("ScoreEvent", ScoreEventSchema);
+
+// Optional: handle index errors
+ScoreEventModel.on("index", (err: any) => {
+  if (err && process.env.NODE_ENV !== "production") {
+    console.warn("ScoreEventModel index creation error:", err);
+  }
+});
+
+export default ScoreEventModel;

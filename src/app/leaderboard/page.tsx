@@ -25,21 +25,26 @@ export default function LeaderboardPage() {
     return () => clearTimeout(t);
   }, []);
 
-  useEffect(() => {
-    // Try to fetch leaderboard data if API exists. If not, fail silently and show placeholder.
-    async function fetchLeaderboard() {
-      try {
-        const res = await fetch(`/api/leaderboard?period=weekly&limit=50`);
-        if (!res.ok) throw new Error(`Status ${res.status}`);
-        const json = await res.json();
-        if (json && Array.isArray(json.data)) setEntries(json.data.slice(0, 50));
-      } catch (err: any) {
-        // do not crash the page; show a friendly message
-        setError("Leaderboard data is not available yet.");
-      }
+  // Extracted fetchLeaderboard so it can be reused for refresh
+  const fetchLeaderboard = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await fetch(`/api/leaderboard?period=weekly&limit=50`);
+      if (!res.ok) throw new Error(`Status ${res.status}`);
+      const json = await res.json();
+      if (json && Array.isArray(json.data)) setEntries(json.data.slice(0, 50));
+    } catch (err: any) {
+      setError("Leaderboard data is not available yet.");
+    } finally {
+      setLoading(false);
     }
+  };
 
+  useEffect(() => {
     fetchLeaderboard();
+    // small UX delay like other pages
+    // The loading state is now handled in fetchLeaderboard
   }, []);
 
   if (loading) return <AppSkeleton />;
@@ -63,7 +68,7 @@ export default function LeaderboardPage() {
                 <p className="text-sm text-muted-foreground">Weekly & Global rankings based on user points</p>
               </div>
               <div>
-                <Button variant="outline">Refresh</Button>
+                <Button variant="outline" onClick={fetchLeaderboard}>Refresh</Button>
               </div>
             </div>
 

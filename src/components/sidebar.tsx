@@ -160,7 +160,13 @@ export function Sidebar({ className }: SidebarProps) {
                       isActive && "bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90",
                       collapsed && "px-2",
                     )}
-                    onClick={() => { if (isLeaderboard) markLeaderboardSeen(); }}
+                    onClick={(e) => {
+                      if (isLeaderboard) {
+                        e.preventDefault();
+                        markLeaderboardSeen();
+                        router.push(item.href);
+                      }
+                    }}
                   >
                     {content}
                   </Button>

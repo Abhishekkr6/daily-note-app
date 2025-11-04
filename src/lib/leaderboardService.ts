@@ -2,6 +2,7 @@ import leaderboardConfig, { getDiminishingMultiplier } from "@/lib/leaderboardCo
 import ScoreEvent from "@/models/scoreEventModel";
 import LeaderboardEntry from "@/models/leaderboardModel";
 import User from "@/models/userModel";
+import mongoose from "mongoose";
 
 interface ScoreEventInput {
   userId: string;
@@ -36,7 +37,17 @@ function getWeekKey(ts?: string) {
   return `${tmp.getUTCFullYear()}-W${String(weekNo).padStart(2, "0")}`;
 }
 
-export async function computeAward(params: { actionType: string; basePoints: number; actionTotalSoFar: number; userGlobalTotalSoFar: number; countForActionToday: number; capPerDay: number; globalMax: number; }) {
+interface ComputeAwardParams {
+  actionType: string;
+  basePoints: number;
+  actionTotalSoFar: number;
+  userGlobalTotalSoFar: number;
+  countForActionToday: number;
+  capPerDay: number;
+  globalMax: number;
+}
+
+export async function computeAward(params: ComputeAwardParams) {
   const { basePoints, actionTotalSoFar, userGlobalTotalSoFar, countForActionToday, capPerDay, globalMax } = params;
   const multiplier = getDiminishingMultiplier(countForActionToday);
   const pointsRaw = basePoints * multiplier;
@@ -52,14 +63,10 @@ export async function computeAward(params: { actionType: string; basePoints: num
   return { pointsRaw, finalAward, reason };
 }
 
-export async function awardPoints(input: ScoreEventInput): Promise<AwardResult> {
-  const now = input.timestamp || new Date().toISOString();
-  const actionConfig = (leaderboardConfig.actions as any)[input.actionType];
-  if (!actionConfig) {
-    return { finalAward: 0, pointsRaw: 0, reason: "unknown_action" };
-  }
+export async function awardPoints(input: ScoreEventInput) {
+  const now = new Date();
 
-  // Load user and check opt-out
+  // fetch user snapshot
   const user = await User.findById(input.userId).lean();
   // normalize user to any to avoid accidental array/document union types from mongoose typings
   const u = user as any;
@@ -70,49 +77,58 @@ export async function awardPoints(input: ScoreEventInput): Promise<AwardResult> 
             ? u.preferences.showOnLeaderboard
             : true))
     : true;
-  if (!showOnLeaderboard) {
-    // record audit
-    await ScoreEvent.create({ userId: input.userId, actionType: input.actionType, sourceId: input.sourceId, pointsRaw: 0, pointsAwarded: 0, reason: "opted_out", meta: input.meta, processedAt: new Date() });
-    return { finalAward: 0, pointsRaw: 0, reason: "opted_out" };
-  }
+
+  const toObjectId = (id: string) => {
+    try {
+      return new mongoose.Types.ObjectId(id);
+    } catch {
+      return id;
+    }
+  };
 
   // Idempotency: if sourceId provided and existing ScoreEvent exists, return duplicate
   if (input.sourceId) {
-    const existing = await ScoreEvent.findOne({ userId: input.userId, actionType: input.actionType, sourceId: input.sourceId });
+    const existing = await ScoreEvent.findOne({ userId: toObjectId(input.userId), actionType: input.actionType, sourceId: input.sourceId });
     if (existing) {
       return { finalAward: 0, pointsRaw: existing.pointsRaw || 0, reason: "duplicate" };
     }
   }
 
   // Determine today's totals
-  const { start, end } = getDayRange(now);
+  const { start, end } = getDayRange(now.toISOString());
   const actionTotalAgg = await ScoreEvent.aggregate([
-    { $match: { userId: (input.userId as any), actionType: input.actionType, createdAt: { $gte: start, $lte: end } } },
+    { $match: { userId: toObjectId(input.userId), actionType: input.actionType, createdAt: { $gte: start, $lte: end } } },
     { $group: { _id: null, total: { $sum: "$pointsAwarded" }, count: { $sum: 1 } } }
   ]);
   const actionTotalSoFar = (actionTotalAgg[0] && actionTotalAgg[0].total) || 0;
   const actionCountSoFar = (actionTotalAgg[0] && actionTotalAgg[0].count) || 0;
 
   const globalTotalAgg = await ScoreEvent.aggregate([
-    { $match: { userId: (input.userId as any), createdAt: { $gte: start, $lte: end } } },
+    { $match: { userId: toObjectId(input.userId), createdAt: { $gte: start, $lte: end } } },
     { $group: { _id: null, total: { $sum: "$pointsAwarded" } } }
   ]);
   const userGlobalTotalSoFar = (globalTotalAgg[0] && globalTotalAgg[0].total) || 0;
 
   const countForActionToday = actionCountSoFar + 1;
 
+  // derive action configuration (safe defaults if config missing)
+  const actionCfg = (leaderboardConfig.actions && (leaderboardConfig.actions as any)[input.actionType]) || {};
+  const basePoints = actionCfg.points ?? actionCfg.basePoints ?? 0;
+  const capPerDay = typeof actionCfg.capPerDay === "number" ? actionCfg.capPerDay : Number.MAX_SAFE_INTEGER;
+  const globalMax = typeof actionCfg.globalMax === "number" ? actionCfg.globalMax : Number.MAX_SAFE_INTEGER;
+
   const { pointsRaw, finalAward, reason } = await computeAward({
     actionType: input.actionType,
-    basePoints: actionConfig.basePoints,
+    basePoints,
     actionTotalSoFar,
     userGlobalTotalSoFar,
     countForActionToday,
-    capPerDay: actionConfig.capPerDay,
-    globalMax: leaderboardConfig.globalMaxPointsPerUserPerDay
+    capPerDay,
+    globalMax
   });
 
   // Persist ScoreEvent
-  const scoreEvent = await ScoreEvent.create({
+  await ScoreEvent.create({
     userId: input.userId,
     actionType: input.actionType,
     sourceId: input.sourceId,
@@ -120,25 +136,31 @@ export async function awardPoints(input: ScoreEventInput): Promise<AwardResult> 
     pointsAwarded: finalAward,
     reason,
     meta: input.meta || {},
-    processedAt: new Date()
+    processedAt: now
   });
+
+  // Helper functions for display name and opt-out logic
+  function getUserDisplayName(user: any): string | undefined {
+    return user?.name ?? user?.username ?? user?.email;
+  }
+
+  function getUserOptOut(user: any): boolean {
+    if (!user) return true;
+    if (user.showOnLeaderboard !== undefined) return user.showOnLeaderboard;
+    if (user.preferences && user.preferences.showOnLeaderboard !== undefined) return user.preferences.showOnLeaderboard;
+    return true;
+  }
 
   // Upsert leaderboard entries for weekly and global
   try {
     if (finalAward > 0) {
       const periods = [] as string[];
-      if (leaderboardConfig.periods.includes("weekly" as any)) periods.push(getWeekKey(now));
+      if (leaderboardConfig.periods.includes("weekly" as any)) periods.push(getWeekKey(now.toISOString()));
       if (leaderboardConfig.periods.includes("global" as any)) periods.push("global");
 
-      // Create safe snapshots for display name and opt-out status so UI never falls back to raw ObjectId
-      const displayNameSnapshot = user ? ((user as any).name ?? (user as any).username ?? (user as any).email) : undefined;
-      const optOutSnapshot = user
-        ? ((user as any).showOnLeaderboard !== undefined
-            ? (user as any).showOnLeaderboard
-            : ((user as any).preferences && (user as any).preferences.showOnLeaderboard !== undefined
-                ? (user as any).preferences.showOnLeaderboard
-                : true))
-        : true;
+      // Use helper functions for display name and opt-out status
+      const displayNameSnapshot = getUserDisplayName(user);
+      const optOutSnapshot = getUserOptOut(user);
 
       for (const p of periods) {
         await LeaderboardEntry.findOneAndUpdate(

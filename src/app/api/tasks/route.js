@@ -140,7 +140,7 @@ export async function PUT(req) {
   // Award points for task completion (non-blocking)
   if (body.status && body.status.toLowerCase() === "completed") {
     try {
-      await awardPoints({ userId, actionType: 'task_complete', sourceId: body._id || (updatedTask && updatedTask._id) ? (body._id || (updatedTask && updatedTask._id)) : undefined, timestamp: new Date().toISOString(), meta: { completedDate: body.completedDate || null } });
+      await awardPoints({ userId, actionType: 'task_complete', sourceId: body._id || updatedTask?._id, timestamp: new Date().toISOString(), meta: { completedDate: body.completedDate || null } });
     } catch (err) {
       console.error('awardPoints error (tasks):', err);
     }
