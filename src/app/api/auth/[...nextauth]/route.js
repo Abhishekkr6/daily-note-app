@@ -29,6 +29,17 @@ export const authOptions = {
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
+  cookies: {
+    sessionToken: {
+      name: `${process.env.NODE_ENV === 'production' ? '__Secure-' : ''}next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+      },
+    },
+  },
   pages: { signIn: "/login" },
   // Surface NextAuth internal errors to server logs so we can triage OAuth failures
   events: {
@@ -83,7 +94,24 @@ export const authOptions = {
             };
             console.log("Creating user with payload:", newUserPayload);
             const created = await User.create(newUserPayload);
-            console.log("OAuth user created (db result):", created && created.toObject ? created.toObject() : created);
+            console.log("OAuth user created successfully:", {
+              id: created._id.toString(),
+              email: created.email,
+              username: created.username
+            });
+            
+            // Verify user was created
+            const verifyUser = await User.findOne({ email });
+            if (!verifyUser) {
+              console.error("CRITICAL: User creation verification failed!");
+              return false;
+            }
+            console.log("User creation verified:", verifyUser._id.toString());
+          } else {
+            console.log("Existing user found:", {
+              id: existingUser._id.toString(),
+              email: existingUser.email
+            });
           }
         }
         return true;
@@ -95,49 +123,50 @@ export const authOptions = {
         return true;
       }
     },
-    async jwt({ token, user, account, profile }) {
+    async jwt({ token, user, account, profile, trigger }) {
       try {
+        console.log("=== JWT Callback ===");
+        console.log("Trigger:", trigger);
+        console.log("Token before:", { id: token.id, email: token.email });
+        
         // Add user info to token on sign in
         if (user) {
           token.email = user.email || token.email;
           token.name = user.name || token.name;
           token.picture = user.image || token.picture;
+          console.log("User object present:", { email: user.email, name: user.name });
         }
 
-        // Ensure token contains the DB user id. If missing, try to load from DB by email.
-        if (!token.id && token.email) {
+        // CRITICAL: Always ensure token has the DB user id
+        // This runs on every token refresh and initial sign-in
+        if (token.email) {
           try {
             await dbConnect();
-            // Load common public fields so token can carry avatar/name
-            const dbUser = await User.findOne({ email: token.email }).select("_id avatarUrl name username");
+            // Load user from DB by email
+            const dbUser = await User.findOne({ email: token.email }).select("_id avatarUrl name username email");
+            
             if (dbUser) {
-              token.id = dbUser._id.toString();
-              // Prefer DB avatar if present
-              token.picture = token.picture || dbUser.avatarUrl || token.picture;
-              token.name = token.name || dbUser.name || token.name;
-              token.username = token.username || dbUser.username || token.username;
-            }
-          } catch (e) {
-            // non-fatal: log and continue
-            console.error("JWT callback DB lookup failed:", e);
-          }
-        }
-        // If token.id exists, refresh a few public fields from DB so session reflects recent profile updates
-        if (token.id) {
-          try {
-            await dbConnect();
-            const dbUser = await User.findById(token.id).select("_id avatarUrl name username");
-            if (dbUser) {
+              // IMPORTANT: Set the id in token
               token.id = dbUser._id.toString();
               token.picture = dbUser.avatarUrl || token.picture;
               token.name = dbUser.name || token.name;
               token.username = dbUser.username || token.username;
+              
+              console.log("DB user found and token updated:", {
+                id: token.id,
+                email: token.email,
+                name: token.name,
+                username: token.username
+              });
+            } else {
+              console.error("CRITICAL: No DB user found for email:", token.email);
             }
           } catch (e) {
-            // non-fatal
-            console.error("JWT callback DB refresh failed:", e);
+            console.error("JWT callback DB lookup failed:", e);
           }
         }
+        
+        console.log("Token after:", { id: token.id, email: token.email });
       } catch (err) {
         console.error("JWT callback error (non-blocking):", err);
       }
@@ -145,13 +174,26 @@ export const authOptions = {
     },
     async session({ session, token }) {
       try {
+        console.log("=== Session Callback ===");
+        console.log("Token:", { id: token.id, email: token.email });
+        
         // Ensure session.user exists
         session.user = session.user || {};
+        
         if (token) {
+          // CRITICAL: Add id to session.user so API routes can access it
+          session.user.id = token.id;
           session.user.email = token.email || session.user.email;
           session.user.name = token.name || session.user.name;
           session.user.image = token.picture || session.user.image;
+          session.user.username = token.username || session.user.username;
         }
+        
+        console.log("Session user:", {
+          id: session.user.id,
+          email: session.user.email,
+          name: session.user.name
+        });
       } catch (err) {
         console.error("Session callback error (non-blocking):", err);
       }
