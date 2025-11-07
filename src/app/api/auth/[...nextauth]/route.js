@@ -7,6 +7,8 @@ import User from "@/models/userModel";
 export const authOptions = {
   // Enable debug logging to help diagnose OAuthCallback issues
   debug: true,
+  // CRITICAL for Vercel deployment
+  trustHost: true,
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID,
@@ -29,17 +31,8 @@ export const authOptions = {
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
-  cookies: {
-    sessionToken: {
-      name: `${process.env.NODE_ENV === 'production' ? '__Secure-' : ''}next-auth.session-token`,
-      options: {
-        httpOnly: true,
-        sameSite: 'lax',
-        path: '/',
-        secure: process.env.NODE_ENV === 'production',
-      },
-    },
-  },
+  // Simplified cookie configuration for Vercel
+  useSecureCookies: process.env.NODE_ENV === 'production',
   pages: { signIn: "/login" },
   // Surface NextAuth internal errors to server logs so we can triage OAuth failures
   events: {
@@ -200,8 +193,19 @@ export const authOptions = {
       return session;
     },
     async redirect({ url, baseUrl }) {
+      console.log("=== Redirect Callback ===");
+      console.log("URL:", url);
+      console.log("Base URL:", baseUrl);
+      
+      // If already going to home, keep it
+      if (url.includes('/home')) {
+        return url;
+      }
+      
       // Always redirect to /home after login/signup
-      return baseUrl + "/home";
+      const homeUrl = `${baseUrl}/home`;
+      console.log("Redirecting to:", homeUrl);
+      return homeUrl;
     }
   }
 };
