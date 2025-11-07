@@ -5,18 +5,26 @@ import { connect as dbConnect } from "@/dbConfig/dbConfig";
 import User from "@/models/userModel";
 
 export const authOptions = {
-  // Enable debug logging in non-production to help diagnose OAuthCallback issues
-  debug: process.env.NODE_ENV !== "production",
+  // Enable debug logging to help diagnose OAuthCallback issues
+  debug: true,
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      authorization: {
+        params: {
+          prompt: "consent",
+          access_type: "offline",
+          response_type: "code"
+        }
+      }
     }),
     GitHubProvider({
       clientId: process.env.GITHUB_CLIENT_ID,
       clientSecret: process.env.GITHUB_CLIENT_SECRET,
     }),
   ],
+  secret: process.env.NEXTAUTH_SECRET,
   session: {
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60, // 30 days
@@ -31,6 +39,11 @@ export const authOptions = {
   callbacks: {
     async signIn({ user, account, profile }) {
       try {
+        console.log("=== OAuth SignIn Callback Started ===");
+        console.log("Environment:", {
+          NEXTAUTH_URL: process.env.NEXTAUTH_URL,
+          NODE_ENV: process.env.NODE_ENV
+        });
         await dbConnect();
         console.log("OAuth user data:", { user, account, profile });
         if (account && (account.provider === "google" || account.provider === "github")) {

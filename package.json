@@ -6,7 +6,8 @@
     "build": "next build",
     "dev": "next dev",
     "lint": "next lint",
-    "start": "next start"
+    "start": "next start",
+    "check-oauth": "node scripts/check-oauth.js"
   },
   "dependencies": {
     "@heroui/react": "^2.8.5",
