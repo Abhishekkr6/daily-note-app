@@ -46,10 +46,25 @@ export const authOptions = {
         console.log("=== OAuth SignIn Callback Started ===");
         console.log("Environment:", {
           NEXTAUTH_URL: process.env.NEXTAUTH_URL,
-          NODE_ENV: process.env.NODE_ENV
+          NODE_ENV: process.env.NODE_ENV,
+          hasMongoDB: !!process.env.MONGO_URI
         });
-        await dbConnect();
-        console.log("OAuth user data:", { user, account, profile });
+        console.log("OAuth user data:", { 
+          email: user?.email, 
+          name: user?.name,
+          provider: account?.provider 
+        });
+        
+        // Connect to database
+        try {
+          await dbConnect();
+          console.log("✅ Database connected successfully");
+        } catch (dbError) {
+          console.error("❌ Database connection failed:", dbError);
+          // IMPORTANT: Allow sign-in even if DB fails (user won't be saved but can still use the app)
+          return true;
+        }
+        
         if (account && (account.provider === "google" || account.provider === "github")) {
           // Robust email extraction: NextAuth/provider shapes vary, check multiple places
           const userEmail = user && user.email;
@@ -59,60 +74,83 @@ export const authOptions = {
 
           let email = userEmail || profileEmail || oauthProfileEmail || githubEmail || null;
           console.log("Resolved email sources:", { userEmail, profileEmail, oauthProfileEmail, githubEmail, resolved: email });
+          
           if (!email) {
-            console.warn("OAuth provider did not return an email; skipping DB user create.");
+            console.warn("⚠️ OAuth provider did not return an email; allowing sign-in without DB save.");
             return true;
           }
-          const existingUser = await User.findOne({ email });
-          if (!existingUser) {
-            // Generate a valid, unique username
-            let baseUsername = (user && user.name) || (email ? email.split("@")[0] : "user");
-            baseUsername = baseUsername.replace(/\s+/g, "");
-            if (baseUsername.length < 3) baseUsername += Math.random().toString(36).slice(-3);
-            let username = baseUsername;
-            let attempts = 0;
-            while (await User.findOne({ username })) {
-              username = `${baseUsername}${Math.floor(Math.random() * 10000)}`;
-              attempts++;
-              if (attempts > 10) throw new Error("Could not generate unique username");
-            }
-            // Create user for OAuth provider WITHOUT storing a local password
-            const newUserPayload = {
-              email,
-              username,
-              avatarUrl: (user && user.image) || (profile && profile.picture) || null,
-              // password intentionally omitted for OAuth-only users
-              emailVerified: true,
-              name: (user && user.name) || (profile && profile.name) || username,
-            };
-            console.log("Creating user with payload:", newUserPayload);
-            const created = await User.create(newUserPayload);
-            console.log("OAuth user created successfully:", {
-              id: created._id.toString(),
-              email: created.email,
-              username: created.username
-            });
+          
+          try {
+            const existingUser = await User.findOne({ email });
             
-            // Verify user was created
-            const verifyUser = await User.findOne({ email });
-            if (!verifyUser) {
-              console.error("CRITICAL: User creation verification failed!");
-              return false;
+            if (!existingUser) {
+              console.log("📝 Creating new user for:", email);
+              
+              // Generate a valid, unique username
+              let baseUsername = (user && user.name) || (email ? email.split("@")[0] : "user");
+              baseUsername = baseUsername.replace(/\s+/g, "");
+              if (baseUsername.length < 3) baseUsername += Math.random().toString(36).slice(-3);
+              let username = baseUsername;
+              let attempts = 0;
+              
+              while (await User.findOne({ username })) {
+                username = `${baseUsername}${Math.floor(Math.random() * 10000)}`;
+                attempts++;
+                if (attempts > 10) {
+                  console.error("❌ Could not generate unique username after 10 attempts");
+                  throw new Error("Could not generate unique username");
+                }
+              }
+              
+              // Create user for OAuth provider WITHOUT storing a local password
+              const newUserPayload = {
+                email,
+                username,
+                avatarUrl: (user && user.image) || (profile && profile.picture) || null,
+                emailVerified: true,
+                name: (user && user.name) || (profile && profile.name) || username,
+              };
+              
+              console.log("Creating user with payload:", newUserPayload);
+              const created = await User.create(newUserPayload);
+              console.log("✅ OAuth user created successfully:", {
+                id: created._id.toString(),
+                email: created.email,
+                username: created.username
+              });
+              
+              // Verify user was created
+              const verifyUser = await User.findOne({ email });
+              if (!verifyUser) {
+                console.error("❌ CRITICAL: User creation verification failed!");
+                // Still allow sign-in, but log the issue
+                return true;
+              }
+              console.log("✅ User creation verified:", verifyUser._id.toString());
+            } else {
+              console.log("✅ Existing user found:", {
+                id: existingUser._id.toString(),
+                email: existingUser.email
+              });
             }
-            console.log("User creation verified:", verifyUser._id.toString());
-          } else {
-            console.log("Existing user found:", {
-              id: existingUser._id.toString(),
-              email: existingUser.email
+          } catch (userError) {
+            console.error("❌ Error in user find/create:", userError);
+            console.error("Error details:", {
+              message: userError.message,
+              code: userError.code,
+              name: userError.name
             });
+            // Allow sign-in even if DB operation fails
+            return true;
           }
         }
+        
+        console.log("✅ SignIn callback completed successfully");
         return true;
       } catch (err) {
-        // Returning false causes NextAuth to redirect with error=OAuthCallback.
-        // In an OAuth-only app we prefer to allow sign-in even if DB write fails
-        // (admins can reconcile users later). This avoids a broken UX.
-        console.error("OAuth signIn error (continuing sign-in):", err);
+        console.error("❌ OAuth signIn error:", err);
+        console.error("Error stack:", err.stack);
+        // Allow sign-in even if there are errors
         return true;
       }
     },
