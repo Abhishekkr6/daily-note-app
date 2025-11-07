@@ -14,8 +14,14 @@ import { Settings, User, Bell, Palette, Download, Upload, Trash2, Clock, Databas
 import { Check } from "lucide-react"
 import { signOut } from "next-auth/react"
 import { useTheme } from "next-themes"
+import ConfirmDialog from "@/components/confirm-dialog"
+import { useRouter } from "next/navigation"
 
 export function SettingsPage() {
+  const router = useRouter();
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  
   const handleLogout = async () => {
     try {
       // Use NextAuth signOut which will clear the session and redirect.
@@ -28,6 +34,32 @@ export function SettingsPage() {
       window.location.href = '/';
     }
   };
+
+  const handleDeleteAllData = async () => {
+    setIsDeleting(true);
+    try {
+      const response = await fetch("/api/users/delete-all-data", {
+        method: "DELETE",
+        credentials: "include",
+      });
+
+      if (response.ok) {
+        // Sign out and redirect to landing page
+        await signOut({ callbackUrl: "/landing" });
+      } else {
+        const data = await response.json();
+        alert(`Error: ${data.error || "Failed to delete data"}`);
+        setIsDeleting(false);
+      }
+    } catch (error) {
+      console.error("Error deleting data:", error);
+      alert("Failed to delete data. Please try again.");
+      setIsDeleting(false);
+    } finally {
+      setShowDeleteConfirm(false);
+    }
+  };
+
   const [saveStatus, setSaveStatus] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -686,9 +718,14 @@ export function SettingsPage() {
                     Permanently delete all your data. This action cannot be undone.
                   </p>
                   <div className="flex gap-2">
-                    <Button variant="destructive" className="cursor-pointer">
+                    <Button 
+                      variant="destructive" 
+                      className="cursor-pointer"
+                      onClick={() => setShowDeleteConfirm(true)}
+                      disabled={isDeleting}
+                    >
                       <Trash2 className="w-4 h-4 mr-2" />
-                      Delete All Data
+                      {isDeleting ? "Deleting..." : "Delete All Data"}
                     </Button>
                   </div>
                 </div>
@@ -707,6 +744,14 @@ export function SettingsPage() {
           </div>
         </div>
       </div>
+
+      {/* Confirmation Dialog */}
+      <ConfirmDialog
+        open={showDeleteConfirm}
+        onConfirm={handleDeleteAllData}
+        onCancel={() => setShowDeleteConfirm(false)}
+        message="Are you sure you want to delete all your data? This will permanently delete your account, tasks, notes, templates, moods, focus sessions, and all other data. This action cannot be undone!"
+      />
     </div>
   )
 }

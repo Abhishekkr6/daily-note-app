@@ -158,14 +158,15 @@ export async function awardPoints(input: ScoreEventInput) {
       if (leaderboardConfig.periods.includes("weekly" as any)) periods.push(getWeekKey(now.toISOString()));
       if (leaderboardConfig.periods.includes("global" as any)) periods.push("global");
 
-      // Use helper functions for display name and opt-out status
+      // Use helper functions for display name, avatar, and opt-out status
       const displayNameSnapshot = getUserDisplayName(user);
+      const avatarSnapshot = u?.avatarUrl || null;
       const optOutSnapshot = getUserOptOut(user);
 
       for (const p of periods) {
         await LeaderboardEntry.findOneAndUpdate(
           { userId: input.userId, period: p },
-          { $inc: { score: finalAward }, $set: { lastUpdated: new Date(), optOutSnapshot, displayNameSnapshot } },
+          { $inc: { score: finalAward }, $set: { lastUpdated: new Date(), optOutSnapshot, displayNameSnapshot, avatarSnapshot } },
           { upsert: true, new: true }
         );
       }

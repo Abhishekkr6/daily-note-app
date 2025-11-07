@@ -29,53 +29,32 @@ export function Sidebar({ className }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
-  const [leaderboardSeen, setLeaderboardSeen] = useState<boolean>(() => {
+  // Persist whether the user has visited the leaderboard page.
+  // The "New" badge should be visible until the user actually visits /leaderboard.
+  const [leaderboardVisited, setLeaderboardVisited] = useState<boolean>(() => {
     try {
-      if (typeof window !== 'undefined') return !!localStorage.getItem('leaderboard_toast_seen_v1');
+      if (typeof window !== 'undefined') return !!localStorage.getItem('leaderboardVisited_v1');
     } catch (e) {
       return false;
     }
     return false;
   });
 
-  // Mark leaderboard as seen (persistently) when user clicks the nav item
-  function markLeaderboardSeen() {
+  function markLeaderboardVisited() {
     try {
-      localStorage.setItem('leaderboard_toast_seen_v1', '1');
+      localStorage.setItem('leaderboardVisited_v1', '1');
     } catch (e) {
       // ignore
     }
-    setLeaderboardSeen(true);
-    // Persist server-side for cross-device visibility
-    (async () => {
-      try {
-        await fetch('/api/users/leaderboard-seen', { method: 'POST', credentials: 'include' });
-      } catch (e) {
-        // ignore
-      }
-    })();
+    setLeaderboardVisited(true);
   }
 
-  // Initialize seen state from server if user is authenticated
-  const [hasFetchedLeaderboardSeen, setHasFetchedLeaderboardSeen] = useState(false);
+  // When pathname becomes /leaderboard mark it visited (this hides the badge).
   useEffect(() => {
-    if (leaderboardSeen || hasFetchedLeaderboardSeen) return;
-    setHasFetchedLeaderboardSeen(true);
-    (async () => {
-        try {
-          const res = await fetch('/api/users/aboutme', { method: 'POST', credentials: 'include' });
-          if (!res.ok) return;
-          const json = await res.json();
-          const user = json?.data;
-          if (user && user.preferences && user.preferences.leaderboardSeen) {
-            try { localStorage.setItem('leaderboard_toast_seen_v1', '1'); } catch (e) {}
-            setLeaderboardSeen(true);
-          }
-        } catch (e) {
-          // ignore
-        }
-    })();
-  }, [leaderboardSeen, hasFetchedLeaderboardSeen]);
+    if (pathname === '/leaderboard' && !leaderboardVisited) {
+      markLeaderboardVisited();
+    }
+  }, [pathname, leaderboardVisited]);
 
   // Logout logic moved to settings page
 
@@ -114,7 +93,8 @@ export function Sidebar({ className }: SidebarProps) {
             const Icon = item.icon;
             const isActive = pathname === item.href;
             const isLeaderboard = item.name === "Leaderboard";
-            const showNewBadge = isLeaderboard && !leaderboardSeen && !isActive && !collapsed;
+            // Show 'New' badge on Leaderboard until user visits /leaderboard, regardless of active state
+            const showNewBadge = isLeaderboard && !leaderboardVisited && !collapsed;
             const content = (
               <>
                 <div className="flex items-center">
@@ -138,8 +118,10 @@ export function Sidebar({ className }: SidebarProps) {
                           "w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent cursor-pointer",
                           isActive && "bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90",
                           collapsed && "px-2",
+                          // Highlight leaderboard button with golden glow
+                          isLeaderboard && !leaderboardVisited && "ring-2 ring-amber-400/50 bg-amber-50 dark:bg-amber-950/30 hover:bg-amber-100 dark:hover:bg-amber-900/40",
                         )}
-                        onClick={() => markLeaderboardSeen()}
+                        onClick={() => markLeaderboardVisited()}
                       >
                         {content}
                       </Button>
@@ -148,7 +130,7 @@ export function Sidebar({ className }: SidebarProps) {
                       <div className="text-sm font-medium">Leaderboard</div>
                       <div className="text-xs text-muted-foreground mt-1">A new feature — earn points for completing tasks and focus sessions. Compete weekly with others and track your progress.</div>
                       <div className="mt-3 text-right">
-                        <Button size="sm" onClick={() => markLeaderboardSeen()}>Got it</Button>
+                        <Button size="sm" onClick={() => markLeaderboardVisited()}>Got it</Button>
                       </div>
                     </PopoverContent>
                   </Popover>
@@ -159,11 +141,13 @@ export function Sidebar({ className }: SidebarProps) {
                       "w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent cursor-pointer",
                       isActive && "bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90",
                       collapsed && "px-2",
+                      // Highlight leaderboard button with golden glow even without badge
+                      isLeaderboard && !leaderboardVisited && "ring-2 ring-amber-400/50 bg-amber-50 dark:bg-amber-950/30 hover:bg-amber-100 dark:hover:bg-amber-900/40",
                     )}
                     onClick={(e) => {
                       if (isLeaderboard) {
                         e.preventDefault();
-                        markLeaderboardSeen();
+                        markLeaderboardVisited();
                         router.push(item.href);
                       }
                     }}

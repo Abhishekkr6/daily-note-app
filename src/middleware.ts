@@ -7,7 +7,8 @@ const PUBLIC_ROUTES = [
   "/landing",
   "/login",
   "/signup",
-  "/forgot-password",
+  "/privacy",
+  "/terms",
   // Note: password reset and legacy password APIs have been removed in OAuth-only mode
   // if you re-enable password flows, re-add the routes here.
 ];

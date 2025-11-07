@@ -10,17 +10,18 @@ export default function ConfirmDialog({ open, onConfirm, onCancel, message }: {
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/40 backdrop-blur-sm animate-fade-in">
-      <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-2xl p-8 w-full max-w-xs text-center scale-95 animate-pop-in">
-        <div className="mb-4 text-lg font-semibold text-foreground">{message}</div>
+      <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-2xl p-8 w-full max-w-md text-center scale-95 animate-pop-in">
+        <div className="mb-2 text-xl font-bold text-destructive">⚠️ Warning</div>
+        <div className="mb-6 text-sm text-foreground/80 leading-relaxed">{message}</div>
         <div className="flex justify-center gap-4 mt-6">
           <button
-            className="px-4 py-2 rounded bg-primary text-white font-medium shadow hover:bg-primary/90 transition"
+            className="px-6 py-2.5 rounded-lg bg-destructive text-white font-medium shadow hover:bg-destructive/90 transition-all hover:scale-105"
             onClick={onConfirm}
           >
-            Yes, Delete
+            Yes, Delete Everything
           </button>
           <button
-            className="px-4 py-2 rounded bg-muted text-foreground font-medium shadow hover:bg-muted/70 transition"
+            className="px-6 py-2.5 rounded-lg bg-muted text-foreground font-medium shadow hover:bg-muted/70 transition-all hover:scale-105"
             onClick={onCancel}
           >
             Cancel

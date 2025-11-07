@@ -1,15 +1,19 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { signIn } from "next-auth/react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { motion } from "framer-motion";
 import logo from "@/../public/logo.png";
 import { StarsBackground } from "@/components/stars-background";
 import { ShootingStars } from "@/components/shooting-stars";
 
+
 const SignupPage = () => {
+  const [agreed, setAgreed] = useState(false);
   return (
     <div className="min-h-screen flex items-center justify-center px-2 sm:px-6 bg-[#171717] text-white relative">
       <StarsBackground className="z-0 pointer-events-none" />
@@ -27,9 +31,11 @@ const SignupPage = () => {
             <p className="text-muted-foreground text-center text-base">Sign up quickly using Google or GitHub.</p>
           </div>
 
+
           <div className="flex flex-col gap-3">
             <Button
               type="button"
+              disabled={!agreed}
               onClick={() => {
                 try { sessionStorage.setItem("justLoggedIn", "true"); } catch (e) { }
                 signIn("google", { callbackUrl: "/home" });
@@ -42,6 +48,7 @@ const SignupPage = () => {
 
             <Button
               type="button"
+              disabled={!agreed}
               onClick={() => {
                 try { sessionStorage.setItem("justLoggedIn", "true"); } catch (e) { }
                 signIn("github", { callbackUrl: "/home" });
@@ -51,6 +58,17 @@ const SignupPage = () => {
               <img src="https://www.svgrepo.com/show/512317/github-142.svg" alt="GitHub" width={22} height={22} />
               <span className="tracking-wide">Sign up with <span className="font-bold">GitHub</span></span>
             </Button>
+          </div>
+
+          <div className="flex items-center gap-2 mt-1 mb-1 ml-1">
+            <Checkbox
+              id="privacy-terms-signup"
+              checked={agreed}
+              onCheckedChange={val => setAgreed(val === true)}
+            />
+            <Label htmlFor="privacy-terms-signup" className="text-xs text-white/80">
+              I agree to the <a href="/privacy" className="underline text-primary">Privacy Policy</a> and <a href="/terms" className="underline text-primary">Terms of Service</a>
+            </Label>
           </div>
 
           <div className="text-center text-sm text-white/70 mt-2">

@@ -4,7 +4,11 @@ import { useEffect, useState } from "react";
 import { Sidebar } from "@/components/sidebar";
 import { TopBar } from "@/components/top-bar";
 import { AppSkeleton } from "@/components/AppSkeleton";
+
 import { Button } from "@/components/ui/button";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 
 interface LeaderboardEntry {
   rank: number;
@@ -33,9 +37,14 @@ export default function LeaderboardPage() {
       const res = await fetch(`/api/leaderboard?period=weekly&limit=50`);
       if (!res.ok) throw new Error(`Status ${res.status}`);
       const json = await res.json();
-      if (json && Array.isArray(json.data)) setEntries(json.data.slice(0, 50));
+      console.log('Leaderboard API Response:', json);
+      if (json && Array.isArray(json.data)) {
+        console.log('First entry:', json.data[0]);
+        setEntries(json.data.slice(0, 50));
+      }
     } catch (err: any) {
       setError("Leaderboard data is not available yet.");
+      console.error('Leaderboard fetch error:', err);
     } finally {
       setLoading(false);
     }
@@ -64,8 +73,8 @@ export default function LeaderboardPage() {
           <div className="max-w-4xl mx-auto">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h1 className="text-2xl font-semibold">Leaderboard</h1>
-                <p className="text-sm text-muted-foreground">Weekly & Global rankings based on user points</p>
+                <h1 className="text-3xl font-bold tracking-tight">Leaderboard</h1>
+                <p className="text-base text-muted-foreground mt-1">Weekly & Global rankings based on user points</p>
               </div>
               <div>
                 <Button variant="outline" onClick={fetchLeaderboard}>Refresh</Button>
@@ -85,51 +94,87 @@ export default function LeaderboardPage() {
                 </div>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-8">
                 {/* Top 3 highlight */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {entries.slice(0, 3).map((e) => (
-                    <div key={e.userId} className="p-4 rounded-lg border border-border">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center text-lg font-semibold">{e.displayName ? e.displayName.charAt(0) : 'U'}</div>
-                        <div>
-                          <div className="text-sm font-medium">{e.displayName ?? 'Unknown'}</div>
-                          <div className="text-xs text-muted-foreground">Rank #{e.rank}</div>
-                        </div>
-                        <div className="ml-auto text-right">
-                          <div className="text-lg font-bold">{e.score}</div>
-                          <div className="text-xs text-muted-foreground">points</div>
-                        </div>
-                      </div>
-                    </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {entries.slice(0, 3).map((e, i) => (
+                    <Card key={e.userId} className={`relative border-2 ${i === 0 ? 'border-yellow-400 shadow-lg' : i === 1 ? 'border-gray-400' : 'border-orange-400'} bg-gradient-to-br from-background to-muted/60`}> 
+                      <CardHeader className="flex flex-col items-center gap-2 pb-2">
+                        <Badge variant="secondary" className={`absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 text-xs font-bold ${i === 0 ? 'bg-yellow-400 text-yellow-900' : i === 1 ? 'bg-gray-300 text-gray-800' : 'bg-orange-300 text-orange-900'}`}>{i === 0 ? '🥇 1st' : i === 1 ? '🥈 2nd' : '🥉 3rd'}</Badge>
+                        <Avatar className="w-16 h-16 ring-4 ring-primary/30">
+                          {e.avatarUrl ? (
+                            <>
+                              <AvatarImage 
+                                src={e.avatarUrl} 
+                                alt={e.displayName ?? 'User'}
+                                onError={(e) => console.error('Avatar load error for', e.currentTarget.src)}
+                                onLoad={() => console.log('Avatar loaded:', e.avatarUrl)}
+                              />
+                              <AvatarFallback className="text-lg font-bold">
+                                {e.displayName ? e.displayName.charAt(0).toUpperCase() : 'U'}
+                              </AvatarFallback>
+                            </>
+                          ) : (
+                            <AvatarFallback className="text-lg font-bold">
+                              {e.displayName ? e.displayName.charAt(0).toUpperCase() : 'U'}
+                            </AvatarFallback>
+                          )}
+                        </Avatar>
+                        <div className="mt-2 text-lg font-semibold text-center">{e.displayName ?? 'Unknown'}</div>
+                        <div className="text-xs text-muted-foreground">Rank #{e.rank}</div>
+                      </CardHeader>
+                      <CardContent className="flex flex-col items-center">
+                        <div className="text-2xl font-bold text-primary mb-1">{e.score}</div>
+                        <div className="text-xs text-muted-foreground">points</div>
+                      </CardContent>
+                    </Card>
                   ))}
                 </div>
 
                 {/* Full list */}
-                <div className="mt-4 bg-card rounded-md border">
-                  <div className="p-3 border-b grid grid-cols-12 text-xs text-muted-foreground">
-                    <div className="col-span-1">#</div>
-                    <div className="col-span-7">User</div>
-                    <div className="col-span-4 text-right">Score</div>
-                  </div>
-                  <div>
-                    {entries.map((e) => (
-                      <div key={`${e.userId}-${e.rank}`} className="p-3 grid grid-cols-12 items-center hover:bg-muted/50">
-                        <div className="col-span-1">{e.rank}</div>
-                        <div className="col-span-7 flex items-center space-x-3">
-                          <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-sm">{e.displayName ? e.displayName.charAt(0) : 'U'}</div>
+                <Card className="mt-6">
+                  <CardHeader className="border-b pb-2">
+                    <div className="grid grid-cols-12 text-xs text-muted-foreground">
+                      <div className="col-span-1">#</div>
+                      <div className="col-span-7">User</div>
+                      <div className="col-span-4 text-right">Score</div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="p-0 divide-y">
+                    {entries.map((e, idx) => (
+                      <div key={`${e.userId}-${e.rank}`} className={`grid grid-cols-12 items-center px-4 py-3 transition-all ${idx < 3 ? 'bg-muted/40' : 'hover:bg-muted/30'} ${idx === 0 ? 'rounded-t-xl' : ''}`}>
+                        <div className="col-span-1 font-semibold text-center">{e.rank}</div>
+                        <div className="col-span-7 flex items-center gap-3">
+                          <Avatar className="w-8 h-8">
+                            {e.avatarUrl ? (
+                              <>
+                                <AvatarImage 
+                                  src={e.avatarUrl} 
+                                  alt={e.displayName ?? 'User'}
+                                  onError={(e) => console.error('Avatar load error:', e.currentTarget.src)}
+                                />
+                                <AvatarFallback className="text-sm font-semibold">
+                                  {e.displayName ? e.displayName.charAt(0).toUpperCase() : 'U'}
+                                </AvatarFallback>
+                              </>
+                            ) : (
+                              <AvatarFallback className="text-sm font-semibold">
+                                {e.displayName ? e.displayName.charAt(0).toUpperCase() : 'U'}
+                              </AvatarFallback>
+                            )}
+                          </Avatar>
                           <div>
-                            <div className="text-sm">{e.displayName ?? 'Unknown'}</div>
+                            <div className="text-sm font-medium">{e.displayName ?? 'Unknown'}</div>
                             {!e.displayName && e.userId && (
                               <div className="text-xs text-muted-foreground">{String(e.userId).slice(0, 6) + '...'}</div>
                             )}
                           </div>
                         </div>
-                        <div className="col-span-4 text-right font-medium">{e.score}</div>
+                        <div className="col-span-4 text-right font-semibold text-primary">{e.score}</div>
                       </div>
                     ))}
-                  </div>
-                </div>
+                  </CardContent>
+                </Card>
               </div>
             )}
           </div>
