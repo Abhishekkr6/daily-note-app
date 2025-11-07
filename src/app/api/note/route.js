@@ -1,6 +1,6 @@
 import { connect } from "@/dbConfig/dbConfig";
 import Note from "@/models/noteModel";
-import { getDataFromToken } from "@/helpers/getDataFromToken";
+import { getToken } from "next-auth/jwt";
 
 export async function GET(req) {
   await connect();
@@ -9,7 +9,9 @@ export async function GET(req) {
   if (!date) return Response.json({ error: "Missing date" }, { status: 400 });
   let userId;
   try {
-    userId = getDataFromToken(req);
+    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    if (!token || !token.id) return Response.json({ error: "Unauthorized" }, { status: 401 });
+    userId = token.id;
   } catch (err) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -22,7 +24,9 @@ export async function POST(req) {
   await connect();
   let userId;
   try {
-    userId = getDataFromToken(req);
+    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    if (!token || !token.id) return Response.json({ error: "Unauthorized" }, { status: 401 });
+    userId = token.id;
   } catch (err) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }

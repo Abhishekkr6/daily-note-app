@@ -1,7 +1,7 @@
 import { connect } from "@/dbConfig/dbConfig";
 import Task from "@/models/taskModel";
 import Mood from "@/models/moodModel";
-import { getDataFromToken } from "@/helpers/getDataFromToken";
+import { getToken } from "next-auth/jwt";
 import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 
@@ -10,7 +10,11 @@ export async function GET(req) {
   await connect();
   let userId;
   try {
-    userId = getDataFromToken(req);
+    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    if (!token || !token.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    userId = token.id;
   } catch (err) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

@@ -8,6 +8,7 @@ import { WelcomeToast } from "@/components/welcome-toast";
 import LeaderboardToast from "@/components/leaderboard-toast";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 
 type UserType = {
   username?: string;
@@ -23,15 +24,32 @@ export default function HomePage() {
   const [showLeaderboardToast, setShowLeaderboardToast] = useState(false);
   const router = useRouter();
 
+  const { data: session, status } = useSession();
+
   useEffect(() => {
     async function fetchUser() {
       try {
-        const res = await fetch("/api/users/aboutme", { method: "POST", credentials: "include" });
-        const data = await res.json();
-        if (data?.data) {
-          setUser(data.data);
+        // Wait for NextAuth to finish loading session to avoid a race where
+        // the client asks the API before the auth cookie is set on redirect.
+        if (status === "loading") return;
+
+        // If session is available client-side, prefer that to avoid extra roundtrip
+        if (session && session.user) {
+          // Prefer session user but ensure null values are converted to undefined to match UserType
+          setUser({
+            ...session.user,
+            username: session.user.name ?? session.user.email?.split("@")[0],
+            name: session.user.name ?? undefined,
+            email: session.user.email ?? undefined,
+          });
         } else {
-          router.push("/login");
+          const res = await fetch("/api/users/aboutme", { method: "POST", credentials: "include" });
+          const data = await res.json();
+          if (data?.data) {
+            setUser(data.data);
+          } else {
+            router.push("/login");
+          }
         }
       } catch {
         router.push("/login");
@@ -56,7 +74,7 @@ export default function HomePage() {
         // ignore
       }
     }
-  }, [router]);
+  }, [router, session, status]);
 
 
   if (loading) {

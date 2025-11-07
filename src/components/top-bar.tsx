@@ -7,20 +7,39 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useTheme } from "next-themes";
 import { Badge } from "@/components/ui/badge";
 import React, { useState, useRef, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
 export function TopBar() {
   const router = useRouter();
-  // User profile fetch logic
+  // User profile fetch logic — prefer NextAuth session when available to avoid race
+  const { data: session, status } = useSession();
   const [profile, setProfile] = useState<{ name: string; email: string; avatarUrl: string | null }>({ name: "", email: "", avatarUrl: null });
   const [avatarLoading, setAvatarLoading] = useState(true);
   useEffect(() => {
+    let mounted = true;
     async function fetchProfile() {
       setAvatarLoading(true);
       try {
+        // If session present, use it immediately
+        if (session && session.user) {
+          if (!mounted) return;
+          setProfile({
+            name: (session.user.name as string) || "",
+            email: (session.user.email as string) || "",
+            avatarUrl: (session.user.image as string) || null,
+          });
+          setAvatarLoading(false);
+          return;
+        }
+
+        // Wait until next-auth finished loading before hitting protected API
+        if (status === "loading") return;
+
         const res = await fetch("/api/users/profile", { credentials: "include" });
         if (res.ok) {
           const data = await res.json();
+          if (!mounted) return;
           setProfile({
             name: data.name || "",
             email: data.email || "",
@@ -36,8 +55,21 @@ export function TopBar() {
       setProfile((prev) => ({ ...prev, avatarUrl: e.detail.avatarUrl }));
     };
     window.addEventListener("avatarUrlChanged", handler);
-    return () => window.removeEventListener("avatarUrlChanged", handler);
-  }, []);
+    return () => {
+      mounted = false;
+      window.removeEventListener("avatarUrlChanged", handler);
+    };
+  }, [session, status]);
+
+  // Debug: log session and resolved profile to help trace missing avatar issues
+  useEffect(() => {
+    try {
+      console.debug("TopBar session:", session);
+      console.debug("TopBar profile:", profile);
+    } catch (e) {
+      // ignore
+    }
+  }, [session, profile]);
   const { theme, setTheme } = useTheme();
   const [searchQuery, setSearchQuery] = useState("");
   type Item = {

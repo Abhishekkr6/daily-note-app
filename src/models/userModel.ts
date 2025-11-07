@@ -2,27 +2,23 @@ import { Schema, model, models, Document } from "mongoose";
 
 /**
  * User document interface for TypeScript and JSDoc
- * @typedef {Object} IUser
- * @property {string} email
- * @property {string} password
- * @property {string} username
  * @property {string} [avatarUrl]
  * @property {number} [loginAttempts]
  * @property {Date} [lockedUntil]
  * @property {Object} [preferences]
  * @property {string} [preferences.theme]
  * @property {string} [preferences.timezone]
- * @property {string} [resetPasswordToken]
- * @property {Date} [resetPasswordExpires]
  * @property {Date} [deletedAt]
  */
 export interface IUser extends Document {
+  // Identity fields
+  email?: string;
+  username?: string;
+  name?: string;
+
   twoFactorEnabled?: boolean;
   twoFactorSecret?: string;
   role?: string;
-  email: string;
-  password: string;
-  username: string;
   avatarUrl?: string;
   loginAttempts?: number;
   lockedUntil?: Date;
@@ -35,21 +31,10 @@ export interface IUser extends Document {
       end?: string;
     };
   };
-  notifications?: {
-    taskReminders?: boolean;
-    dailyDigest?: boolean;
-    weeklyReport?: boolean;
-    streakAlerts?: boolean;
-    focusBreaks?: boolean;
-    [key: string]: any;
-  };
-  resetPasswordToken?: string;
-  resetPasswordExpires?: Date;
+
+  // resetPasswordToken deprecated and removed
   deletedAt?: Date;
   refreshToken?: string;
-  emailVerified?: boolean;
-  emailVerificationToken?: string;
-  emailVerificationExpires?: Date;
   currentStreak?: number;
   longestStreak?: number;
   lastStreakDate?: string;
@@ -59,16 +44,21 @@ export interface IUser extends Document {
 }
 
 const UserSchema = new Schema<IUser>({
-  notifications: {
-    type: Object,
-    default: {
-      taskReminders: true,
-      dailyDigest: true,
-      weeklyReport: false,
-      streakAlerts: true,
-      focusBreaks: true,
+    // Basic identity fields
+    email: {
+      type: String,
+      default: null,
+      index: true,
     },
-  },
+    username: {
+      type: String,
+      default: null,
+      index: true,
+    },
+    name: {
+      type: String,
+      default: null,
+    },
     twoFactorEnabled: {
       type: Boolean,
       default: false,
@@ -81,26 +71,6 @@ const UserSchema = new Schema<IUser>({
       type: String,
       enum: ["user", "admin"],
       default: "user",
-    },
-    email: {
-      type: String,
-      required: [true, "Email is required"],
-      unique: true,
-      lowercase: true,
-      trim: true,
-      match: [/^[^\s@]+@[^\s@]+\.[^\s@]+$/, "Please use a valid Email address"]
-    },
-    password: {
-      type: String,
-      required: [true, "Password is required"],
-    },
-    username: {
-      type: String,
-      required: true,
-      unique: true,
-      trim: true,
-      minlength: 3,
-      maxlength: 30,
     },
     avatarUrl: {
       type: String,
@@ -123,32 +93,13 @@ const UserSchema = new Schema<IUser>({
         default: { start: "09:00", end: "17:00" }
       }
     },
-    resetPasswordToken: {
-      type: String,
-      default: null,
-    },
-    resetPasswordExpires: {
-      type: Date,
-      default: null,
-    },
+    // resetPasswordToken and resetPasswordExpires removed — password reset flow is deprecated
     deletedAt: {
       type: Date,
       default: null,
     },
     refreshToken: {
       type: String,
-      default: null,
-    },
-    emailVerified: {
-      type: Boolean,
-      default: false,
-    },
-    emailVerificationToken: {
-      type: String,
-      default: null,
-    },
-    emailVerificationExpires: {
-      type: Date,
       default: null,
     },
     // Streak fields
@@ -177,6 +128,13 @@ const UserSchema = new Schema<IUser>({
     },
   },
   { timestamps: true }
+);
+
+// Create a partial unique index so only real string emails are constrained.
+// This avoids duplicate-key failures when documents have email: null/undefined.
+UserSchema.index(
+  { email: 1 },
+  { unique: true, partialFilterExpression: { email: { $type: "string" } } }
 );
 
 const User = models.User || model<IUser>("User", UserSchema);

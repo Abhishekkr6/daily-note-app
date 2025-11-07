@@ -1,18 +1,9 @@
-import { NextRequest } from "next/server";
-import jwt from 'jsonwebtoken';
+// helpers/getDataFromToken.js
+// DEPRECATED helper: replaced by NextAuth's getToken from 'next-auth/jwt'.
+// Keep a stub to avoid import-time crashes during migration.
 
-export const getDataFromToken = (req) => {
-    try {
-        let token = "";
-        if (typeof req === "string") {
-            token = req;
-        } else if (req && req.cookies && typeof req.cookies.get === "function") {
-            token = req.cookies.get("authToken")?.value || "";
-        }
-        if (!token) throw new Error("Token not found");
-        const decodedToken = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
-        return decodedToken.id;
-    } catch (error) {
-        throw new Error(error.message);
-    }
+export const getDataFromToken = () => {
+  throw new Error(
+    "Deprecated: getDataFromToken is removed. Use getToken from 'next-auth/jwt' instead."
+  );
 };

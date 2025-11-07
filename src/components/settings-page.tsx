@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useState, useEffect } from "react"
+import { useSession } from "next-auth/react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -11,15 +12,20 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
 import { Settings, User, Bell, Palette, Download, Upload, Trash2, Clock, Database, LogOut } from "lucide-react"
 import { Check } from "lucide-react"
+import { signOut } from "next-auth/react"
 import { useTheme } from "next-themes"
 
 export function SettingsPage() {
   const handleLogout = async () => {
     try {
-      await fetch("/api/users/logout", { method: "POST", credentials: "include" });
-      window.location.href = "/login";
+      // Use NextAuth signOut which will clear the session and redirect.
+      // Redirect to homepage after sign out.
+      await signOut({ callbackUrl: '/' });
     } catch (err) {
       // Optionally show error toast
+      console.error("Sign out failed:", err);
+      // Fallback: navigate to homepage
+      window.location.href = '/';
     }
   };
   const [saveStatus, setSaveStatus] = useState<string | null>(null);
@@ -91,13 +97,31 @@ export function SettingsPage() {
     weekStartsOn: "monday",
   })
 
-  // Fetch user profile from API
+  // Fetch user profile from API, but prefer NextAuth session initially
+  const { data: session, status } = useSession();
   React.useEffect(() => {
+    let mounted = true;
     async function fetchProfile() {
       try {
+        const sUser = session?.user as any;
+        if (sUser) {
+          if (!mounted) return;
+          setProfile((prev) => ({
+            ...prev,
+            name: sUser.name || "",
+            email: sUser.email || "",
+          }));
+          setAvatarUrl(sUser.image || null);
+          setAvatarLoading(false);
+          return;
+        }
+
+        if (status === "loading") return;
+
         const res = await fetch("/api/users/profile", { credentials: "include" });
         if (res.ok) {
           const data = await res.json();
+          if (!mounted) return;
           setProfile((prev) => ({
             ...prev,
             name: data.name || "",
@@ -105,11 +129,7 @@ export function SettingsPage() {
             timezone: data.timezone || "America/New_York",
             workingHours: data.workingHours || { start: "09:00", end: "17:00" },
           }));
-          if (data.avatarUrl) {
-            setAvatarUrl(data.avatarUrl);
-          } else {
-            setAvatarUrl(null);
-          }
+          setAvatarUrl(data.avatarUrl || null);
         }
       } catch (err) {
         // handle error (optional)
@@ -117,7 +137,17 @@ export function SettingsPage() {
       setAvatarLoading(false);
     }
     fetchProfile();
-  }, []);
+    return () => { mounted = false };
+  }, [session, status]);
+
+  // Debug: log session/profile/avatar for troubleshooting
+  useEffect(() => {
+    try {
+      console.debug("SettingsPage session:", session);
+      console.debug("SettingsPage profile state:", profile);
+      console.debug("SettingsPage avatarUrl:", avatarUrl);
+    } catch (e) {}
+  }, [session, profile, avatarUrl]);
 
   // Animate avatar on change
   useEffect(() => {

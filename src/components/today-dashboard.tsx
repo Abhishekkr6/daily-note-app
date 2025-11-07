@@ -406,7 +406,14 @@ export function TodayDashboard() {
     try {
       const res = await fetch("/api/tasks");
       const data = await res.json();
-      setTasks(data);
+      if (Array.isArray(data)) {
+        setTasks(data);
+      } else if (Array.isArray(data?.tasks)) {
+        setTasks(data.tasks);
+      } else {
+        console.warn("Unexpected /api/tasks response, expected array:", data);
+        setTasks([]);
+      }
       // Set notification times from backend
       const times: { [key: string]: string } = {};
       data.forEach((task: any) => {
@@ -538,9 +545,11 @@ export function TodayDashboard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newTask),
       });
-      const res = await fetch("/api/tasks");
-      const data = await res.json();
-      setTasks(data);
+  const res = await fetch("/api/tasks");
+  const data = await res.json();
+  if (Array.isArray(data)) setTasks(data);
+  else if (Array.isArray(data?.tasks)) setTasks(data.tasks);
+  else setTasks([]);
       window.dispatchEvent(new Event("activityChanged"));
     } catch (error) {
       console.error("Failed to add task", error);
@@ -565,9 +574,11 @@ export function TodayDashboard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ _id: id }),
       });
-      const res = await fetch("/api/tasks");
-      const data = await res.json();
-      setTasks(data);
+  const res = await fetch("/api/tasks");
+  const data = await res.json();
+  if (Array.isArray(data)) setTasks(data);
+  else if (Array.isArray(data?.tasks)) setTasks(data.tasks);
+  else setTasks([]);
       window.dispatchEvent(new Event("activityChanged"));
       setDeletedTask(taskToDelete);
       setShowUndo(true);
@@ -593,9 +604,11 @@ export function TodayDashboard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(deletedTask),
       });
-      const res = await fetch("/api/tasks");
-      const data = await res.json();
-      setTasks(data);
+  const res = await fetch("/api/tasks");
+  const data = await res.json();
+  if (Array.isArray(data)) setTasks(data);
+  else if (Array.isArray(data?.tasks)) setTasks(data.tasks);
+  else setTasks([]);
       // Notify heatmap/activity listeners
       window.dispatchEvent(new Event("activityChanged"));
     } catch (error) {

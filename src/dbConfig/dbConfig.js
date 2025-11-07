@@ -20,3 +20,6 @@ export async function connect() {
         throw err;
     }
 }
+
+// Default export for modules that import the connector as default
+export default connect;

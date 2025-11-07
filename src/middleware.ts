@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { getToken } from "next-auth/jwt";
 
 // List of public routes that do not require authentication
 const PUBLIC_ROUTES = [
@@ -7,12 +8,8 @@ const PUBLIC_ROUTES = [
   "/login",
   "/signup",
   "/forgot-password",
-  "/reset-password",
-  "/api/users/login",
-  "/api/users/signup",
-  // ...existing code...
-  "/api/users/forgotpassword",
-  "/api/users/resetpassword"
+  // Note: password reset and legacy password APIs have been removed in OAuth-only mode
+  // if you re-enable password flows, re-add the routes here.
 ];
 
 // Helper to check if route is public
@@ -20,59 +17,40 @@ function isPublicRoute(path: string) {
   return PUBLIC_ROUTES.some(route => path.startsWith(route));
 }
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const token = request.cookies.get("authToken")?.value || request.headers.get("Authorization");
-  // Daily logout logic: if token exists, check its iat (issued at) date
-  if (token) {
-    try {
-      // Decode JWT without verifying signature (for iat)
-      const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
-      if (payload.iat) {
-        const issuedDate = new Date(payload.iat * 1000);
-        const now = new Date();
-        // If token was issued on a previous day, force logout
-        if (
-          issuedDate.getUTCFullYear() !== now.getUTCFullYear() ||
-          issuedDate.getUTCMonth() !== now.getUTCMonth() ||
-          issuedDate.getUTCDate() !== now.getUTCDate()
-        ) {
-          const url = request.nextUrl.clone();
-          // Redirect expired/old tokens to /landing instead of /login
-          url.pathname = "/landing";
-          // Clear cookies
-          const response = NextResponse.redirect(url);
-          response.cookies.set("authToken", "", { maxAge: 0, path: "/" });
-          response.cookies.set("refreshToken", "", { maxAge: 0, path: "/api/users/refresh-token" });
-          return response;
-        }
-      }
-    } catch (err) {
-      // If token is invalid, ignore and continue
-    }
+
+  // Prefer NextAuth token for session detection (works for JWT session strategy)
+  let sessionToken = null;
+  try {
+    sessionToken = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
+  } catch (err) {
+    // ignore
   }
 
+  const isAuthenticated = !!sessionToken;
+
   // If authenticated, block access to login, signup, landing
-  if (token && ["/login", "/signup", "/landing"].some(route => pathname.startsWith(route))) {
+  if (
+    isAuthenticated &&
+    ["/login", "/signup", "/landing"].some((route) => pathname.startsWith(route))
+  ) {
     const url = request.nextUrl.clone();
     url.pathname = "/home";
     return NextResponse.redirect(url);
   }
 
   // Allow public routes for unauthenticated users
-  if (!token && isPublicRoute(pathname)) {
+  if (!isAuthenticated && isPublicRoute(pathname)) {
     return NextResponse.next();
   }
 
   // Block access to protected routes for unauthenticated users
-  if (!token) {
+  if (!isAuthenticated) {
     const url = request.nextUrl.clone();
     url.pathname = "/landing";
     return NextResponse.redirect(url);
   }
-
-  // Optionally, verify token validity here (e.g., JWT verification)
-  // If invalid, redirect to /login
 
   return NextResponse.next();
 }
@@ -82,3 +60,5 @@ export const config = {
     "/((?!_next|_static|favicon.ico|api).*)"
   ]
 };
+
+

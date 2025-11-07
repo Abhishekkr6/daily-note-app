@@ -1,18 +1,15 @@
 import { NextResponse } from "next/server";
 import cloudinary from "@/lib/cloudinary";
 import User from "@/models/userModel";
-import { getDataFromToken } from "@/helpers/getDataFromToken";
+import { getToken } from "next-auth/jwt";
 
 export async function POST(req) {
   try {
-    const token = req.cookies.get("authToken")?.value;
-    if (!token) {
+    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    if (!token || !token.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    const userId = getDataFromToken(token);
-    if (!userId) {
-      return NextResponse.json({ error: "Invalid token" }, { status: 401 });
-    }
+    const userId = token.id;
     const formData = await req.formData();
     const file = formData.get("avatar");
     if (!file || typeof file === "string") {

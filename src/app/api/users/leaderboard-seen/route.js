@@ -1,12 +1,14 @@
 import { connect } from '@/dbConfig/dbConfig';
 import User from '@/models/userModel';
-import { getDataFromToken } from '@/helpers/getDataFromToken';
+import { getToken } from 'next-auth/jwt';
 
 export async function POST(req) {
   await connect();
   let userId;
   try {
-    userId = await getDataFromToken(req);
+    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    if (!token || !token.id) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    userId = token.id;
   } catch (err) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 });
   }

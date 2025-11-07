@@ -1,13 +1,15 @@
 import { connect } from "@/dbConfig/dbConfig";
 import Template from "@/models/templateModel";
-import { getDataFromToken } from "@/helpers/getDataFromToken";
+import { getToken } from "next-auth/jwt";
 
 // GET: fetch all templates for logged-in user
 export async function GET(req) {
   await connect();
   let userId;
   try {
-    userId = getDataFromToken(req);
+    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    if (!token || !token.id) return Response.json({ error: "Unauthorized" }, { status: 401 });
+    userId = token.id;
   } catch (err) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -20,7 +22,9 @@ export async function POST(req) {
   await connect();
   let userId;
   try {
-    userId = getDataFromToken(req);
+    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    if (!token || !token.id) return Response.json({ error: "Unauthorized" }, { status: 401 });
+    userId = token.id;
   } catch (err) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -62,7 +66,9 @@ export async function PUT(req) {
   await connect();
   let userId;
   try {
-    userId = getDataFromToken(req);
+    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    if (!token || !token.id) return Response.json({ error: "Unauthorized" }, { status: 401 });
+    userId = token.id;
   } catch (err) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -81,7 +87,9 @@ export async function DELETE(req) {
   await connect();
   let userId;
   try {
-    userId = getDataFromToken(req);
+    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    if (!token || !token.id) return Response.json({ error: "Unauthorized" }, { status: 401 });
+    userId = token.id;
   } catch (err) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }

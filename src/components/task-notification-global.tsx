@@ -21,7 +21,14 @@ export default function TaskNotificationGlobal() {
     try {
       const res = await fetch("/api/tasks");
       const data = await res.json();
-      setTasks(data);
+      // Be defensive: API may return an object { error: ..., message: ... } or { tasks: [...] }
+      if (Array.isArray(data)) {
+        setTasks(data);
+      } else if (data && Array.isArray((data as any).tasks)) {
+        setTasks((data as any).tasks);
+      } else {
+        setTasks([]);
+      }
     } catch (error) {
       // ignore
     }
@@ -49,8 +56,10 @@ export default function TaskNotificationGlobal() {
       const now = new Date();
       const currentTime = now.toTimeString().slice(0, 5); // "HH:MM"
       const todayStr = now.toISOString().slice(0, 10);
-      const match = tasks.find(
-        (t) => t.status === "today" && t.notificationTime === currentTime && (!t.dueDate || t.dueDate === todayStr)
+      // Ensure we only call array methods on arrays — guard against unexpected API shapes
+      const list = Array.isArray(tasks) ? tasks : [];
+      const match = list.find(
+        (t) => t && t.status === "today" && t.notificationTime === currentTime && (!t.dueDate || t.dueDate === todayStr)
       );
       if (match) {
         const key = `${match._id}_${currentTime}`;

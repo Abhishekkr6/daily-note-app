@@ -1,6 +1,6 @@
 import { connect } from '@/dbConfig/dbConfig';
 import LeaderboardEntry from '@/models/leaderboardModel';
-import { getDataFromToken } from '@/helpers/getDataFromToken';
+import { getToken } from 'next-auth/jwt';
 
 export async function GET(req) {
   try {
@@ -18,7 +18,9 @@ export async function GET(req) {
   }
   let userId;
   try {
-    userId = getDataFromToken(req);
+    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    if (!token || !token.id) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    userId = token.id;
   } catch (err) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 });
   }
