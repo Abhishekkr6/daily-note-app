@@ -109,6 +109,22 @@ export const authOptions = {
             console.error("JWT callback DB lookup failed:", e);
           }
         }
+        // If token.id exists, refresh a few public fields from DB so session reflects recent profile updates
+        if (token.id) {
+          try {
+            await dbConnect();
+            const dbUser = await User.findById(token.id).select("_id avatarUrl name username");
+            if (dbUser) {
+              token.id = dbUser._id.toString();
+              token.picture = dbUser.avatarUrl || token.picture;
+              token.name = dbUser.name || token.name;
+              token.username = dbUser.username || token.username;
+            }
+          } catch (e) {
+            // non-fatal
+            console.error("JWT callback DB refresh failed:", e);
+          }
+        }
       } catch (err) {
         console.error("JWT callback error (non-blocking):", err);
       }

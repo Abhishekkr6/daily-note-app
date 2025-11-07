@@ -7,10 +7,10 @@ export async function GET(req) {
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
     if (!token || !token.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     const userId = token.id;
-    const user = await User.findById(userId).select("username email avatarUrl preferences");
+    const user = await User.findById(userId).select("name username email avatarUrl preferences");
     if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
     return NextResponse.json({
-      name: user.username,
+      name: user.name || user.username,
       email: user.email,
       avatarUrl: user.avatarUrl,
       timezone: user.preferences?.timezone,
@@ -30,6 +30,8 @@ export async function PUT(req) {
     let user = await User.findById(userId);
     if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
     if (body.name && typeof body.name === "string" && body.name.length >= 3) {
+      // Persist display name to both `name` and `username` to keep NextAuth/session and legacy fields in sync
+      user.name = body.name;
       user.username = body.name;
     }
     if (body.timezone && typeof body.timezone === "string") {

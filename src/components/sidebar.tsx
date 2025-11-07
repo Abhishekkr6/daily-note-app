@@ -31,7 +31,7 @@ export function Sidebar({ className }: SidebarProps) {
   const router = useRouter();
   const [leaderboardSeen, setLeaderboardSeen] = useState<boolean>(() => {
     try {
-      if (typeof window !== 'undefined') return !!localStorage.getItem('leaderboard_seen_v1');
+      if (typeof window !== 'undefined') return !!localStorage.getItem('leaderboard_toast_seen_v1');
     } catch (e) {
       return false;
     }
@@ -41,7 +41,7 @@ export function Sidebar({ className }: SidebarProps) {
   // Mark leaderboard as seen (persistently) when user clicks the nav item
   function markLeaderboardSeen() {
     try {
-      localStorage.setItem('leaderboard_seen_v1', '1');
+      localStorage.setItem('leaderboard_toast_seen_v1', '1');
     } catch (e) {
       // ignore
     }
@@ -62,18 +62,18 @@ export function Sidebar({ className }: SidebarProps) {
     if (leaderboardSeen || hasFetchedLeaderboardSeen) return;
     setHasFetchedLeaderboardSeen(true);
     (async () => {
-      try {
-        const res = await fetch('/api/users/aboutme', { method: 'POST', credentials: 'include' });
-        if (!res.ok) return;
-        const json = await res.json();
-        const user = json?.data;
-        if (user && user.preferences && user.preferences.leaderboardSeen) {
-          try { localStorage.setItem('leaderboard_seen_v1', '1'); } catch (e) {}
-          setLeaderboardSeen(true);
+        try {
+          const res = await fetch('/api/users/aboutme', { method: 'POST', credentials: 'include' });
+          if (!res.ok) return;
+          const json = await res.json();
+          const user = json?.data;
+          if (user && user.preferences && user.preferences.leaderboardSeen) {
+            try { localStorage.setItem('leaderboard_toast_seen_v1', '1'); } catch (e) {}
+            setLeaderboardSeen(true);
+          }
+        } catch (e) {
+          // ignore
         }
-      } catch (e) {
-        // ignore
-      }
     })();
   }, [leaderboardSeen, hasFetchedLeaderboardSeen]);
 

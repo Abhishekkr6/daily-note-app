@@ -30,7 +30,10 @@ const LoginPage = () => {
           <div className="flex flex-col gap-3">
             <Button
               type="button"
-              onClick={() => signIn("google", { callbackUrl: "/home" })}
+              onClick={() => {
+                try { sessionStorage.setItem("justLoggedIn", "true"); } catch (e) { }
+                signIn("google", { callbackUrl: "/home" });
+              }}
               className="w-full bg-white text-black border border-gray-300 rounded-xl py-2 font-semibold text-lg flex items-center justify-center gap-2 shadow-md transition-all duration-150"
             >
               <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" width={22} height={22} />
@@ -39,7 +42,10 @@ const LoginPage = () => {
 
             <Button
               type="button"
-              onClick={() => signIn("github", { callbackUrl: "/home" })}
+              onClick={() => {
+                try { sessionStorage.setItem("justLoggedIn", "true"); } catch (e) { }
+                signIn("github", { callbackUrl: "/home" });
+              }}
               className="w-full bg-white text-black border border-gray-300 rounded-xl py-2 font-semibold text-lg flex items-center justify-center gap-2 shadow-md transition-all duration-150"
             >
               <img src="https://www.svgrepo.com/show/512317/github-142.svg" alt="GitHub" width={22} height={22} />

@@ -106,14 +106,15 @@ export function SettingsPage() {
         const sUser = session?.user as any;
         if (sUser) {
           if (!mounted) return;
+          // Apply session-provided public fields, but still fetch the full profile
+          // from the API so server-side settings (timezone, workingHours) are used.
           setProfile((prev) => ({
             ...prev,
             name: sUser.name || "",
             email: sUser.email || "",
           }));
           setAvatarUrl(sUser.image || null);
-          setAvatarLoading(false);
-          return;
+          // Do NOT return here — continue to fetch /api/users/profile to get timezone and workingHours
         }
 
         if (status === "loading") return;
@@ -350,15 +351,99 @@ export function SettingsPage() {
                 </div>
               </div>
 
-              {/* Logout button moved here */}
+              {/* Save button moved here (swapped with bottom Logout) */}
               <div className="flex justify-end pt-2">
                 <Button
-                  variant="destructive"
-                  className="cursor-pointer"
-                  onClick={handleLogout}
+                  onClick={async () => {
+                    setSaveStatus(null);
+                    setIsSaving(true);
+                    let success = false;
+                    // Save avatar if selected
+                    if (selectedFile) {
+                      const formData = new FormData();
+                      formData.append("avatar", selectedFile);
+                      const res = await fetch("/api/users/avatar", {
+                        method: "POST",
+                        body: formData,
+                        credentials: "include"
+                      });
+                      if (res.ok) {
+                        const data = await res.json();
+                        setAvatarUrl(data.avatarUrl);
+                        window.dispatchEvent(new CustomEvent("avatarUrlChanged", { detail: { avatarUrl: data.avatarUrl } }));
+                        success = true;
+                      }
+                    }
+                    // Save name, timezone, working hours
+                    const profileRes = await fetch("/api/users/profile", {
+                      method: "PUT",
+                      headers: { "Content-Type": "application/json" },
+                      credentials: "include",
+                      body: JSON.stringify({
+                        name: profile.name,
+                        timezone: profile.timezone,
+                        workingHours: profile.workingHours
+                      })
+                    });
+                    if (profileRes.ok) {
+                      success = true;
+                      try {
+                        const data = await profileRes.json();
+                        // Update local profile state so timezone and working hours (and name) reflect immediately
+                        setProfile((prev) => ({
+                          ...prev,
+                          name: data.name || prev.name,
+                          timezone: data.timezone || prev.timezone,
+                          workingHours: data.workingHours || prev.workingHours,
+                        }));
+                        if (data.avatarUrl) {
+                          setAvatarUrl(data.avatarUrl);
+                        }
+                      } catch (e) {
+                        // ignore JSON parse errors
+                      }
+                    }
+                    // Save notification settings
+                    try {
+                      const notifRes = await fetch("/api/users/notifications", {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        credentials: "include",
+                        body: JSON.stringify({ notifications }),
+                      });
+                      if (notifRes.ok) {
+                        success = true;
+                        // Refetch notifications to ensure state is up-to-date
+                        await fetchNotifications();
+                      }
+                    } catch (err) {
+                      // Optionally handle error
+                    }
+                    setIsSaving(false);
+                    if (success) {
+                      setSaveStatus("Saved Changes");
+                      setTimeout(() => setSaveStatus(null), 2500);
+                    } else {
+                      setSaveStatus(null);
+                    }
+                  }}
+                  className={saveStatus ? "bg-green-100 text-green-700 cursor-pointer" : "cursor-pointer"}
+                  disabled={isSaving}
                 >
-                  <LogOut className="w-4 h-4 mr-2" />
-                  Logout
+                  {isSaving ? (
+                    <span className="flex items-center gap-2">
+                      <svg className="animate-spin h-5 w-5 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M12 2a10 10 0 1 1-9.95 9.05" />
+                      </svg>
+                      Saving...
+                    </span>
+                  ) : saveStatus ? (
+                    <span className="flex items-center gap-2">
+                      {saveStatus}
+                      <Check className="w-4 h-4" />
+                    </span>
+                  ) : "Save Changes"}
                 </Button>
               </div>
             </CardContent>
@@ -614,82 +699,9 @@ export function SettingsPage() {
           {/* Save Changes */}
           <div className="flex flex-col gap-2 justify-end">
             <div className="flex justify-end">
-              <Button
-                onClick={async () => {
-                  setSaveStatus(null);
-                  setIsSaving(true);
-                  let success = false;
-                  // Save avatar if selected
-                  if (selectedFile) {
-                    const formData = new FormData();
-                    formData.append("avatar", selectedFile);
-                    const res = await fetch("/api/users/avatar", {
-                      method: "POST",
-                      body: formData,
-                      credentials: "include"
-                    });
-                    if (res.ok) {
-                      const data = await res.json();
-                      setAvatarUrl(data.avatarUrl);
-                      window.dispatchEvent(new CustomEvent("avatarUrlChanged", { detail: { avatarUrl: data.avatarUrl } }));
-                      success = true;
-                    }
-                  }
-                  // Save name, timezone, working hours
-                  const res = await fetch("/api/users/profile", {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    credentials: "include",
-                    body: JSON.stringify({
-                      name: profile.name,
-                      timezone: profile.timezone,
-                      workingHours: profile.workingHours
-                    })
-                  });
-                  if (res.ok) {
-                    success = true;
-                  }
-                  // Save notification settings
-                  try {
-                    const notifRes = await fetch("/api/users/notifications", {
-                      method: "PUT",
-                      headers: { "Content-Type": "application/json" },
-                      credentials: "include",
-                      body: JSON.stringify({ notifications }),
-                    });
-                    if (notifRes.ok) {
-                      success = true;
-                      // Refetch notifications to ensure state is up-to-date
-                      await fetchNotifications();
-                    }
-                  } catch (err) {
-                    // Optionally handle error
-                  }
-                  setIsSaving(false);
-                  if (success) {
-                    setSaveStatus("Saved Changes");
-                    setTimeout(() => setSaveStatus(null), 2500);
-                  } else {
-                    setSaveStatus(null);
-                  }
-                }}
-                className={saveStatus ? "bg-green-100 text-green-700 cursor-pointer" : "cursor-pointer"}
-                disabled={isSaving}
-              >
-                {isSaving ? (
-                  <span className="flex items-center gap-2">
-                    <svg className="animate-spin h-5 w-5 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M12 2a10 10 0 1 1-9.95 9.05" />
-                    </svg>
-                    Saving...
-                  </span>
-                ) : saveStatus ? (
-                  <span className="flex items-center gap-2">
-                    {saveStatus}
-                    <Check className="w-4 h-4" />
-                  </span>
-                ) : "Save Changes"}
+              <Button variant="destructive" className="cursor-pointer" onClick={handleLogout}>
+                <LogOut className="w-4 h-4 mr-2" />
+                Logout
               </Button>
             </div>
           </div>

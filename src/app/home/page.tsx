@@ -27,26 +27,72 @@ export default function HomePage() {
   const { data: session, status } = useSession();
 
   useEffect(() => {
+    let leaderboardTimer: ReturnType<typeof setTimeout> | null = null;
+    const justLoggedIn = typeof window !== 'undefined' && sessionStorage.getItem('justLoggedIn') === 'true';
+    if (justLoggedIn) {
+      setShowWelcome(true);
+      try { sessionStorage.removeItem('justLoggedIn'); } catch (e) { }
+    }
+
     async function fetchUser() {
       try {
         // Wait for NextAuth to finish loading session to avoid a race where
         // the client asks the API before the auth cookie is set on redirect.
         if (status === "loading") return;
-
-        // If session is available client-side, prefer that to avoid extra roundtrip
-        if (session && session.user) {
-          // Prefer session user but ensure null values are converted to undefined to match UserType
-          setUser({
-            ...session.user,
-            username: session.user.name ?? session.user.email?.split("@")[0],
-            name: session.user.name ?? undefined,
-            email: session.user.email ?? undefined,
-          });
-        } else {
-          const res = await fetch("/api/users/aboutme", { method: "POST", credentials: "include" });
+        // Prefer loading the server-side user record so we can read server
+        // preferences (like preferences.leaderboardSeen) even when NextAuth
+        // session is available. This ensures new-user announcements are shown.
+        const res = await fetch("/api/users/aboutme", { method: "POST", credentials: "include" });
+        if (res.ok) {
           const data = await res.json();
           if (data?.data) {
             setUser(data.data);
+            // Decide leaderboard toast visibility based on server preference + local storage
+            try {
+              const localSeen = !!localStorage.getItem('leaderboard_toast_seen_v1');
+              const serverSeen = !!data.data?.preferences?.leaderboardSeen;
+              if (!localSeen && !serverSeen) {
+                if (justLoggedIn) {
+                  // Delay slightly longer than welcome toast (5500ms) so leaderboard appears after welcome
+                  leaderboardTimer = setTimeout(() => setShowLeaderboardToast(true), 6000);
+                } else {
+                  setShowLeaderboardToast(true);
+                }
+              }
+            } catch (e) {
+              // If storage access fails, still show toast for new users
+              const serverSeen = !!data.data?.preferences?.leaderboardSeen;
+              if (!serverSeen) {
+                if (justLoggedIn) {
+                  leaderboardTimer = setTimeout(() => setShowLeaderboardToast(true), 6000);
+                } else {
+                  setShowLeaderboardToast(true);
+                }
+              }
+            }
+            // Also ensure welcome flag handling below still runs
+          } else {
+            // If server didn't return user but session exists, fall back to session
+            if (session && session.user) {
+              setUser({
+                ...session.user,
+                username: session.user.name ?? session.user.email?.split("@")[0],
+                name: session.user.name ?? undefined,
+                email: session.user.email ?? undefined,
+              });
+            } else {
+              router.push("/login");
+            }
+          }
+        } else {
+          // If aboutme fails, fall back to session if available
+          if (session && session.user) {
+            setUser({
+              ...session.user,
+              username: session.user.name ?? session.user.email?.split("@")[0],
+              name: session.user.name ?? undefined,
+              email: session.user.email ?? undefined,
+            });
           } else {
             router.push("/login");
           }
@@ -59,21 +105,17 @@ export default function HomePage() {
     }
     fetchUser();
 
-    // Check for login flag in sessionStorage
-    if (typeof window !== "undefined") {
-      if (sessionStorage.getItem("justLoggedIn") === "true") {
-        setShowWelcome(true);
-        sessionStorage.removeItem("justLoggedIn");
-      }
-
-      // Show leaderboard one-time toast if not seen
-      try {
-        const seen = !!localStorage.getItem('leaderboard_toast_seen_v1');
-        if (!seen) setShowLeaderboardToast(true);
-      } catch (e) {
-        // ignore
+    // If fetchUser didn't already schedule the leaderboard (aboutme failed),
+    // and the user just logged in, ensure we still show leaderboard after welcome.
+    if (typeof window !== "undefined" && justLoggedIn) {
+      if (!showLeaderboardToast) {
+        leaderboardTimer = setTimeout(() => setShowLeaderboardToast(true), 6000);
       }
     }
+
+    return () => {
+      if (leaderboardTimer) clearTimeout(leaderboardTimer);
+    };
   }, [router, session, status]);
 
 

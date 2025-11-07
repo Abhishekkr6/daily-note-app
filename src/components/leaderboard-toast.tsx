@@ -19,10 +19,17 @@ export const LeaderboardToast: React.FC = () => {
   }, []);
 
   function dismiss(persist = true) {
-    if (persist) {
-      try { localStorage.setItem('leaderboard_toast_seen_v1', '1'); } catch (e) { }
-    }
-    setShow(false);
+    (async () => {
+      if (persist) {
+        try { localStorage.setItem('leaderboard_toast_seen_v1', '1'); } catch (e) { }
+        try {
+          await fetch('/api/users/leaderboard-seen', { method: 'POST', credentials: 'include' });
+        } catch (e) {
+          // ignore server errors
+        }
+      }
+      setShow(false);
+    })();
   }
 
   return (
@@ -37,8 +44,8 @@ export const LeaderboardToast: React.FC = () => {
         >
           <div className="text-2xl">🏆</div>
           <div className="flex-1">
-            <div className="font-semibold">New: Leaderboard</div>
-            <div className="text-sm text-muted-foreground">Earn points for tasks and focus sessions. See how you stack up weekly.</div>
+            <div className="font-semibold">Introducing: Leaderboard</div>
+            <div className="text-sm text-muted-foreground">Track your productivity with our new Leaderboard. Earn points for completed tasks and focus sessions, compare weekly performance, and celebrate progress.</div>
             <div className="mt-3 flex items-center gap-2">
               <Button size="sm" onClick={() => { dismiss(true); router.push('/leaderboard'); }}>Open Leaderboard</Button>
               <Button variant="ghost" size="sm" onClick={() => dismiss(true)}>Dismiss</Button>
