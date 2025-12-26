@@ -6,9 +6,9 @@ import { SettingsPage } from "@/components/settings-page";
 
 export default function Settings() {
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-screen bg-background flex-col md:flex-row">
       {/* Sidebar */}
-      <div className="h-screen flex flex-col sticky top-0">
+      <div className="h-screen flex flex-col sticky top-0 hidden md:flex">
         <Sidebar />
       </div>
 

@@ -105,7 +105,7 @@ export default function FocusModePage({ params }: FocusModeProps) {
     return <div className="text-red-500 p-4 text-center">{error}</div>;
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen bg-black text-white">
+    <div className="flex flex-col items-center justify-center h-screen bg-black text-white p-4 text-center">
       <h1 className="text-3xl font-bold mb-4">Focus Mode</h1>
       <div className="mb-6 text-xl">{task?.title || "Task"}</div>
       <div className="text-6xl font-mono mb-8">

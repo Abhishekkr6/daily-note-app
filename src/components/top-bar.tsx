@@ -10,6 +10,8 @@ import React, { useState, useRef, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
+import { MobileNav } from "@/components/mobile-nav";
+
 export function TopBar() {
   const router = useRouter();
   // User profile fetch logic — prefer NextAuth session when available to avoid race
@@ -46,7 +48,7 @@ export function TopBar() {
             avatarUrl: data.avatarUrl || null,
           });
         }
-      } catch {}
+      } catch { }
       setAvatarLoading(false);
     }
     fetchProfile();
@@ -105,7 +107,7 @@ export function TopBar() {
           status: t.status || "",
         }));
         setAllTasks(mapped);
-      } catch {}
+      } catch { }
     }
     fetchTasks();
   }, []);
@@ -166,7 +168,7 @@ export function TopBar() {
       } else {
         setStreak(0);
       }
-    } catch {}
+    } catch { }
   };
 
   useEffect(() => {
@@ -242,6 +244,7 @@ export function TopBar() {
     <header className="flex items-center justify-between px-6 py-4 bg-background border-b border-border">
       {/* Left section - Date */}
       <div className="flex items-center space-x-4">
+        <MobileNav />
         <div>
           <h1 className="text-lg font-semibold text-foreground">
             {currentDate}
@@ -345,8 +348,8 @@ export function TopBar() {
               {profile.name
                 ? profile.name[0].toUpperCase()
                 : profile.email
-                ? profile.email[0].toUpperCase()
-                : ""}
+                  ? profile.email[0].toUpperCase()
+                  : ""}
             </AvatarFallback>
           )}
         </Avatar>

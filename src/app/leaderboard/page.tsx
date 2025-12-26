@@ -59,8 +59,8 @@ export default function LeaderboardPage() {
   if (loading) return <AppSkeleton />;
 
   return (
-    <div className="flex min-h-screen bg-background">
-      <div className="h-screen flex flex-col sticky top-0">
+    <div className="flex min-h-screen bg-background flex-col md:flex-row">
+      <div className="h-screen flex flex-col sticky top-0 hidden md:flex">
         <Sidebar />
       </div>
 
@@ -98,14 +98,14 @@ export default function LeaderboardPage() {
                 {/* Top 3 highlight */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {entries.slice(0, 3).map((e, i) => (
-                    <Card key={e.userId} className={`relative border-2 ${i === 0 ? 'border-yellow-400 shadow-lg' : i === 1 ? 'border-gray-400' : 'border-orange-400'} bg-gradient-to-br from-background to-muted/60`}> 
+                    <Card key={e.userId} className={`relative border-2 ${i === 0 ? 'border-yellow-400 shadow-lg' : i === 1 ? 'border-gray-400' : 'border-orange-400'} bg-gradient-to-br from-background to-muted/60`}>
                       <CardHeader className="flex flex-col items-center gap-2 pb-2">
                         <Badge variant="secondary" className={`absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 text-xs font-bold ${i === 0 ? 'bg-yellow-400 text-yellow-900' : i === 1 ? 'bg-gray-300 text-gray-800' : 'bg-orange-300 text-orange-900'}`}>{i === 0 ? '🥇 1st' : i === 1 ? '🥈 2nd' : '🥉 3rd'}</Badge>
                         <Avatar className="w-16 h-16 ring-4 ring-primary/30">
                           {e.avatarUrl ? (
                             <>
-                              <AvatarImage 
-                                src={e.avatarUrl} 
+                              <AvatarImage
+                                src={e.avatarUrl}
                                 alt={e.displayName ?? 'User'}
                                 onError={(e) => console.error('Avatar load error for', e.currentTarget.src)}
                                 onLoad={() => console.log('Avatar loaded:', e.avatarUrl)}
@@ -148,8 +148,8 @@ export default function LeaderboardPage() {
                           <Avatar className="w-8 h-8">
                             {e.avatarUrl ? (
                               <>
-                                <AvatarImage 
-                                  src={e.avatarUrl} 
+                                <AvatarImage
+                                  src={e.avatarUrl}
                                   alt={e.displayName ?? 'User'}
                                   onError={(e) => console.error('Avatar load error:', e.currentTarget.src)}
                                 />

@@ -94,7 +94,7 @@ export function TodayDashboard() {
       transition: box-shadow 0.3s, transform 0.3s, border 0.3s;
     }
   `;
-  
+
   // In-place Focus Mode state
   const [focusTaskId, setFocusTaskId] = useState<string | null>(null);
   const [focusTimer, setFocusTimer] = useState<number>(25 * 60); // 25 min default
@@ -210,7 +210,7 @@ export function TodayDashboard() {
     if (recognitionRef.current) {
       try {
         recognitionRef.current.stop();
-      } catch {}
+      } catch { }
       recognitionRef.current = null;
     }
     setIsRecording(false);
@@ -358,7 +358,7 @@ export function TodayDashboard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ _id: taskId, notificationTime: emailTime[taskId] })
       });
-    } catch (err) {}
+    } catch (err) { }
     setEmailLoading(false);
     setEmailSaved(prev => ({ ...prev, [taskId]: true }));
     setTimeout(() => {
@@ -518,7 +518,7 @@ export function TodayDashboard() {
 
   // Quick Add handler
   const handleQuickAdd = async () => {
-  setQuickAddStatus('loading');
+    setQuickAddStatus('loading');
     const title = quickAddValue.replace(/#\w+/g, "").trim();
     const description = quickAddDescription.trim();
     if (
@@ -545,21 +545,21 @@ export function TodayDashboard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newTask),
       });
-  const res = await fetch("/api/tasks");
-  const data = await res.json();
-  if (Array.isArray(data)) setTasks(data);
-  else if (Array.isArray(data?.tasks)) setTasks(data.tasks);
-  else setTasks([]);
+      const res = await fetch("/api/tasks");
+      const data = await res.json();
+      if (Array.isArray(data)) setTasks(data);
+      else if (Array.isArray(data?.tasks)) setTasks(data.tasks);
+      else setTasks([]);
       window.dispatchEvent(new Event("activityChanged"));
     } catch (error) {
       console.error("Failed to add task", error);
     }
-  setQuickAddValue("");
-  setQuickAddPriority("");
-  setQuickAddDescription("");
-  setQuickAddTag("");
-  setQuickAddStatus('added');
-  setTimeout(() => setQuickAddStatus('idle'), 1200);
+    setQuickAddValue("");
+    setQuickAddPriority("");
+    setQuickAddDescription("");
+    setQuickAddTag("");
+    setQuickAddStatus('added');
+    setTimeout(() => setQuickAddStatus('idle'), 1200);
   };
 
   // Delete task with undo
@@ -574,11 +574,11 @@ export function TodayDashboard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ _id: id }),
       });
-  const res = await fetch("/api/tasks");
-  const data = await res.json();
-  if (Array.isArray(data)) setTasks(data);
-  else if (Array.isArray(data?.tasks)) setTasks(data.tasks);
-  else setTasks([]);
+      const res = await fetch("/api/tasks");
+      const data = await res.json();
+      if (Array.isArray(data)) setTasks(data);
+      else if (Array.isArray(data?.tasks)) setTasks(data.tasks);
+      else setTasks([]);
       window.dispatchEvent(new Event("activityChanged"));
       setDeletedTask(taskToDelete);
       setShowUndo(true);
@@ -604,11 +604,11 @@ export function TodayDashboard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(deletedTask),
       });
-  const res = await fetch("/api/tasks");
-  const data = await res.json();
-  if (Array.isArray(data)) setTasks(data);
-  else if (Array.isArray(data?.tasks)) setTasks(data.tasks);
-  else setTasks([]);
+      const res = await fetch("/api/tasks");
+      const data = await res.json();
+      if (Array.isArray(data)) setTasks(data);
+      else if (Array.isArray(data?.tasks)) setTasks(data.tasks);
+      else setTasks([]);
       // Notify heatmap/activity listeners
       window.dispatchEvent(new Event("activityChanged"));
     } catch (error) {
@@ -843,7 +843,7 @@ export function TodayDashboard() {
         const res = await fetch("/api/mood");
         const data = await res.json();
         setMoodHistory(Array.isArray(data) ? data : []);
-      } catch (err) {}
+      } catch (err) { }
     };
     fetchHistory();
   }, []);
@@ -879,19 +879,19 @@ export function TodayDashboard() {
   // Error messages for quick add inputs
   const titleError =
     quickAddValue.trim() &&
-    !isValidTitle(quickAddValue.replace(/#\w+/g, "").trim())
+      !isValidTitle(quickAddValue.replace(/#\w+/g, "").trim())
       ? "Title must be at least 2 characters and cannot start with a number. Numbers are allowed elsewhere."
       : "";
 
   const descError =
     quickAddDescription.trim() &&
-    !isValidDescription(quickAddDescription.trim())
+      !isValidDescription(quickAddDescription.trim())
       ? "Description must be at least 5 characters and cannot start with a number. Numbers are allowed elsewhere."
       : "";
 
 
   return (
-  <div className="p-6 space-y-6" style={{ position: 'relative', zIndex: 1 }}>
+    <div className="p-6 space-y-6" style={{ position: 'relative', zIndex: 1 }}>
       {/* Task Complete Sound */}
       <audio
         ref={taskCompleteAudioRef}
@@ -903,7 +903,7 @@ export function TodayDashboard() {
       {activeNotification && (
         <div className="fixed top-1/2 left-1/2 z-50 transform -translate-x-1/2 -translate-y-1/2 bg-white border border-primary shadow-2xl rounded-2xl px-8 py-6 flex flex-col items-center animate-fade-in">
           <div className="flex items-center gap-3 mb-2">
-            <svg width="32" height="32" fill="none" viewBox="0 0 24 24"><path fill="#2563eb" d="M12 2a6 6 0 0 0-6 6v4.586l-.707.707A1 1 0 0 0 6 16h12a1 1 0 0 0 .707-1.707L18 12.586V8a6 6 0 0 0-6-6Zm0 20a2 2 0 0 0 2-2h-4a2 2 0 0 0 2 2Z"/></svg>
+            <svg width="32" height="32" fill="none" viewBox="0 0 24 24"><path fill="#2563eb" d="M12 2a6 6 0 0 0-6 6v4.586l-.707.707A1 1 0 0 0 6 16h12a1 1 0 0 0 .707-1.707L18 12.586V8a6 6 0 0 0-6-6Zm0 20a2 2 0 0 0 2-2h-4a2 2 0 0 0 2 2Z" /></svg>
             <span className="text-xl font-bold text-primary">Task Reminder</span>
           </div>
           <div className="text-lg font-semibold mb-2">{activeNotification.title}</div>
@@ -950,11 +950,10 @@ export function TodayDashboard() {
       <style>{focusOverlayStyle}</style>
       <Card
         style={blinkQuickAdd ? { filter: "url(#wavy-border)" } : {}}
-        className={`bg-card border-border shadow-sm ${
-          blinkQuickAdd
-            ? "animate-[blink-quickadd_0.6s_cubic-bezier(0.4,0.0,0.2,1)_0s_2] border border-[#D86D38]"
-            : ""
-        }`}
+        className={`bg-card border-border shadow-sm ${blinkQuickAdd
+          ? "animate-[blink-quickadd_0.6s_cubic-bezier(0.4,0.0,0.2,1)_0s_2] border border-[#D86D38]"
+          : ""
+          }`}
       >
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
@@ -962,7 +961,7 @@ export function TodayDashboard() {
             <span>Quick Add</span>
           </CardTitle>
         </CardHeader>
-        <CardContent className="flex gap-2">
+        <CardContent className="flex flex-col md:flex-row gap-2">
           <div className="flex flex-col flex-1">
             <div className="relative flex items-center">
               <Input
@@ -1029,7 +1028,7 @@ export function TodayDashboard() {
               </span>
             )}
           </div>
-          <div className="flex flex-col flex-1 min-w-[120px] max-w-[120px]">
+          <div className="flex flex-col flex-1 w-full md:min-w-[120px] md:max-w-[120px]">
             <Select value={quickAddTag} onValueChange={setQuickAddTag}>
               <SelectTrigger className="w-full h-10 text-xs">
                 <SelectValue placeholder="#Tag" />
@@ -1050,11 +1049,11 @@ export function TodayDashboard() {
               placeholder="Add new #tag"
               className="text-xs mt-1 bg-background border-border focus:border-primary transition-colors placeholder:text-muted-foreground h-8 px-2"
               onKeyDown={(e) => e.key === "Enter" && handleQuickAdd()}
-              style={{ maxWidth: 120 }}
+              style={{ maxWidth: '100%' }}
             />
           </div>
           <Select value={quickAddPriority} onValueChange={setQuickAddPriority}>
-            <SelectTrigger className="w-28">
+            <SelectTrigger className="w-full md:w-28">
               <SelectValue placeholder="Priority" />
             </SelectTrigger>
             <SelectContent>
@@ -1072,7 +1071,7 @@ export function TodayDashboard() {
               !quickAddPriority ||
               !quickAddTag.trim()
             }
-            className="cursor-pointer flex items-center gap-2 min-w-[70px]"
+            className="cursor-pointer flex items-center justify-center gap-2 w-full md:min-w-[70px] md:w-auto"
           >
             {quickAddStatus === 'loading'
               ? (<span className="inline-block w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>)
@@ -1284,11 +1283,10 @@ export function TodayDashboard() {
                   <button
                     key={index}
                     onClick={() => setMood(index - 2)}
-                    className={`text-2xl p-2 rounded-xl transition-all ${
-                      mood === index - 2
-                        ? "bg-primary/20 scale-110"
-                        : "hover:bg-muted/50 hover:scale-105"
-                    }`}
+                    className={`text-2xl p-2 rounded-xl transition-all ${mood === index - 2
+                      ? "bg-primary/20 scale-110"
+                      : "hover:bg-muted/50 hover:scale-105"
+                      }`}
                     title={moodLabels[index]}
                     disabled={moodLoading}
                   >
@@ -1512,11 +1510,10 @@ function TaskSection({
           orderedTasks.map((task: Task) => (
             <div
               key={task._id}
-              className={`flex items-center space-x-3 p-3 rounded-xl border relative z-10 shadow-sm transition-all duration-300 ${
-                title === "Completed"
-                  ? "bg-muted/40 border border-border text-muted-foreground opacity-70"
-                  : "bg-accent/30 border border-border"
-              } ${title === 'Today' && (focusTaskId === task._id ? 'focus-highlight' : focusTaskId ? 'focus-blur' : '')}`}
+              className={`flex items-center space-x-3 p-3 rounded-xl border relative z-10 shadow-sm transition-all duration-300 ${title === "Completed"
+                ? "bg-muted/40 border border-border text-muted-foreground opacity-70"
+                : "bg-accent/30 border border-border"
+                } ${title === 'Today' && (focusTaskId === task._id ? 'focus-highlight' : focusTaskId ? 'focus-blur' : '')}`}
             >
               {completeTask && title !== "Completed" && (
                 <button
@@ -1609,11 +1606,10 @@ function TaskSection({
                   <>
                     <div className="flex items-center">
                       <p
-                        className={`font-medium break-words whitespace-pre-line max-w-full overflow-wrap-anywhere ${
-                          title === "Completed"
-                            ? "line-through"
-                            : "text-foreground"
-                        }`}
+                        className={`font-medium break-words whitespace-pre-line max-w-full overflow-wrap-anywhere ${title === "Completed"
+                          ? "line-through"
+                          : "text-foreground"
+                          }`}
                         style={{ overflowWrap: 'anywhere', wordBreak: 'break-word', minWidth: 0 }}
                       >
                         {task.title}
@@ -1630,7 +1626,7 @@ function TaskSection({
                           >
                             {emailTime[task._id ?? ""]
                               ? <span className="text-xs font-semibold">{formatTime12(emailTime[task._id ?? ""])} </span>
-                              : <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a6 6 0 0 0-6 6v4.586l-.707.707A1 1 0 0 0 6 16h12a1 1 0 0 0 .707-1.707L18 12.586V8a6 6 0 0 0-6-6Zm0 20a2 2 0 0 0 2-2h-4a2 2 0 0 0 2 2Z"/></svg>
+                              : <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a6 6 0 0 0-6 6v4.586l-.707.707A1 1 0 0 0 6 16h12a1 1 0 0 0 .707-1.707L18 12.586V8a6 6 0 0 0-6-6Zm0 20a2 2 0 0 0 2-2h-4a2 2 0 0 0 2 2Z" /></svg>
                             }
                           </Button>
                           <Button
