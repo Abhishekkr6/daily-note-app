@@ -32,3 +32,6 @@ next-env.d.ts
 # Interview preparation files (hidden from GitHub)
 INTERVIEW_QUESTIONS.md
 TODO_TASKS.md
+public/interview-questions.md
+public/todo-tasks.md
+public/walkthrough.md
