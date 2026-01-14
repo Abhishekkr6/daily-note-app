@@ -3,8 +3,7 @@
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs";
 import { Card } from "@/components/ui/card";
-import ReactMarkdown from "react-markdown";
-import { Loader2 } from "lucide-react";
+import { Loader2, FileText, CheckSquare, BookOpen } from "lucide-react";
 
 export default function HiddenTaskPage() {
     const [activeTab, setActiveTab] = useState("questions");
@@ -43,50 +42,89 @@ export default function HiddenTaskPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-background flex items-center justify-center">
+            <div className="min-h-screen bg-background flex items-center justify-center p-4">
                 <div className="text-center">
-                    <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-                    <p className="text-muted-foreground">Loading interview prep materials...</p>
+                    <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
+                    <p className="text-sm text-muted-foreground">Loading interview prep materials...</p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-background p-4 md:p-8">
-            <div className="max-w-6xl mx-auto">
-                <div className="mb-8">
-                    <h1 className="text-3xl md:text-4xl font-bold mb-2">🔒 Interview Preparation</h1>
-                    <p className="text-muted-foreground">Hidden documentation for interview prep</p>
+        <div className="min-h-screen bg-background">
+            {/* Header - Mobile optimized */}
+            <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
+                <div className="max-w-6xl mx-auto px-4 py-4 md:py-6">
+                    <div className="flex items-center gap-2 mb-2">
+                        <span className="text-2xl">🔒</span>
+                        <h1 className="text-xl md:text-3xl font-bold">Interview Preparation</h1>
+                    </div>
+                    <p className="text-xs md:text-sm text-muted-foreground">
+                        Hidden documentation for interview prep
+                    </p>
                 </div>
+            </div>
 
-                <Tabs value={activeTab} onValueChange={setActiveTab}>
-                    <TabsList className="grid w-full grid-cols-3">
-                        <TabsTrigger value="questions">Interview Questions</TabsTrigger>
-                        <TabsTrigger value="tasks">TODO Tasks</TabsTrigger>
-                        <TabsTrigger value="walkthrough">Walkthrough</TabsTrigger>
+            {/* Content */}
+            <div className="max-w-6xl mx-auto px-4 py-4 md:py-8">
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                    {/* Mobile-first tabs */}
+                    <TabsList className="grid w-full grid-cols-3 h-auto">
+                        <TabsTrigger
+                            value="questions"
+                            className="flex flex-col gap-1 py-2 text-xs md:text-sm"
+                        >
+                            <FileText className="h-4 w-4" />
+                            <span className="hidden sm:inline">Interview Questions</span>
+                            <span className="sm:hidden">Questions</span>
+                        </TabsTrigger>
+                        <TabsTrigger
+                            value="tasks"
+                            className="flex flex-col gap-1 py-2 text-xs md:text-sm"
+                        >
+                            <CheckSquare className="h-4 w-4" />
+                            <span className="hidden sm:inline">TODO Tasks</span>
+                            <span className="sm:hidden">Tasks</span>
+                        </TabsTrigger>
+                        <TabsTrigger
+                            value="walkthrough"
+                            className="flex flex-col gap-1 py-2 text-xs md:text-sm"
+                        >
+                            <BookOpen className="h-4 w-4" />
+                            <span>Walkthrough</span>
+                        </TabsTrigger>
                     </TabsList>
 
-                    <TabsContent value="questions" className="mt-6">
-                        <Card className="p-4 md:p-6">
-                            <div className="prose dark:prose-invert max-w-none prose-pre:bg-muted prose-pre:text-foreground">
-                                <ReactMarkdown>{questions}</ReactMarkdown>
+                    {/* Questions Tab */}
+                    <TabsContent value="questions" className="mt-4 md:mt-6">
+                        <Card className="p-3 md:p-6">
+                            <div className="prose prose-sm md:prose-base dark:prose-invert max-w-none overflow-x-auto">
+                                <pre className="whitespace-pre-wrap break-words text-xs md:text-sm">
+                                    {questions}
+                                </pre>
                             </div>
                         </Card>
                     </TabsContent>
 
-                    <TabsContent value="tasks" className="mt-6">
-                        <Card className="p-4 md:p-6">
-                            <div className="prose dark:prose-invert max-w-none prose-pre:bg-muted prose-pre:text-foreground">
-                                <ReactMarkdown>{tasks}</ReactMarkdown>
+                    {/* Tasks Tab */}
+                    <TabsContent value="tasks" className="mt-4 md:mt-6">
+                        <Card className="p-3 md:p-6">
+                            <div className="prose prose-sm md:prose-base dark:prose-invert max-w-none overflow-x-auto">
+                                <pre className="whitespace-pre-wrap break-words text-xs md:text-sm">
+                                    {tasks}
+                                </pre>
                             </div>
                         </Card>
                     </TabsContent>
 
-                    <TabsContent value="walkthrough" className="mt-6">
-                        <Card className="p-4 md:p-6">
-                            <div className="prose dark:prose-invert max-w-none prose-pre:bg-muted prose-pre:text-foreground">
-                                <ReactMarkdown>{walkthrough}</ReactMarkdown>
+                    {/* Walkthrough Tab */}
+                    <TabsContent value="walkthrough" className="mt-4 md:mt-6">
+                        <Card className="p-3 md:p-6">
+                            <div className="prose prose-sm md:prose-base dark:prose-invert max-w-none overflow-x-auto">
+                                <pre className="whitespace-pre-wrap break-words text-xs md:text-sm">
+                                    {walkthrough}
+                                </pre>
                             </div>
                         </Card>
                     </TabsContent>
