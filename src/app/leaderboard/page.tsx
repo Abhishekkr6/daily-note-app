@@ -69,9 +69,9 @@ export default function LeaderboardPage() {
           <TopBar />
         </div>
 
-        <main className="flex-1 overflow-y-auto p-6">
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 w-full overflow-x-hidden">
           <div className="max-w-4xl mx-auto">
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 md:mb-6 gap-3">
               <div>
                 <h1 className="text-3xl font-bold tracking-tight">Leaderboard</h1>
                 <p className="text-base text-muted-foreground mt-1">Weekly & Global rankings based on user points</p>
@@ -96,7 +96,7 @@ export default function LeaderboardPage() {
             ) : (
               <div className="space-y-8">
                 {/* Top 3 highlight */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
                   {entries.slice(0, 3).map((e, i) => (
                     <Card key={e.userId} className={`relative border-2 ${i === 0 ? 'border-yellow-400 shadow-lg' : i === 1 ? 'border-gray-400' : 'border-orange-400'} bg-gradient-to-br from-background to-muted/60`}>
                       <CardHeader className="flex flex-col items-center gap-2 pb-2">

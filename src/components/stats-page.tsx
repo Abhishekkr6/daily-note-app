@@ -51,7 +51,7 @@ export function StatsPage() {
         if (!resActivity.ok) return;
         let activity = await resActivity.json();
         // Sort activity by date descending (latest first)
-  activity = activity.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        activity = activity.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
 
         // --- Calculate key metrics ---
@@ -104,142 +104,142 @@ export function StatsPage() {
 
         // 2. Longest streak (max consecutive days with completed > 0)
         let maxStreak = 0, curr = 0;
-            for (let i = 0; i < activity.length; i++) {
-              if (activity[i].completed > 0) curr++;
-              else curr = 0;
-              if (curr > maxStreak) maxStreak = curr;
-            }
-            setLongestStreak(maxStreak);
-    
-            // 3. Total tasks
-            setTotalTasks(tasks.length);
-    
-            // 4. Completion rate (completed/total in last 30 days)
-            const last30 = activity.slice(0, 30);
-            const completed30 = last30.reduce((sum: number, d: any) => sum + d.completed, 0);
-            setCompletionRate(tasks.length ? Math.round((completed30 / (tasks.length || 1)) * 100) : 0);
-    
-            // 5. Focus hours (sum of focusMinutes in last 30 days, if available)
-            // Not available in backend, so set to null or 0 for now
-            setFocusHours(null);
-    
-            // 6. Most productive day (day with max completed in last 30 days)
-            let maxDay = last30[0];
-            for (let d of last30) if (d.completed > maxDay.completed) maxDay = d;
-            setMostProductiveDay(maxDay ? getWeekday(maxDay.date) : "");
-    
-            // --- Weekly Progress Chart Data ---
-            // Show last 7 days, map to { day, completed, total }
-            const last7 = activity.slice(0, 7).reverse();
-            // For each day, count total tasks due (by dueDate) and completed
-            const weekly = last7.map((d: any) => {
-              const dayTasks = tasks.filter((t: any) => t.dueDate && t.dueDate.slice(0, 10) === d.date);
-              return {
-                day: getWeekday(d.date).slice(0, 3),
-                completed: d.completed,
-                total: dayTasks.length || 0,
-                focusMinutes: null // Not available
-              };
-            });
-            setWeeklyData(weekly);
-    
-            // --- Priority Distribution Chart Data ---
-            const priorities = [
-              { name: "High", color: "#ef4444" },
-              { name: "Medium", color: "#f59e0b" },
-              { name: "Low", color: "#10b981" },
-            ];
-            const priorityCounts = priorities.map(p => ({
-              name: p.name,
-              value: tasks.filter((t: any) => t.priority === p.name).length,
-              color: p.color,
-            }));
-            setPriorityDistribution(priorityCounts);
-    
-            // --- Monthly Completion Trend Chart Data ---
-            // Group activity by month, sum completed per month for last 12 months
-            const monthMap: { [key: string]: number } = {};
-            for (const d of activity) {
-              const month = d.date.slice(0, 7); // YYYY-MM
-              if (!monthMap[month]) monthMap[month] = 0;
-              monthMap[month] += d.completed;
-            }
-            // Get last 12 months sorted ascending
-            const months = Object.keys(monthMap).sort().slice(-12);
-            const monthly = months.map(m => ({
-              month: new Date(m + "-01").toLocaleString("en-US", { month: "short" }),
-              completion: monthMap[m],
-            }));
-            setMonthlyTrend(monthly);
-    
-            // --- Focus Sessions Chart Data ---
-            // Fetch pomodoro data for last 4 weeks
-            const now = new Date();
-            const focusWeeks: { [key: string]: { sessions: number; totalMinutes: number } } = {};
-            for (let i = 0; i < 28; i++) {
-              const d = new Date(now);
-              d.setDate(now.getDate() - i);
-              const dateStr = d.toISOString().slice(0, 10);
-              // Fetch pomodoro for this date
-              // eslint-disable-next-line no-await-in-loop
-              const resPom = await fetch(`/api/pomodoro?date=${dateStr}`);
-              if (!resPom.ok) continue;
-              const pom = await resPom.json();
-              if (!pom || !pom.cycles) continue;
-              // Group by week number (0 = this week, 1 = last week, ...)
-              const weekNum = Math.floor(i / 7);
-              if (!focusWeeks[weekNum]) focusWeeks[weekNum] = { sessions: 0, totalMinutes: 0 };
-              focusWeeks[weekNum].sessions += pom.cycles;
-              focusWeeks[weekNum].totalMinutes += pom.cycles * (pom.duration || 25);
-            }
-            // Prepare data for chart (last 4 weeks, most recent last)
-            const focusSessionArr = [3, 2, 1, 0].map(week => ({
-              date: `Week ${4 - week}`,
-              sessions: focusWeeks[week]?.sessions || 0,
-              totalMinutes: focusWeeks[week]?.totalMinutes || 0,
-            }));
-            setFocusSessionData(focusSessionArr);
-    
-            // --- Tag Performance Section ---
-            // Group tasks by tag, count completed and total per tag
-            const tagMap: { [key: string]: { completed: number; total: number } } = {};
-            for (const t of tasks) {
-              if (!t.tag) continue;
-              if (!tagMap[t.tag]) tagMap[t.tag] = { completed: 0, total: 0 };
-              tagMap[t.tag].total++;
-              if (t.status === "completed") tagMap[t.tag].completed++;
-            }
-            const tagArr = Object.entries(tagMap).map(([tag, data]) => ({
-              tag,
-              completed: data.completed,
-              total: data.total,
-              percentage: data.total ? Math.round((data.completed / data.total) * 100) : 0,
-            }));
-            setTagAnalytics(tagArr);
-          } catch (e) {
-            // handle error
-          }
+        for (let i = 0; i < activity.length; i++) {
+          if (activity[i].completed > 0) curr++;
+          else curr = 0;
+          if (curr > maxStreak) maxStreak = curr;
         }
-    
-        fetchStats();
-        // Listen for activityChanged event for realtime stats update
-        const handler = () => fetchStats();
-        window.addEventListener('activityChanged', handler);
-        return () => window.removeEventListener('activityChanged', handler);
-      }, []);
-    
-      // State for completionRate, focusHours, mostProductiveDay, weeklyData, priorityDistribution, monthlyTrend, focusSessionData, tagAnalytics
-      const [completionRate, setCompletionRate] = useState(0);
-      const [focusHours, setFocusHours] = useState<number | null>(null);
-      const [mostProductiveDay, setMostProductiveDay] = useState("");
-      const [weeklyData, setWeeklyData] = useState<any[]>([]);
-      const [priorityDistribution, setPriorityDistribution] = useState<any[]>([]);
-      const [monthlyTrend, setMonthlyTrend] = useState<any[]>([]);
-      const [focusSessionData, setFocusSessionData] = useState<any[]>([]);
-      const [tagAnalytics, setTagAnalytics] = useState<any[]>([]);
-    
-      return (
-        <div className="space-y-8">
+        setLongestStreak(maxStreak);
+
+        // 3. Total tasks
+        setTotalTasks(tasks.length);
+
+        // 4. Completion rate (completed/total in last 30 days)
+        const last30 = activity.slice(0, 30);
+        const completed30 = last30.reduce((sum: number, d: any) => sum + d.completed, 0);
+        setCompletionRate(tasks.length ? Math.round((completed30 / (tasks.length || 1)) * 100) : 0);
+
+        // 5. Focus hours (sum of focusMinutes in last 30 days, if available)
+        // Not available in backend, so set to null or 0 for now
+        setFocusHours(null);
+
+        // 6. Most productive day (day with max completed in last 30 days)
+        let maxDay = last30[0];
+        for (let d of last30) if (d.completed > maxDay.completed) maxDay = d;
+        setMostProductiveDay(maxDay ? getWeekday(maxDay.date) : "");
+
+        // --- Weekly Progress Chart Data ---
+        // Show last 7 days, map to { day, completed, total }
+        const last7 = activity.slice(0, 7).reverse();
+        // For each day, count total tasks due (by dueDate) and completed
+        const weekly = last7.map((d: any) => {
+          const dayTasks = tasks.filter((t: any) => t.dueDate && t.dueDate.slice(0, 10) === d.date);
+          return {
+            day: getWeekday(d.date).slice(0, 3),
+            completed: d.completed,
+            total: dayTasks.length || 0,
+            focusMinutes: null // Not available
+          };
+        });
+        setWeeklyData(weekly);
+
+        // --- Priority Distribution Chart Data ---
+        const priorities = [
+          { name: "High", color: "#ef4444" },
+          { name: "Medium", color: "#f59e0b" },
+          { name: "Low", color: "#10b981" },
+        ];
+        const priorityCounts = priorities.map(p => ({
+          name: p.name,
+          value: tasks.filter((t: any) => t.priority === p.name).length,
+          color: p.color,
+        }));
+        setPriorityDistribution(priorityCounts);
+
+        // --- Monthly Completion Trend Chart Data ---
+        // Group activity by month, sum completed per month for last 12 months
+        const monthMap: { [key: string]: number } = {};
+        for (const d of activity) {
+          const month = d.date.slice(0, 7); // YYYY-MM
+          if (!monthMap[month]) monthMap[month] = 0;
+          monthMap[month] += d.completed;
+        }
+        // Get last 12 months sorted ascending
+        const months = Object.keys(monthMap).sort().slice(-12);
+        const monthly = months.map(m => ({
+          month: new Date(m + "-01").toLocaleString("en-US", { month: "short" }),
+          completion: monthMap[m],
+        }));
+        setMonthlyTrend(monthly);
+
+        // --- Focus Sessions Chart Data ---
+        // Fetch pomodoro data for last 4 weeks
+        const now = new Date();
+        const focusWeeks: { [key: string]: { sessions: number; totalMinutes: number } } = {};
+        for (let i = 0; i < 28; i++) {
+          const d = new Date(now);
+          d.setDate(now.getDate() - i);
+          const dateStr = d.toISOString().slice(0, 10);
+          // Fetch pomodoro for this date
+          // eslint-disable-next-line no-await-in-loop
+          const resPom = await fetch(`/api/pomodoro?date=${dateStr}`);
+          if (!resPom.ok) continue;
+          const pom = await resPom.json();
+          if (!pom || !pom.cycles) continue;
+          // Group by week number (0 = this week, 1 = last week, ...)
+          const weekNum = Math.floor(i / 7);
+          if (!focusWeeks[weekNum]) focusWeeks[weekNum] = { sessions: 0, totalMinutes: 0 };
+          focusWeeks[weekNum].sessions += pom.cycles;
+          focusWeeks[weekNum].totalMinutes += pom.cycles * (pom.duration || 25);
+        }
+        // Prepare data for chart (last 4 weeks, most recent last)
+        const focusSessionArr = [3, 2, 1, 0].map(week => ({
+          date: `Week ${4 - week}`,
+          sessions: focusWeeks[week]?.sessions || 0,
+          totalMinutes: focusWeeks[week]?.totalMinutes || 0,
+        }));
+        setFocusSessionData(focusSessionArr);
+
+        // --- Tag Performance Section ---
+        // Group tasks by tag, count completed and total per tag
+        const tagMap: { [key: string]: { completed: number; total: number } } = {};
+        for (const t of tasks) {
+          if (!t.tag) continue;
+          if (!tagMap[t.tag]) tagMap[t.tag] = { completed: 0, total: 0 };
+          tagMap[t.tag].total++;
+          if (t.status === "completed") tagMap[t.tag].completed++;
+        }
+        const tagArr = Object.entries(tagMap).map(([tag, data]) => ({
+          tag,
+          completed: data.completed,
+          total: data.total,
+          percentage: data.total ? Math.round((data.completed / data.total) * 100) : 0,
+        }));
+        setTagAnalytics(tagArr);
+      } catch (e) {
+        // handle error
+      }
+    }
+
+    fetchStats();
+    // Listen for activityChanged event for realtime stats update
+    const handler = () => fetchStats();
+    window.addEventListener('activityChanged', handler);
+    return () => window.removeEventListener('activityChanged', handler);
+  }, []);
+
+  // State for completionRate, focusHours, mostProductiveDay, weeklyData, priorityDistribution, monthlyTrend, focusSessionData, tagAnalytics
+  const [completionRate, setCompletionRate] = useState(0);
+  const [focusHours, setFocusHours] = useState<number | null>(null);
+  const [mostProductiveDay, setMostProductiveDay] = useState("");
+  const [weeklyData, setWeeklyData] = useState<any[]>([]);
+  const [priorityDistribution, setPriorityDistribution] = useState<any[]>([]);
+  const [monthlyTrend, setMonthlyTrend] = useState<any[]>([]);
+  const [focusSessionData, setFocusSessionData] = useState<any[]>([]);
+  const [tagAnalytics, setTagAnalytics] = useState<any[]>([]);
+
+  return (
+    <div className="p-4 md:p-6 space-y-6 md:space-y-8 w-full overflow-x-hidden">
 
       {/* Key Metrics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -311,7 +311,7 @@ export function StatsPage() {
       </div>
 
       {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
         {/* Weekly Progress */}
         <Card className="bg-card border-border shadow-sm">
           <CardHeader>
@@ -453,7 +453,7 @@ export function StatsPage() {
       </div>
 
       {/* Additional Insights */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
         {/* Tag Performance */}
         <Card className="bg-card border-border shadow-sm">
           <CardHeader>

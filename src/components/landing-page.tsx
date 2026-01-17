@@ -85,12 +85,12 @@ export function LandingPage() {
 
   const router = useRouter();
   return (
-  <div className="min-h-screen bg-[#171717] text-white relative">
-  <StarsBackground className="z-0 pointer-events-none" />
-  <ShootingStars className="z-0 pointer-events-none" />
+    <div className="min-h-screen bg-[#171717] text-white relative">
+      <StarsBackground className="z-0 pointer-events-none" />
+      <ShootingStars className="z-0 pointer-events-none" />
       {/* Header */}
-  <header className={`border-b sticky top-0 z-50 text-white w-full transition-colors duration-300 ${navBg ? "bg-[#171717]" : "bg-transparent"}`}>
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+      <header className={`border-b sticky top-0 z-50 text-white w-full transition-colors duration-300 ${navBg ? "bg-[#171717]" : "bg-transparent"}`}>
+        <div className="container mx-auto px-4 md:px-6 py-3 md:py-4 flex items-center justify-between">
           <div
             className="flex items-center gap-2 cursor-pointer"
             onClick={() => router.push('/landing')}
@@ -99,9 +99,9 @@ export function LandingPage() {
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
               <FileText className="w-5 h-5 text-primary-foreground" />
             </div>
-            <span className="text-xl font-semibold heading">DailyNote</span>
+            <span className="text-lg md:text-xl font-semibold heading">DailyNote</span>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 md:gap-4">
             <Link href="/signup" className="cursor-pointer">
               <Button variant="ghost" className="btn cursor-pointer">Sign Up</Button>
             </Link>
@@ -113,7 +113,7 @@ export function LandingPage() {
       </header>
 
       {/* Hero Section */}
-  <section className="container mx-auto px-4 py-20 text-center bg-[#171717] text-white">
+      <section className="container mx-auto px-4 md:px-6 py-12 md:py-20 text-center bg-[#171717] text-white">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center justify-center gap-2 mb-6">
             <Sparkles className="w-6 h-6 text-primary" />
@@ -122,18 +122,18 @@ export function LandingPage() {
             </Badge>
           </div>
 
-          <h1 className="text-5xl md:text-6xl font-bold mb-6 text-balance heading">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 md:mb-6 text-balance heading leading-tight">
             Start your productivity journey with <span className="text-primary">DailyNote</span>
           </h1>
 
-          <p className="text-xl text-muted-foreground mb-8 text-balance max-w-2xl mx-auto">
+          <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-6 md:mb-8 text-balance max-w-2xl mx-auto px-2">
             Combine daily journaling with smart task management. Track your progress, build habits, and achieve your
             goals with our beautifully designed productivity app.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-            <Link href="/signup" className="cursor-pointer">
-              <Button size="lg" className="text-lg px-8 py-6 cursor-pointer">
+          <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center mb-8 md:mb-12 px-4">
+            <Link href="/signup" className="cursor-pointer w-full sm:w-auto">
+              <Button size="lg" className="text-base md:text-lg px-6 md:px-8 py-5 md:py-6 cursor-pointer w-full sm:w-auto">
                 Get Started Free
                 <ArrowRight className="w-5 h-5 ml-2 cursor-pointer" />
               </Button>
@@ -168,10 +168,10 @@ export function LandingPage() {
       </section>
 
       {/* Features Section */}
-  <section className="container mx-auto px-4 py-20 bg-[#171717] text-white">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4 heading">Everything you need to stay productive</h2>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+      <section className="container mx-auto px-4 md:px-6 py-12 md:py-20 bg-[#171717] text-white">
+        <div className="text-center mb-10 md:mb-16">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 md:mb-4 heading">Everything you need to stay productive</h2>
+          <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto px-2">
             Powerful features designed to help you organize your thoughts, manage tasks, and track your progress
             effortlessly.
           </p>
@@ -241,7 +241,7 @@ export function LandingPage() {
       </section>
 
       {/* Testimonials */}
-  <section className="bg-[#171717] py-20 text-white">
+      <section className="bg-[#171717] py-20 text-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold mb-4 heading">Loved by productive people everywhere</h2>
@@ -272,10 +272,10 @@ export function LandingPage() {
       </section>
 
       {/* CTA Section */}
-  <section className="container mx-auto px-4 py-20 text-center bg-[#171717] text-white">
+      <section className="container mx-auto px-4 md:px-6 py-12 md:py-20 text-center bg-[#171717] text-white">
         <div className="max-w-2xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4 heading">Ready to boost your productivity?</h2>
-          <p className="text-xl text-muted-foreground mb-8">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 md:mb-4 heading">Ready to boost your productivity?</h2>
+          <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-6 md:mb-8 px-2">
             Join thousands of users who have transformed their daily routine with DailyNote. Start your free account
             today.
           </p>
@@ -290,7 +290,7 @@ export function LandingPage() {
       </section>
 
       {/* Footer */}
-  <footer className="border-t bg-[#171717] backdrop-blur-sm text-white">
+      <footer className="border-t bg-[#171717] backdrop-blur-sm text-white">
         <div className="container mx-auto px-4 py-8">
           <div className="flex flex-col md:flex-row items-center justify-between">
             <div className="flex items-center gap-2 mb-4 md:mb-0">
@@ -302,12 +302,12 @@ export function LandingPage() {
             <p className="text-sm text-muted-foreground">
               © 2025 DailyNote. Made with ❤️ by{" "}
               <a
-              href="https://abhishektiwari-18.vercel.app/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline hover:text-primary transition-colors"
+                href="https://abhishektiwari-18.vercel.app/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline hover:text-primary transition-colors"
               >
-              Abhishek.tiwari
+                Abhishek.tiwari
               </a>{" "}
               for productive people.
             </p>

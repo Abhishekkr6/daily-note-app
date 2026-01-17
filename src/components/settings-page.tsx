@@ -21,7 +21,7 @@ export function SettingsPage() {
   const router = useRouter();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  
+
   const handleLogout = async () => {
     try {
       // Use NextAuth signOut which will clear the session and redirect.
@@ -179,7 +179,7 @@ export function SettingsPage() {
       console.debug("SettingsPage session:", session);
       console.debug("SettingsPage profile state:", profile);
       console.debug("SettingsPage avatarUrl:", avatarUrl);
-    } catch (e) {}
+    } catch (e) { }
   }, [session, profile, avatarUrl]);
 
   // Animate avatar on change
@@ -230,9 +230,9 @@ export function SettingsPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 md:p-6 space-y-4 md:space-y-6 w-full overflow-x-hidden">
       {/* Header */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
         {/* Sidebar Menu */}
         <div>
           <Card className="bg-card border-border shadow-sm">
@@ -291,8 +291,8 @@ export function SettingsPage() {
                       {profile.name
                         ? profile.name[0].toUpperCase()
                         : profile.email
-                        ? profile.email[0].toUpperCase()
-                        : ""}
+                          ? profile.email[0].toUpperCase()
+                          : ""}
                     </AvatarFallback>
                   )}
                 </Avatar>
@@ -718,8 +718,8 @@ export function SettingsPage() {
                     Permanently delete all your data. This action cannot be undone.
                   </p>
                   <div className="flex gap-2">
-                    <Button 
-                      variant="destructive" 
+                    <Button
+                      variant="destructive"
                       className="cursor-pointer"
                       onClick={() => setShowDeleteConfirm(true)}
                       disabled={isDeleting}

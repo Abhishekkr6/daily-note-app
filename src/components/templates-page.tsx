@@ -93,7 +93,7 @@ function TemplatesPage() {
       .then((data) => {
         if (Array.isArray(data)) setTemplates(data);
       })
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   // Filter logic
@@ -163,7 +163,7 @@ function TemplatesPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(taskPayload),
       });
-    } catch (err) {}
+    } catch (err) { }
 
     // 2. Increment usageCount in backend and UI
     const payload = {
@@ -189,7 +189,7 @@ function TemplatesPage() {
           prev.map((t) => ((t as any)._id === data._id ? data : t))
         );
       }
-    } catch (err) {}
+    } catch (err) { }
 
     // 3. Redirect to /home page (today section)
     router.push("/home");
@@ -223,7 +223,7 @@ function TemplatesPage() {
           prev.map((t) => ((t as any)._id === data._id ? data : t))
         );
       }
-    } catch (err) {}
+    } catch (err) { }
   };
 
   // Edit template logic
@@ -267,7 +267,7 @@ function TemplatesPage() {
           prev.map((t) => ((t as any)._id === data._id ? data : t))
         );
       }
-    } catch (err) {}
+    } catch (err) { }
     setEditDialogOpen(false);
     setEditTemplate(null);
   };
@@ -349,7 +349,7 @@ function TemplatesPage() {
       if (data && data._id) {
         setTemplates((prev) => [data, ...prev]);
       }
-    } catch (err) {}
+    } catch (err) { }
     setShowCreateDialog(false);
     setNewName("");
     setNewDescription("");
@@ -360,18 +360,18 @@ function TemplatesPage() {
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 md:p-6 space-y-4 md:space-y-6 w-full overflow-x-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Templates</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-xl md:text-2xl font-bold text-foreground">Templates</h1>
+          <p className="text-sm md:text-base text-muted-foreground mr-1">
             Reusable templates for tasks and notes
           </p>
         </div>
         <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
           <DialogTrigger asChild>
-            <Button className="cursor-pointer">
+            <Button className="cursor-pointer w-full sm:w-auto">
               <Plus className="w-4 h-4 mr-2" />
               New Template
             </Button>
@@ -541,20 +541,20 @@ function TemplatesPage() {
 
       {/* Filters */}
       <Card className="bg-card border-border shadow-sm">
-        <CardContent className="p-4">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1 relative">
+        <CardContent className="p-3 md:p-4">
+          <div className="flex flex-col gap-3">
+            <div className="w-full relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 placeholder="Search templates..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
+                className="pl-10 text-sm md:text-base"
               />
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                <SelectTrigger className="w-32">
+                <SelectTrigger className="w-full sm:w-32">
                   <SelectValue placeholder="Category" />
                 </SelectTrigger>
                 <SelectContent>
@@ -564,7 +564,7 @@ function TemplatesPage() {
                 </SelectContent>
               </Select>
               <Select value={typeFilter} onValueChange={setTypeFilter}>
-                <SelectTrigger className="w-32">
+                <SelectTrigger className="w-full sm:w-32">
                   <SelectValue placeholder="Type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -582,7 +582,7 @@ function TemplatesPage() {
       </Card>
 
       {/* Templates Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
         {filteredTemplates.map((template) => (
           <Card
             key={(template as any)._id || template.id}
@@ -598,8 +598,8 @@ function TemplatesPage() {
                   >
                     {getTypeIcon(template.type)}
                   </div>
-                  <div>
-                    <CardTitle className="text-base">{template.name}</CardTitle>
+                  <div className="overflow-hidden">
+                    <CardTitle className="text-base truncate pr-2">{template.name}</CardTitle>\r
                     <Badge variant="outline" className="text-xs mt-1">
                       {template.category}
                     </Badge>

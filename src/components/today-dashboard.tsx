@@ -891,7 +891,7 @@ export function TodayDashboard() {
 
 
   return (
-    <div className="p-6 space-y-6" style={{ position: 'relative', zIndex: 1 }}>
+    <div className="p-4 md:p-6 space-y-4 md:space-y-6 w-full overflow-x-hidden" style={{ position: 'relative', zIndex: 1 }}>
       {/* Task Complete Sound */}
       <audio
         ref={taskCompleteAudioRef}
@@ -901,15 +901,15 @@ export function TodayDashboard() {
       />
       {/* Task Reminder Notification Popup */}
       {activeNotification && (
-        <div className="fixed top-1/2 left-1/2 z-50 transform -translate-x-1/2 -translate-y-1/2 bg-white border border-primary shadow-2xl rounded-2xl px-8 py-6 flex flex-col items-center animate-fade-in">
+        <div className="fixed top-1/2 left-1/2 z-50 transform -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-card border border-primary shadow-2xl rounded-2xl px-4 md:px-8 py-4 md:py-6 flex flex-col items-center animate-fade-in max-w-[90vw] md:max-w-md">
           <div className="flex items-center gap-3 mb-2">
             <svg width="32" height="32" fill="none" viewBox="0 0 24 24"><path fill="#2563eb" d="M12 2a6 6 0 0 0-6 6v4.586l-.707.707A1 1 0 0 0 6 16h12a1 1 0 0 0 .707-1.707L18 12.586V8a6 6 0 0 0-6-6Zm0 20a2 2 0 0 0 2-2h-4a2 2 0 0 0 2 2Z" /></svg>
-            <span className="text-xl font-bold text-primary">Task Reminder</span>
+            <span className="text-lg md:text-xl font-bold text-primary">Task Reminder</span>
           </div>
-          <div className="text-lg font-semibold mb-2">{activeNotification.title}</div>
-          <div className="text-sm text-muted-foreground mb-4">It's time for your scheduled task!</div>
+          <div className="text-base md:text-lg font-semibold mb-2 text-center">{activeNotification.title}</div>
+          <div className="text-xs md:text-sm text-muted-foreground mb-4 text-center">It's time for your scheduled task!</div>
           <button
-            className="mt-2 px-4 py-2 rounded bg-primary text-white font-medium shadow cursor-pointer hover:bg-primary/80 transition"
+            className="mt-2 px-4 py-2 rounded bg-primary text-white font-medium shadow cursor-pointer hover:bg-primary/80 transition w-full md:w-auto"
             onClick={() => {
               dismissedNotificationsRef.current.add(`${activeNotification.id}_${activeNotification.time}`);
               setActiveNotification(null);
@@ -955,141 +955,147 @@ export function TodayDashboard() {
           : ""
           }`}
       >
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Plus className="w-5 h-5 text-primary" />
+        <CardHeader className="pb-3 md:pb-6">
+          <CardTitle className="flex items-center space-x-2 text-base md:text-lg">
+            <Plus className="w-4 h-4 md:w-5 md:h-5 text-primary" />
             <span>Quick Add</span>
           </CardTitle>
         </CardHeader>
-        <CardContent className="flex flex-col md:flex-row gap-2">
-          <div className="flex flex-col flex-1">
-            <div className="relative flex items-center">
-              <Input
-                value={quickAddValue}
-                onChange={(e) => setQuickAddValue(e.target.value)}
-                placeholder="Task Title"
-                className="text-base bg-background border-border focus:border-primary transition-colors placeholder:text-muted-foreground pr-10"
-                onKeyDown={(e) => e.key === "Enter" && handleQuickAdd()}
-                aria-label="Task Title"
-                maxLength={60}
-              />
-              <button
-                type="button"
-                aria-label="Voice input for title"
-                className={`absolute right-2 top-1/2 -translate-y-1/2 focus:outline-none`}
-                onClick={() => listeningField === 'title' ? stopRecording() : startRecording('title')}
-                tabIndex={0}
-              >
-                <span className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${listeningField === 'title' && isRecording ? 'bg-red-500 animate-pulse' : 'bg-gray-400'}`}>
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 text-white">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.25v1.25m0 0h3m-3 0H9m6-6.5a3 3 0 11-6 0v-4a3 3 0 116 0v4z" />
-                  </svg>
+        <CardContent className="flex flex-col gap-3 md:gap-2">
+          {/* Title and Description - Full width on mobile */}
+          <div className="flex flex-col md:flex-row gap-3 md:gap-2 w-full">
+            <div className="flex flex-col flex-1 w-full">
+              <div className="relative flex items-center">
+                <Input
+                  value={quickAddValue}
+                  onChange={(e) => setQuickAddValue(e.target.value)}
+                  placeholder="Task Title"
+                  className="text-sm md:text-base bg-background border-border focus:border-primary transition-colors placeholder:text-muted-foreground pr-10 w-full"
+                  onKeyDown={(e) => e.key === "Enter" && handleQuickAdd()}
+                  aria-label="Task Title"
+                  maxLength={60}
+                />
+                <button
+                  type="button"
+                  aria-label="Voice input for title"
+                  className={`absolute right-2 top-1/2 -translate-y-1/2 focus:outline-none`}
+                  onClick={() => listeningField === 'title' ? stopRecording() : startRecording('title')}
+                  tabIndex={0}
+                >
+                  <span className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${listeningField === 'title' && isRecording ? 'bg-red-500 animate-pulse' : 'bg-gray-400'}`}>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 text-white">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.25v1.25m0 0h3m-3 0H9m6-6.5a3 3 0 11-6 0v-4a3 3 0 116 0v4z" />
+                    </svg>
+                  </span>
+                </button>
+              </div>
+              {titleError && (
+                <span
+                  className="text-xs text-red-600 mt-1 ml-1 font-light block transition-opacity duration-300 opacity-100 animate-fade-in"
+                >
+                  {titleError}
                 </span>
-              </button>
+              )}
             </div>
-            {titleError && (
-              <span
-                className="text-xs text-red-600 mt-2 ml-2 font-light block transition-opacity duration-300 opacity-100 animate-fade-in"
-              >
-                {titleError}
-              </span>
-            )}
-          </div>
-          <div className="flex flex-col flex-1">
-            <div className="relative flex items-center">
-              <Input
-                value={quickAddDescription}
-                onChange={(e) => setQuickAddDescription(e.target.value)}
-                placeholder="Description"
-                className="text-base bg-background border-border focus:border-primary transition-colors placeholder:text-muted-foreground pr-10"
-                onKeyDown={(e) => e.key === "Enter" && handleQuickAdd()}
-                aria-label="Task Description"
-                maxLength={120}
-              />
-              <button
-                type="button"
-                aria-label="Voice input for description"
-                className={`absolute right-2 top-1/2 -translate-y-1/2 focus:outline-none`}
-                onClick={() => listeningField === 'description' ? stopRecording() : startRecording('description')}
-                tabIndex={0}
-              >
-                <span className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${listeningField === 'description' && isRecording ? 'bg-red-500 animate-pulse' : 'bg-gray-400'}`}>
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 text-white">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.25v1.25m0 0h3m-3 0H9m6-6.5a3 3 0 11-6 0v-4a3 3 0 116 0v4z" />
-                  </svg>
+            <div className="flex flex-col flex-1 w-full">
+              <div className="relative flex items-center">
+                <Input
+                  value={quickAddDescription}
+                  onChange={(e) => setQuickAddDescription(e.target.value)}
+                  placeholder="Description"
+                  className="text-sm md:text-base bg-background border-border focus:border-primary transition-colors placeholder:text-muted-foreground pr-10 w-full"
+                  onKeyDown={(e) => e.key === "Enter" && handleQuickAdd()}
+                  aria-label="Task Description"
+                  maxLength={120}
+                />
+                <button
+                  type="button"
+                  aria-label="Voice input for description"
+                  className={`absolute right-2 top-1/2 -translate-y-1/2 focus:outline-none`}
+                  onClick={() => listeningField === 'description' ? stopRecording() : startRecording('description')}
+                  tabIndex={0}
+                >
+                  <span className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${listeningField === 'description' && isRecording ? 'bg-red-500 animate-pulse' : 'bg-gray-400'}`}>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 text-white">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.25v1.25m0 0h3m-3 0H9m6-6.5a3 3 0 11-6 0v-4a3 3 0 116 0v4z" />
+                    </svg>
+                  </span>
+                </button>
+              </div>
+              {descError && (
+                <span
+                  className="text-xs text-red-600 mt-1 ml-1 font-light block transition-opacity duration-300 opacity-100 animate-fade-in"
+                >
+                  {descError}
                 </span>
-              </button>
+              )}
             </div>
-            {descError && (
-              <span
-                className="text-xs text-red-600 mt-2 ml-2 font-light block transition-opacity duration-300 opacity-100 animate-fade-in"
-              >
-                {descError}
-              </span>
-            )}
           </div>
-          <div className="flex flex-col flex-1 w-full md:min-w-[120px] md:max-w-[120px]">
-            <Select value={quickAddTag} onValueChange={setQuickAddTag}>
-              <SelectTrigger className="w-full h-10 text-xs">
-                <SelectValue placeholder="#Tag" />
+
+          {/* Tag, Priority, and Add Button - Stack on mobile */}
+          <div className="flex flex-col md:flex-row gap-2 w-full">
+            <div className="flex flex-col w-full md:flex-1 md:min-w-[120px] md:max-w-[120px]">
+              <Select value={quickAddTag} onValueChange={setQuickAddTag}>
+                <SelectTrigger className="w-full h-10 text-xs">
+                  <SelectValue placeholder="#Tag" />
+                </SelectTrigger>
+                <SelectContent>
+                  {allTags.map((tag) => (
+                    <SelectItem key={tag} value={tag}>{`#${tag}`}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Input
+                value={quickAddTag ? `#${quickAddTag.replace(/^#/, "")}` : ""}
+                onChange={(e) => {
+                  // Always keep # at the start, but store value without #
+                  const val = e.target.value.startsWith("#") ? e.target.value.slice(1) : e.target.value;
+                  setQuickAddTag(val);
+                }}
+                placeholder="Add new #tag"
+                className="text-xs mt-1 bg-background border-border focus:border-primary transition-colors placeholder:text-muted-foreground h-8 px-2 w-full"
+                onKeyDown={(e) => e.key === "Enter" && handleQuickAdd()}
+              />
+            </div>
+            <Select value={quickAddPriority} onValueChange={setQuickAddPriority}>
+              <SelectTrigger className="w-full md:w-28">
+                <SelectValue placeholder="Priority" />
               </SelectTrigger>
               <SelectContent>
-                {allTags.map((tag) => (
-                  <SelectItem key={tag} value={tag}>{`#${tag}`}</SelectItem>
-                ))}
+                <SelectItem value="High">High</SelectItem>
+                <SelectItem value="Medium">Medium</SelectItem>
+                <SelectItem value="Low">Low</SelectItem>
               </SelectContent>
             </Select>
-            <Input
-              value={quickAddTag ? `#${quickAddTag.replace(/^#/, "")}` : ""}
-              onChange={(e) => {
-                // Always keep # at the start, but store value without #
-                const val = e.target.value.startsWith("#") ? e.target.value.slice(1) : e.target.value;
-                setQuickAddTag(val);
-              }}
-              placeholder="Add new #tag"
-              className="text-xs mt-1 bg-background border-border focus:border-primary transition-colors placeholder:text-muted-foreground h-8 px-2"
-              onKeyDown={(e) => e.key === "Enter" && handleQuickAdd()}
-              style={{ maxWidth: '100%' }}
-            />
+            <Button
+              onClick={handleQuickAdd}
+              disabled={
+                quickAddStatus === 'loading' ||
+                !isValidTitle(quickAddValue.replace(/#\w+/g, "").trim()) ||
+                !isValidDescription(quickAddDescription.trim()) ||
+                !quickAddPriority ||
+                !quickAddTag.trim()
+              }
+              className="cursor-pointer flex items-center justify-center gap-2 w-full md:min-w-[70px] md:w-auto"
+            >
+              {quickAddStatus === 'loading'
+                ? (<span className="inline-block w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>)
+                : quickAddStatus === 'added' ? 'Added' : 'Add'}
+            </Button>
           </div>
-          <Select value={quickAddPriority} onValueChange={setQuickAddPriority}>
-            <SelectTrigger className="w-full md:w-28">
-              <SelectValue placeholder="Priority" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="High">High</SelectItem>
-              <SelectItem value="Medium">Medium</SelectItem>
-              <SelectItem value="Low">Low</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button
-            onClick={handleQuickAdd}
-            disabled={
-              quickAddStatus === 'loading' ||
-              !isValidTitle(quickAddValue.replace(/#\w+/g, "").trim()) ||
-              !isValidDescription(quickAddDescription.trim()) ||
-              !quickAddPriority ||
-              !quickAddTag.trim()
-            }
-            className="cursor-pointer flex items-center justify-center gap-2 w-full md:min-w-[70px] md:w-auto"
-          >
-            {quickAddStatus === 'loading'
-              ? (<span className="inline-block w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>)
-              : quickAddStatus === 'added' ? 'Added' : 'Add'}
-          </Button>
         </CardContent>
       </Card>
       {/* Voice Input UI Feedback as Centered Popup */}
       {showVoicePopup && listeningField && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/30 animate-fade-in">
-          <div className="bg-white rounded-2xl shadow-2xl px-8 py-6 flex flex-col items-center border border-red-200 min-w-[280px]">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/30 animate-fade-in px-4">
+          <div className="bg-white dark:bg-card rounded-2xl shadow-2xl px-6 md:px-8 py-4 md:py-6 flex flex-col items-center border border-red-200 min-w-[280px] max-w-[90vw]">
             <span className="w-6 h-6 rounded-full bg-red-500 animate-pulse mb-3 flex items-center justify-center">
               <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' strokeWidth={1.5} stroke='currentColor' className='w-4 h-4 text-white'>
                 <path strokeLinecap='round' strokeLinejoin='round' d='M12 18.25v1.25m0 0h3m-3 0H9m6-6.5a3 3 0 11-6 0v-4a3 3 0 116 0v4z' />
               </svg>
             </span>
-            <span className="text-base text-red-600 font-semibold mb-2">{listeningMsg}</span>
-            <span className="text-xs text-gray-500 mb-4">Speak now. Recording will auto-stop after a short pause.</span>
+            <span className="text-sm md:text-base text-red-600 font-semibold mb-2 text-center">{listeningMsg}</span>
+            <span className="text-xs text-gray-500 mb-4 text-center">Speak now. Recording will auto-stop after a short pause.</span>
             <button
               type="button"
               onClick={stopRecording}
@@ -1108,9 +1114,9 @@ export function TodayDashboard() {
             className="fixed inset-0 z-[100] bg-black/20 transition-opacity duration-200"
             onClick={() => setShowEmailPicker(null)}
           />
-          <div className="fixed left-1/2 top-1/2 z-[101] transform -translate-x-1/2 -translate-y-1/2">
-            <div className="bg-white rounded-lg shadow-lg p-6 flex flex-col items-center min-w-[260px] border border-border">
-              <h3 className="text-base font-semibold mb-4">Set Notification Time</h3>
+          <div className="fixed left-1/2 top-1/2 z-[101] transform -translate-x-1/2 -translate-y-1/2 px-4 w-full max-w-sm">
+            <div className="bg-white dark:bg-card rounded-lg shadow-lg p-4 md:p-6 flex flex-col items-center border border-border w-full">
+              <h3 className="text-sm md:text-base font-semibold mb-4">Set Notification Time</h3>
               <input
                 type="time"
                 value={emailTime[showEmailPicker] || ""}
@@ -1119,13 +1125,13 @@ export function TodayDashboard() {
                 required
                 placeholder="Select time"
               />
-              <div className="flex gap-2">
+              <div className="flex gap-2 w-full">
                 <Button
                   size="sm"
                   variant="default"
                   disabled={emailLoading || !(emailTime[showEmailPicker])}
                   onClick={() => handleSetEmailNotification(showEmailPicker)}
-                  className="cursor-pointer"
+                  className="cursor-pointer flex-1"
                 >
                   {emailLoading ? "Saving..." : emailSaved[showEmailPicker] ? "Saved!" : "Save"}
                 </Button>
@@ -1133,7 +1139,7 @@ export function TodayDashboard() {
                   size="sm"
                   variant="outline"
                   onClick={() => setShowEmailPicker(null)}
-                  className="cursor-pointer"
+                  className="cursor-pointer flex-1"
                 >
                   Cancel
                 </Button>
@@ -1143,7 +1149,7 @@ export function TodayDashboard() {
         </>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 w-full">\r
         {/* Left Side - Tasks */}
         <div className="lg:col-span-2 space-y-6">
           {/* Overdue Tasks */}

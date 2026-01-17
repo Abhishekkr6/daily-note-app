@@ -232,7 +232,7 @@ function TasksPage() {
               credentials: "include",
               body: JSON.stringify({ _id: task.id }),
             });
-          } catch {}
+          } catch { }
         }
         setRecentlyDeleted(null);
         recentlyDeletedRef.current = null;
@@ -313,22 +313,22 @@ function TasksPage() {
       {/* Filters and Search */}
       <Card className="bg-card border-border shadow-sm">
         <CardContent className="p-4">
-          <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex flex-col gap-3">
             {/* Search */}
-            <div className="flex-1 relative">
+            <div className="w-full relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 placeholder="Search tasks, descriptions, or tags..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 bg-background border-border"
+                className="pl-10 bg-background border-border text-sm md:text-base"
               />
             </div>
 
             {/* Filters */}
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2 w-full">
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-32">
+                <SelectTrigger className="w-full sm:w-32">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -341,7 +341,7 @@ function TasksPage() {
               </Select>
 
               <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-                <SelectTrigger className="w-32">
+                <SelectTrigger className="w-full sm:w-32">
                   <SelectValue placeholder="Priority" />
                 </SelectTrigger>
                 <SelectContent>
@@ -353,7 +353,7 @@ function TasksPage() {
               </Select>
 
               <Select value={tagFilter} onValueChange={setTagFilter}>
-                <SelectTrigger className="w-32">
+                <SelectTrigger className="w-full sm:w-32">
                   <SelectValue placeholder="Tags" />
                 </SelectTrigger>
                 <SelectContent>
@@ -371,12 +371,12 @@ function TasksPage() {
                 type="date"
                 value={searchDate}
                 onChange={e => setSearchDate(e.target.value)}
-                className="border rounded px-2 py-1 min-w-[140px]"
+                className="border rounded px-2 py-1 flex-1 min-w-[140px] text-sm"
                 placeholder="Filter by date"
                 title="Filter tasks by date"
               />
             </div>
-          </div>
+          </div>\r
         </CardContent>
       </Card>
 
@@ -452,11 +452,10 @@ function TasksPage() {
             filteredTasks.map((task, idx) => (
               <div
                 key={task.id}
-                className={`flex items-center space-x-3 p-4 rounded-xl border transition-all hover:shadow-md ${
-                  task.status === "completed"
+                className={`flex items-center space-x-3 p-4 rounded-xl border transition-all hover:shadow-md ${task.status === "completed"
                     ? "bg-muted/20 opacity-60"
                     : "bg-background border-border hover:border-primary/30"
-                } ${activeHighlight && activeHighlight === String(task.id) ? "animate-blink" : ""}`}
+                  } ${activeHighlight && activeHighlight === String(task.id) ? "animate-blink" : ""}`}
               >
                 {/* Selection Checkbox */}
                 <Checkbox
@@ -479,9 +478,8 @@ function TasksPage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center space-x-2 mb-1">
                     <h3
-                      className={`font-medium text-foreground ${
-                        task.status === "completed" ? "line-through" : ""
-                      }`}
+                      className={`font-medium text-foreground ${task.status === "completed" ? "line-through" : ""
+                        }`}
                     >
                       {highlightText(task.title, searchQuery)}
                     </h3>
@@ -576,7 +574,7 @@ function TasksPage() {
                                 credentials: "include",
                                 body: JSON.stringify({ _id: task.id }),
                               });
-                            } catch {}
+                            } catch { }
                             setRecentlyDeleted(null);
                             recentlyDeletedRef.current = null;
                             // Notify other tabs/pages

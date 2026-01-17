@@ -99,10 +99,10 @@ export function CalendarPage() {
         status: (t.status === "completed"
           ? "completed"
           : t.status === "today"
-          ? "in-progress"
-          : t.status === "overdue"
-          ? "todo"
-          : t.status) as "todo" | "in-progress" | "completed" | "overdue" | "today",
+            ? "in-progress"
+            : t.status === "overdue"
+              ? "todo"
+              : t.status) as "todo" | "in-progress" | "completed" | "overdue" | "today",
         priority: (t.priority ? t.priority.toLowerCase() : "low") as "low" | "medium" | "high" | "Low" | "Medium" | "High"
       })),
       note,
@@ -197,12 +197,12 @@ export function CalendarPage() {
   }, [currentDate])
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 md:p-6 space-y-4 md:space-y-6 w-full overflow-x-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Calendar</h1>
-          <p className="text-muted-foreground">Track your daily progress and completion rates</p>
+          <h1 className="text-xl md:text-2xl font-bold text-foreground">Calendar</h1>
+          <p className="text-sm md:text-base text-muted-foreground">Track your daily progress and completion rates</p>
         </div>
         <div className="flex items-center space-x-2">
           <Button variant="outline" onClick={() => setCurrentDate(new Date())}>
@@ -229,12 +229,12 @@ export function CalendarPage() {
             </div>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-2 md:p-6">
           {/* Calendar Grid */}
-          <div className="grid grid-cols-7 gap-1 mb-4">
+          <div className="grid grid-cols-7 gap-0.5 md:gap-1 mb-4">
             {/* Day headers */}
             {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-              <div key={day} className="p-2 text-center text-sm font-medium text-muted-foreground">
+              <div key={day} className="p-1 md:p-2 text-center text-xs md:text-sm font-medium text-muted-foreground">
                 {day}
               </div>
             ))}
@@ -259,9 +259,9 @@ export function CalendarPage() {
                   key={index}
                   onClick={() => handleDayClick(date)}
                   className={`
-                    relative p-2 h-20 rounded-xl border transition-all hover:shadow-md hover:scale-105 cursor-pointer
+                    relative p-1 md:p-2 h-14 md:h-20 rounded-lg md:rounded-xl border transition-all hover:shadow-md hover:scale-105 cursor-pointer text-xs md:text-sm
                     ${isCurrentMonth ? "bg-background border-border" : "bg-muted/20 border-muted"}
-                    ${isCurrentDay ? "ring-2 ring-primary ring-offset-2" : ""}
+                    ${isCurrentDay ? "ring-1 md:ring-2 ring-primary ring-offset-1 md:ring-offset-2" : ""}
                     ${getCompletionColor(dayData.completionRate)}
                   `}
                 >
@@ -294,7 +294,7 @@ export function CalendarPage() {
           </div>
 
           {/* Legend */}
-          <div className="flex items-center justify-center space-x-6 text-sm text-muted-foreground">
+          <div className="flex flex-wrap items-center justify-center gap-3 md:gap-6 text-xs md:text-sm text-muted-foreground px-2">
             <div className="flex items-center space-x-2">
               <div className="w-3 h-3 rounded bg-muted/30"></div>
               <span>No tasks</span>
@@ -321,7 +321,7 @@ export function CalendarPage() {
 
       {/* Day Detail Modal */}
       <Dialog open={showDayDetail} onOpenChange={setShowDayDetail}>
-        <DialogContent className="sm:max-w-2xl">
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center space-x-2">
               <CalendarIcon className="w-5 h-5 text-primary" />
