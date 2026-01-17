@@ -360,12 +360,12 @@ function TemplatesPage() {
   };
 
   return (
-    <div className="p-4 md:p-6 space-y-4 md:space-y-6 w-full overflow-x-hidden">
+    <div className="p-6 space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl md:text-2xl font-bold text-foreground">Templates</h1>
-          <p className="text-sm md:text-base text-muted-foreground mr-1">
+          <h1 className="text-2xl font-bold text-foreground">Templates</h1>
+          <p className="text-muted-foreground">
             Reusable templates for tasks and notes
           </p>
         </div>
@@ -541,20 +541,20 @@ function TemplatesPage() {
 
       {/* Filters */}
       <Card className="bg-card border-border shadow-sm">
-        <CardContent className="p-3 md:p-4">
-          <div className="flex flex-col gap-3">
-            <div className="w-full relative">
+        <CardContent className="p-4">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 placeholder="Search templates..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 text-sm md:text-base"
+                className="pl-10"
               />
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex gap-2">
               <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                <SelectTrigger className="w-full sm:w-32">
+                <SelectTrigger className="w-32">
                   <SelectValue placeholder="Category" />
                 </SelectTrigger>
                 <SelectContent>
@@ -564,7 +564,7 @@ function TemplatesPage() {
                 </SelectContent>
               </Select>
               <Select value={typeFilter} onValueChange={setTypeFilter}>
-                <SelectTrigger className="w-full sm:w-32">
+                <SelectTrigger className="w-32">
                   <SelectValue placeholder="Type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -582,7 +582,7 @@ function TemplatesPage() {
       </Card>
 
       {/* Templates Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredTemplates.map((template) => (
           <Card
             key={(template as any)._id || template.id}
@@ -598,8 +598,8 @@ function TemplatesPage() {
                   >
                     {getTypeIcon(template.type)}
                   </div>
-                  <div className="overflow-hidden">
-                    <CardTitle className="text-base truncate pr-2">{template.name}</CardTitle>\r
+                  <div>
+                    <CardTitle className="text-base">{template.name}</CardTitle>
                     <Badge variant="outline" className="text-xs mt-1">
                       {template.category}
                     </Badge>

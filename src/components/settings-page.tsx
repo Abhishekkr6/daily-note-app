@@ -230,9 +230,9 @@ export function SettingsPage() {
   }
 
   return (
-    <div className="p-4 md:p-6 space-y-4 md:space-y-6 w-full overflow-x-hidden">
+    <div className="p-6 space-y-6">
       {/* Header */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Sidebar Menu */}
         <div>
           <Card className="bg-card border-border shadow-sm">
@@ -356,7 +356,7 @@ export function SettingsPage() {
 
               <div className="space-y-2">
                 <Label>Working Hours</Label>
-                <div className="flex items-center space-x-2">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                   <Input
                     type="time"
                     value={profile.workingHours.start}
@@ -366,9 +366,10 @@ export function SettingsPage() {
                         workingHours: { ...prev.workingHours, start: e.target.value },
                       }))
                     }
-                    className="w-32"
+                    className="w-full sm:w-32"
                   />
-                  <span className="text-muted-foreground">to</span>
+                  <span className="text-muted-foreground hidden sm:inline">to</span>
+                  <span className="text-muted-foreground sm:hidden text-center">to</span>
                   <Input
                     type="time"
                     value={profile.workingHours.end}
@@ -378,7 +379,7 @@ export function SettingsPage() {
                         workingHours: { ...prev.workingHours, end: e.target.value },
                       }))
                     }
-                    className="w-32"
+                    className="w-full sm:w-32"
                   />
                 </div>
               </div>

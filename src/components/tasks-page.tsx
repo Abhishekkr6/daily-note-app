@@ -289,7 +289,7 @@ function TasksPage() {
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-foreground">All Tasks</h1>
           <p className="text-muted-foreground">
@@ -297,7 +297,7 @@ function TasksPage() {
           </p>
         </div>
         <Button
-          className="bg-primary text-primary-foreground hover:bg-primary/90 cursor-pointer"
+          className="bg-primary text-primary-foreground hover:bg-primary/90 cursor-pointer w-full sm:w-auto"
           onClick={() => {
             if (typeof window !== "undefined") {
               sessionStorage.setItem("quickAddBlink", "true");
@@ -313,22 +313,22 @@ function TasksPage() {
       {/* Filters and Search */}
       <Card className="bg-card border-border shadow-sm">
         <CardContent className="p-4">
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col sm:flex-row gap-4">
             {/* Search */}
-            <div className="w-full relative">
+            <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 placeholder="Search tasks, descriptions, or tags..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 bg-background border-border text-sm md:text-base"
+                className="pl-10 bg-background border-border"
               />
             </div>
 
             {/* Filters */}
-            <div className="flex flex-wrap gap-2 w-full">
+            <div className="flex flex-wrap gap-2">
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full sm:w-32">
+                <SelectTrigger className="w-[140px] flex-grow sm:flex-grow-0">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -341,7 +341,7 @@ function TasksPage() {
               </Select>
 
               <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-                <SelectTrigger className="w-full sm:w-32">
+                <SelectTrigger className="w-[140px] flex-grow sm:flex-grow-0">
                   <SelectValue placeholder="Priority" />
                 </SelectTrigger>
                 <SelectContent>
@@ -353,7 +353,7 @@ function TasksPage() {
               </Select>
 
               <Select value={tagFilter} onValueChange={setTagFilter}>
-                <SelectTrigger className="w-full sm:w-32">
+                <SelectTrigger className="w-[140px] flex-grow sm:flex-grow-0">
                   <SelectValue placeholder="Tags" />
                 </SelectTrigger>
                 <SelectContent>
@@ -371,12 +371,12 @@ function TasksPage() {
                 type="date"
                 value={searchDate}
                 onChange={e => setSearchDate(e.target.value)}
-                className="border rounded px-2 py-1 flex-1 min-w-[140px] text-sm"
+                className="border rounded px-2 py-1 min-w-[140px] flex-grow sm:flex-grow-0"
                 placeholder="Filter by date"
                 title="Filter tasks by date"
               />
             </div>
-          </div>\r
+          </div>
         </CardContent>
       </Card>
 
@@ -453,8 +453,8 @@ function TasksPage() {
               <div
                 key={task.id}
                 className={`flex items-center space-x-3 p-4 rounded-xl border transition-all hover:shadow-md ${task.status === "completed"
-                    ? "bg-muted/20 opacity-60"
-                    : "bg-background border-border hover:border-primary/30"
+                  ? "bg-muted/20 opacity-60"
+                  : "bg-background border-border hover:border-primary/30"
                   } ${activeHighlight && activeHighlight === String(task.id) ? "animate-blink" : ""}`}
               >
                 {/* Selection Checkbox */}
@@ -497,7 +497,7 @@ function TasksPage() {
                     </p>
                   )}
 
-                  <div className="flex items-center space-x-4 text-xs text-muted-foreground">
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground mt-2">
                     {task.dueDate && (
                       <div className="flex items-center space-x-1">
                         <Calendar className="w-3 h-3" />
@@ -509,7 +509,7 @@ function TasksPage() {
 
                     <div className="flex items-center space-x-1">
                       <Tag className="w-3 h-3" />
-                      <div className="flex space-x-1">
+                      <div className="flex flex-wrap gap-1">
                         {task.tags.map((tag) => (
                           <span key={tag} className="text-primary">
                             #{highlightText(tag, searchQuery)}

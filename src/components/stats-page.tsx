@@ -239,7 +239,7 @@ export function StatsPage() {
   const [tagAnalytics, setTagAnalytics] = useState<any[]>([]);
 
   return (
-    <div className="p-4 md:p-6 space-y-6 md:space-y-8 w-full overflow-x-hidden">
+    <div className="space-y-8">
 
       {/* Key Metrics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -311,7 +311,7 @@ export function StatsPage() {
       </div>
 
       {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Weekly Progress */}
         <Card className="bg-card border-border shadow-sm">
           <CardHeader>
@@ -453,7 +453,7 @@ export function StatsPage() {
       </div>
 
       {/* Additional Insights */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Tag Performance */}
         <Card className="bg-card border-border shadow-sm">
           <CardHeader>

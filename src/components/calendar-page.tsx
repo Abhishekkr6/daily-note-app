@@ -197,15 +197,15 @@ export function CalendarPage() {
   }, [currentDate])
 
   return (
-    <div className="p-4 md:p-6 space-y-4 md:space-y-6 w-full overflow-x-hidden">
+    <div className="p-6 space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl md:text-2xl font-bold text-foreground">Calendar</h1>
-          <p className="text-sm md:text-base text-muted-foreground">Track your daily progress and completion rates</p>
+          <h1 className="text-2xl font-bold text-foreground">Calendar</h1>
+          <p className="text-muted-foreground">Track your daily progress and completion rates</p>
         </div>
-        <div className="flex items-center space-x-2">
-          <Button variant="outline" onClick={() => setCurrentDate(new Date())}>
+        <div className="flex items-center space-x-2 w-full sm:w-auto">
+          <Button variant="outline" onClick={() => setCurrentDate(new Date())} className="w-full sm:w-auto">
             Today
           </Button>
         </div>
@@ -229,72 +229,74 @@ export function CalendarPage() {
             </div>
           </div>
         </CardHeader>
-        <CardContent className="p-2 md:p-6">
+        <CardContent>
           {/* Calendar Grid */}
-          <div className="grid grid-cols-7 gap-0.5 md:gap-1 mb-4">
-            {/* Day headers */}
-            {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-              <div key={day} className="p-1 md:p-2 text-center text-xs md:text-sm font-medium text-muted-foreground">
-                {day}
-              </div>
-            ))}
+          <div className="overflow-x-auto pb-2">
+            <div className="grid grid-cols-7 gap-1 mb-4 min-w-[600px]">
+              {/* Day headers */}
+              {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
+                <div key={day} className="p-2 text-center text-sm font-medium text-muted-foreground">
+                  {day}
+                </div>
+              ))}
 
-            {/* Calendar days */}
-            {allDays.map((date, index) => {
-              const key = toDateKey(date)
-              const tasks = tasksByDate[key] ?? []
-              const completed = tasks.filter((t) => t.status === "completed").length
-              const completionRate = tasks.length > 0 ? (completed / tasks.length) * 100 : 0
-              const dayData: DayData = {
-                date,
-                tasks: tasks.map((t) => ({ id: t._id, title: t.title, status: (t.status as any) || "todo", priority: (t.priority || "low") as any })),
-                note: undefined,
-                completionRate,
-              }
-              const isCurrentMonth = isSameMonth(date, currentDate)
-              const isCurrentDay = isToday(date)
+              {/* Calendar days */}
+              {allDays.map((date, index) => {
+                const key = toDateKey(date)
+                const tasks = tasksByDate[key] ?? []
+                const completed = tasks.filter((t) => t.status === "completed").length
+                const completionRate = tasks.length > 0 ? (completed / tasks.length) * 100 : 0
+                const dayData: DayData = {
+                  date,
+                  tasks: tasks.map((t) => ({ id: t._id, title: t.title, status: (t.status as any) || "todo", priority: (t.priority || "low") as any })),
+                  note: undefined,
+                  completionRate,
+                }
+                const isCurrentMonth = isSameMonth(date, currentDate)
+                const isCurrentDay = isToday(date)
 
-              return (
-                <button
-                  key={index}
-                  onClick={() => handleDayClick(date)}
-                  className={`
-                    relative p-1 md:p-2 h-14 md:h-20 rounded-lg md:rounded-xl border transition-all hover:shadow-md hover:scale-105 cursor-pointer text-xs md:text-sm
+                return (
+                  <button
+                    key={index}
+                    onClick={() => handleDayClick(date)}
+                    className={`
+                    relative p-2 h-20 rounded-xl border transition-all hover:shadow-md hover:scale-105 cursor-pointer
                     ${isCurrentMonth ? "bg-background border-border" : "bg-muted/20 border-muted"}
-                    ${isCurrentDay ? "ring-1 md:ring-2 ring-primary ring-offset-1 md:ring-offset-2" : ""}
+                    ${isCurrentDay ? "ring-2 ring-primary ring-offset-2" : ""}
                     ${getCompletionColor(dayData.completionRate)}
                   `}
-                >
-                  <div className="flex flex-col h-full">
-                    <span
-                      className={`text-sm font-medium ${isCurrentMonth ? "text-foreground" : "text-muted-foreground"}`}
-                    >
-                      {format(date, "d")}
-                    </span>
+                  >
+                    <div className="flex flex-col h-full">
+                      <span
+                        className={`text-sm font-medium ${isCurrentMonth ? "text-foreground" : "text-muted-foreground"}`}
+                      >
+                        {format(date, "d")}
+                      </span>
 
-                    {isCurrentMonth && dayData.tasks.length > 0 && (
-                      <div className="flex-1 flex flex-col justify-center items-center space-y-1">
-                        <div className="text-xs text-muted-foreground">
-                          {dayData.tasks.filter((t) => t.status === "completed").length}/{dayData.tasks.length}
+                      {isCurrentMonth && dayData.tasks.length > 0 && (
+                        <div className="flex-1 flex flex-col justify-center items-center space-y-1">
+                          <div className="text-xs text-muted-foreground">
+                            {dayData.tasks.filter((t) => t.status === "completed").length}/{dayData.tasks.length}
+                          </div>
+                          <div className="flex space-x-1">
+                            {dayData.tasks.slice(0, 3).map((task, i) => (
+                              <div key={i} className="w-1.5 h-1.5 rounded-full bg-current opacity-60" />
+                            ))}
+                            {dayData.tasks.length > 3 && (
+                              <div className="text-xs text-muted-foreground">+{dayData.tasks.length - 3}</div>
+                            )}
+                          </div>
                         </div>
-                        <div className="flex space-x-1">
-                          {dayData.tasks.slice(0, 3).map((task, i) => (
-                            <div key={i} className="w-1.5 h-1.5 rounded-full bg-current opacity-60" />
-                          ))}
-                          {dayData.tasks.length > 3 && (
-                            <div className="text-xs text-muted-foreground">+{dayData.tasks.length - 3}</div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </button>
-              )
-            })}
+                      )}
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
           </div>
 
           {/* Legend */}
-          <div className="flex flex-wrap items-center justify-center gap-3 md:gap-6 text-xs md:text-sm text-muted-foreground px-2">
+          <div className="flex items-center justify-center space-x-6 text-sm text-muted-foreground">
             <div className="flex items-center space-x-2">
               <div className="w-3 h-3 rounded bg-muted/30"></div>
               <span>No tasks</span>
@@ -321,7 +323,7 @@ export function CalendarPage() {
 
       {/* Day Detail Modal */}
       <Dialog open={showDayDetail} onOpenChange={setShowDayDetail}>
-        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center space-x-2">
               <CalendarIcon className="w-5 h-5 text-primary" />

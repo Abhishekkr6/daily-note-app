@@ -39,7 +39,7 @@ export function CalendarHeatmap({ className }: HeatmapProps) {
           setSelectedDay(updated);
         }
       }
-    } catch (err) {}
+    } catch (err) { }
   };
 
   useEffect(() => {
@@ -85,7 +85,7 @@ export function CalendarHeatmap({ className }: HeatmapProps) {
         } else if (JSON.stringify(updated) !== JSON.stringify(selectedDay)) {
           setSelectedDay(updated);
         }
-      } catch (err) {}
+      } catch (err) { }
     };
     // Poll every 2 seconds while popover is open
     const id = setInterval(poll, 2000);
@@ -135,9 +135,9 @@ export function CalendarHeatmap({ className }: HeatmapProps) {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="space-y-2">
+        <div className="space-y-2 overflow-x-auto pb-4">
           {/* Day labels */}
-          <div className="grid grid-cols-8 gap-1 text-xs text-muted-foreground">
+          <div className="grid grid-cols-8 gap-1 text-xs text-muted-foreground min-w-[300px]">
             <div></div>
             {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
               <div key={day} className="text-center">
@@ -148,7 +148,7 @@ export function CalendarHeatmap({ className }: HeatmapProps) {
 
           {/* Heatmap grid */}
           {weeks.map((week, weekIndex) => (
-            <div key={weekIndex} className="grid grid-cols-8 gap-1">
+            <div key={weekIndex} className="grid grid-cols-8 gap-1 min-w-[300px]">
               <div className="text-xs text-muted-foreground text-right pr-2 flex items-center">
                 {format(week[0], "MMM d")}
               </div>
@@ -156,9 +156,8 @@ export function CalendarHeatmap({ className }: HeatmapProps) {
                 const activity = getActivity(day);
                 const isCurrentDay = isToday(day);
                 const cellTitle = activity
-                  ? `${format(day, "MMM d, yyyy")}: ${activity.completed} tasks, Mood: ${
-                      activity.mood !== null ? ["😢", "😞", "😐", "😊", "😄"][activity.mood + 2] : "-"
-                    }`
+                  ? `${format(day, "MMM d, yyyy")}: ${activity.completed} tasks, Mood: ${activity.mood !== null ? ["😢", "😞", "😐", "😊", "😄"][activity.mood + 2] : "-"
+                  }`
                   : `${format(day, "MMM d, yyyy")}: No data`;
 
                 return (

@@ -121,11 +121,11 @@ export default function HomePage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen bg-background animate-pulse flex-col md:flex-row">
-        <div className="hidden md:block w-64 bg-muted/30 border-r border-border" />
-        <div className="flex-1 flex flex-col w-full">
+      <div className="flex min-h-screen bg-background animate-pulse">
+        <div className="w-64 bg-muted/30 border-r border-border" />
+        <div className="flex-1 flex flex-col">
           <div className="h-16 bg-muted/30 border-b border-border" />
-          <main className="flex-1 p-4 md:p-6">
+          <main className="flex-1 p-6">
             <div className="h-96 bg-muted/20 rounded-xl" />
           </main>
         </div>
@@ -135,15 +135,15 @@ export default function HomePage() {
   if (!user) return null;
 
   return (
-    <div className="flex min-h-screen bg-background flex-col md:flex-row w-full overflow-x-hidden">
-      <div className="h-screen flex-col sticky top-0 hidden md:flex">
+    <div className="flex min-h-screen bg-background flex-col md:flex-row">
+      <div className="h-screen flex flex-col sticky top-0 hidden md:flex">
         <Sidebar />
       </div>
-      <div className="flex-1 flex flex-col w-full min-w-0">
+      <div className="flex-1 flex flex-col">
         <div className="sticky top-0 z-10">
           <TopBar />
         </div>
-        <main className="flex-1 overflow-y-auto overflow-x-hidden">
+        <main className="flex-1 overflow-y-auto">
           <TodayDashboard />
         </main>
       </div>
