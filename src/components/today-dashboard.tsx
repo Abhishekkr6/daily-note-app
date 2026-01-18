@@ -1510,12 +1510,12 @@ function TaskSection({
           orderedTasks.map((task: Task) => (
             <div
               key={task._id}
-              className={`flex flex-col sm:flex-row sm:items-center p-3 rounded-xl border relative z-10 shadow-sm transition-all duration-300 w-full ${title === "Completed"
+              className={`flex flex-row items-center p-2 md:p-3 rounded-xl border relative z-10 shadow-sm transition-all duration-300 w-full ${title === "Completed"
                 ? "bg-muted/40 border border-border text-muted-foreground opacity-70"
                 : "bg-accent/30 border border-border"
                 } ${title === 'Today' && (focusTaskId === task._id ? 'focus-highlight' : focusTaskId ? 'focus-blur' : '')}`}
             >
-              <div className="flex items-center space-x-3 w-full sm:w-auto mb-2 sm:mb-0">
+              <div className="flex items-center space-x-2 md:space-x-3 flex-shrink-0">
                 {completeTask && title !== "Completed" && (
                   <button
                     type="button"
@@ -1524,9 +1524,9 @@ function TaskSection({
                     title="Complete task"
                   >
                     {title === "Overdue" ? (
-                      <Clock className="w-5 h-5 text-destructive" />
+                      <Clock className="w-4 h-4 md:w-5 md:h-5 text-destructive" />
                     ) : (
-                      <Circle className="w-5 h-5 text-primary" />
+                      <Circle className="w-4 h-4 md:w-5 md:h-5 text-primary" />
                     )}
                   </button>
                 )}
@@ -1537,11 +1537,11 @@ function TaskSection({
                     onClick={() => onReopen(task._id ?? "")}
                     title="Reopen task"
                   >
-                    <CheckCircle2 className="w-5 h-5 text-primary" />
+                    <CheckCircle2 className="w-4 h-4 md:w-5 md:h-5 text-primary" />
                   </button>
                 )}
               </div>
-              <div className="flex-1 w-full pl-0 sm:pl-3">
+              <div className="flex-1 min-w-0 pl-2 md:pl-3">
                 {editingTaskId === task._id && title !== "Completed" ? (
                   <div className="flex flex-col gap-2 items-start">
                     <Input
@@ -1606,9 +1606,9 @@ function TaskSection({
                   </div>
                 ) : (
                   <>
-                    <div className="flex flex-col sm:flex-row sm:items-center">
+                    <div className="flex flex-row items-center gap-2 md:gap-3">
                       <p
-                        className={`font-medium break-words whitespace-pre-line max-w-full overflow-wrap-anywhere ${title === "Completed"
+                        className={`text-sm md:text-base font-medium break-words max-w-full ${title === "Completed"
                           ? "line-through"
                           : "text-foreground"
                           }`}
@@ -1618,30 +1618,30 @@ function TaskSection({
                       </p>
                       {/* Add extra margin between title and button */}
                       {title === "Today" && (
-                        <div className="flex sm:ml-6 items-center gap-2 mt-2 sm:mt-0 flex-wrap">
+                        <div className="flex ml-auto items-center gap-1 md:gap-2 flex-shrink-0">
                           <Button
                             size="sm"
                             variant="outline"
                             onClick={() => setShowEmailPicker(task._id ?? "")}
-                            className="flex items-center gap-1 px-2 py-1 h-7 cursor-pointer"
+                            className="flex items-center gap-1 px-1.5 md:px-2 py-1 h-6 md:h-7 cursor-pointer"
                             title={emailTime[task._id ?? ""] ? `Notification set for ${formatTime12(emailTime[task._id ?? ""])} ` : "Notify Me"}
                           >
                             {emailTime[task._id ?? ""]
                               ? <span className="text-xs font-semibold">{formatTime12(emailTime[task._id ?? ""])} </span>
-                              : <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a6 6 0 0 0-6 6v4.586l-.707.707A1 1 0 0 0 6 16h12a1 1 0 0 0 .707-1.707L18 12.586V8a6 6 0 0 0-6-6Zm0 20a2 2 0 0 0 2-2h-4a2 2 0 0 0 2 2Z" /></svg>
+                              : <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a6 6 0 0 0-6 6v4.586l-.707.707A1 1 0 0 0 6 16h12a1 1 0 0 0 .707-1.707L18 12.586V8a6 6 0 0 0-6-6Zm0 20a2 2 0 0 0 2-2h-4a2 2 0 0 0 2 2Z" /></svg>
                             }
                           </Button>
                           <Button
                             size="icon"
                             variant="ghost"
-                            className={`p-1 h-7 w-7 rounded border transition-all duration-200 cursor-pointer
+                            className={`p-0.5 md:p-1 h-6 w-6 md:h-7 md:w-7 rounded border transition-all duration-200 cursor-pointer
                               ${focusTaskId === task._id
                                 ? 'bg-green-700 border-green-800 text-white shadow-lg'
                                 : 'bg-white border-green-600 text-green-700 hover:bg-green-50 hover:border-green-700'}`}
                             onClick={() => setFocusTaskId(focusTaskId === task._id ? null : task._id)}
                             title={focusTaskId === task._id ? "Unfocus Task" : "Focus on Task"}
                           >
-                            <Target className="w-4 h-4" />
+                            <Target className="w-3 h-3 md:w-4 md:h-4" />
                           </Button>
                         </div>
                       )}
@@ -1649,12 +1649,12 @@ function TaskSection({
                     {/* Centered Popup for Time Picker, no overlay */}
                     {/* Popup is now global, not per-task */}
                     {task.description && (
-                      <p className="text-xs text-muted-foreground mt-1 break-words whitespace-pre-line max-w-full overflow-wrap-anywhere" style={{ overflowWrap: 'anywhere', wordBreak: 'break-word', minWidth: 0 }}>
+                      <p className="text-xs md:text-sm text-muted-foreground mt-1 break-words max-w-full" style={{ overflowWrap: 'anywhere', wordBreak: 'break-word', minWidth: 0 }}>
                         {task.description}
                       </p>
                     )}
                     {task.tag && (
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-xs md:text-sm text-muted-foreground">
                         #{task.tag}
                       </p>
                     )}
@@ -1662,7 +1662,7 @@ function TaskSection({
                 )}
               </div>
               {task.priority && title !== "Completed" && (
-                <Badge variant="destructive" className="text-xs">
+                <Badge variant="destructive" className="text-xs flex-shrink-0">
                   {task.priority}
                 </Badge>
               )}
