@@ -1403,6 +1403,16 @@ function PomodoroTimer({
                 // Pause only
                 setPomodoroActive(false);
               } else {
+                // Check if there's an active task before starting
+                if (!currentTask) {
+                  // Show toast warning
+                  const { toast } = require("sonner");
+                  toast.error("No Active Task", {
+                    description: "Please add a task to 'Today' section before starting the focus timer.",
+                    duration: 3000,
+                  });
+                  return;
+                }
                 // Start: only reset if timer is at zero
                 if (pomodoroTime === 0) {
                   setPomodoroTime(pomodoroDuration * 60);
