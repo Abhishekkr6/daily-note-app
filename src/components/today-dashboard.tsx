@@ -1541,7 +1541,7 @@ function TaskSection({
                   </button>
                 )}
               </div>
-              <div className="flex-1 min-w-0 pl-2 md:pl-3">
+              <div className="flex-1 min-w-0 pl-2 md:pl-3 overflow-hidden">
                 {editingTaskId === task._id && title !== "Completed" ? (
                   <div className="flex flex-col gap-2 items-start">
                     <Input
@@ -1606,13 +1606,13 @@ function TaskSection({
                   </div>
                 ) : (
                   <>
-                    <div className="flex flex-row items-center gap-2 md:gap-3">
+                    <div className="flex flex-row items-start gap-2 md:gap-3 min-w-0">
                       <p
-                        className={`text-sm md:text-base font-medium break-words max-w-full ${title === "Completed"
+                        className={`text-sm md:text-base font-medium break-words flex-1 min-w-0 ${title === "Completed"
                           ? "line-through"
                           : "text-foreground"
                           }`}
-                        style={{ overflowWrap: 'anywhere', wordBreak: 'break-word', minWidth: 0 }}
+                        style={{ overflowWrap: 'anywhere', wordBreak: 'break-word' }}
                       >
                         {task.title}
                       </p>
@@ -1649,12 +1649,12 @@ function TaskSection({
                     {/* Centered Popup for Time Picker, no overlay */}
                     {/* Popup is now global, not per-task */}
                     {task.description && (
-                      <p className="text-xs md:text-sm text-muted-foreground mt-1 break-words max-w-full" style={{ overflowWrap: 'anywhere', wordBreak: 'break-word', minWidth: 0 }}>
+                      <p className="text-xs md:text-sm text-muted-foreground mt-1 break-words" style={{ overflowWrap: 'anywhere', wordBreak: 'break-word' }}>
                         {task.description}
                       </p>
                     )}
                     {task.tag && (
-                      <p className="text-xs md:text-sm text-muted-foreground">
+                      <p className="text-xs md:text-sm text-muted-foreground break-words">
                         #{task.tag}
                       </p>
                     )}
