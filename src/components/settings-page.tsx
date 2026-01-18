@@ -230,11 +230,11 @@ export function SettingsPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-3 md:p-6 space-y-4 md:space-y-6">
       {/* Header */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Sidebar Menu */}
-        <div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
+        {/* Sidebar Menu (hidden on mobile) */}
+        <div className="hidden lg:block">
           <Card className="bg-card border-border shadow-sm">
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
@@ -268,7 +268,7 @@ export function SettingsPage() {
         </div>
 
         {/* Settings Content */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-4 md:space-y-6">
           {/* Profile Settings */}
           <Card className="bg-card border-border shadow-sm">
             <CardHeader>

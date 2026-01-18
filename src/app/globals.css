@@ -215,3 +215,40 @@ h6 {
     @apply bg-background text-foreground;
   }
 }
+
+/* Mobile-First Responsive Utilities */
+@layer utilities {
+  /* Prevent horizontal overflow on mobile */
+  .mobile-container {
+    @apply w-full max-w-full overflow-x-hidden;
+  }
+
+  /* Mobile-specific padding adjustments */
+  @media (max-width: 768px) {
+    .mobile-p-reduced {
+      @apply p-3;
+    }
+    
+    .mobile-px-reduced {
+      @apply px-3;
+    }
+    
+    .mobile-py-reduced {
+      @apply py-2;
+    }
+
+    /* Ensure text doesn't overflow */
+    .mobile-text-wrap {
+      @apply break-words overflow-wrap-anywhere;
+    }
+
+    /* Mobile-friendly spacing */
+    .mobile-space-y-reduced {
+      @apply space-y-3;
+    }
+
+    .mobile-gap-reduced {
+      @apply gap-3;
+    }
+  }
+}

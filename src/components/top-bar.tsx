@@ -241,28 +241,28 @@ export function TopBar() {
   }, []);
 
   return (
-    <header className="flex items-center justify-between px-6 py-4 bg-background border-b border-border">
-      {/* Left section - Date */}
-      <div className="flex items-center space-x-4">
+    <header className="flex items-center justify-between px-3 md:px-6 py-3 md:py-4 bg-background border-b border-border">
+      {/* Left section - Date (hidden on mobile) */}
+      <div className="flex items-center space-x-2 md:space-x-4">
         <MobileNav />
-        <div>
-          <h1 className="text-lg font-semibold text-foreground">
+        <div className="hidden sm:block">
+          <h1 className="text-base md:text-lg font-semibold text-foreground">
             {currentDate}
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-xs md:text-sm text-muted-foreground">
             Welcome back to your daily workspace
           </p>
         </div>
       </div>
 
       {/* Center section - Search + Clock */}
-      <div className="flex items-center flex-1 max-w-xl mx-8 gap-8">
+      <div className="flex items-center flex-1 max-w-xl mx-2 md:mx-8 gap-2 md:gap-8">
         <div className="flex-1" ref={inputRef}>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
-              placeholder="Search notes and tasks..."
-              className="pl-10 bg-muted/50 border-border focus:bg-background transition-colors"
+              placeholder="Search..."
+              className="pl-10 bg-muted/50 border-border focus:bg-background transition-colors text-sm"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onFocus={() => searchQuery && setShowDropdown(true)}
@@ -286,13 +286,13 @@ export function TopBar() {
                         className="px-4 py-2 hover:bg-muted cursor-pointer flex flex-col border-b last:border-b-0"
                         onClick={() => router.push(`/tasks?highlight=${item.id}`)}
                       >
-                        <span className="font-medium text-foreground">
+                        <span className="font-medium text-foreground text-sm">
                           {item.title}
                         </span>
                         <span className="text-xs text-muted-foreground">
                           {item.type === "note" ? "Note" : "Task"}
                         </span>
-                        <span className="text-sm text-muted-foreground">
+                        <span className="text-xs text-muted-foreground truncate">
                           {item.content}
                         </span>
                       </li>
@@ -303,26 +303,26 @@ export function TopBar() {
             )}
           </div>
         </div>
-        {/* Modern Clock (extra small) */}
-        <div className="flex items-center justify-center min-w-[60px] px-1 py-0.5 rounded bg-muted/60 border border-border shadow text-xs font-mono text-primary select-none">
+        {/* Modern Clock (hidden on mobile) */}
+        <div className="hidden md:flex items-center justify-center min-w-[60px] px-1 py-0.5 rounded bg-muted/60 border border-border shadow text-xs font-mono text-primary select-none">
           {clockTime}
         </div>
       </div>
 
       {/* Right section - Actions */}
-      <div className="flex items-center space-x-4">
-        {/* Streak Counter */}
+      <div className="flex items-center space-x-2 md:space-x-4">
+        {/* Streak Counter (compact on mobile) */}
         <Badge
           variant="secondary"
-          className="flex items-center space-x-1 px-3 py-1"
+          className="flex items-center space-x-1 px-2 md:px-3 py-1"
         >
           <Flame className="w-3 h-3 text-primary" />
-          <span className="text-sm font-medium">
+          <span className="text-xs md:text-sm font-medium">
             {streak !== null && streak > 0
               ? streak
               : lastStreak > 0
                 ? lastStreak
-                : 0} day streak
+                : 0}<span className="hidden sm:inline"> day</span>
           </span>
         </Badge>
 
@@ -331,20 +331,20 @@ export function TopBar() {
           variant="ghost"
           size="sm"
           onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-          className="text-muted-foreground hover:text-foreground"
+          className="text-muted-foreground hover:text-foreground p-2"
         >
           <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
           <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
         </Button>
 
         {/* Profile Avatar */}
-        <Avatar className="w-8 h-8 border-2 border-border shadow-sm bg-background">
+        <Avatar className="w-7 h-7 md:w-8 md:h-8 border-2 border-border shadow-sm bg-background">
           {avatarLoading ? (
             <div className="animate-pulse w-full h-full bg-muted rounded-full" />
           ) : profile.avatarUrl ? (
             <AvatarImage src={profile.avatarUrl} alt="Profile" className="object-cover w-full h-full rounded-full" />
           ) : (
-            <AvatarFallback className="bg-primary text-primary-foreground text-xl flex items-center justify-center w-full h-full rounded-full">
+            <AvatarFallback className="bg-primary text-primary-foreground text-sm md:text-xl flex items-center justify-center w-full h-full rounded-full">
               {profile.name
                 ? profile.name[0].toUpperCase()
                 : profile.email

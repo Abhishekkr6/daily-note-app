@@ -891,7 +891,7 @@ export function TodayDashboard() {
 
 
   return (
-    <div className="p-6 space-y-6" style={{ position: 'relative', zIndex: 1 }}>
+    <div className="p-3 md:p-6 space-y-4 md:space-y-6" style={{ position: 'relative', zIndex: 1 }}>
       {/* Task Complete Sound */}
       <audio
         ref={taskCompleteAudioRef}
