@@ -197,15 +197,15 @@ export function CalendarPage() {
   }, [currentDate])
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-3 md:p-6 space-y-4 md:space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 md:gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Calendar</h1>
-          <p className="text-muted-foreground">Track your daily progress and completion rates</p>
+          <h1 className="text-xl md:text-2xl font-bold text-foreground">Calendar</h1>
+          <p className="text-sm md:text-base text-muted-foreground">Track your daily progress and completion rates</p>
         </div>
         <div className="flex items-center space-x-2 w-full sm:w-auto">
-          <Button variant="outline" onClick={() => setCurrentDate(new Date())} className="w-full sm:w-auto">
+          <Button variant="outline" size="sm" onClick={() => setCurrentDate(new Date())} className="w-full sm:w-auto">
             Today
           </Button>
         </div>
@@ -232,10 +232,10 @@ export function CalendarPage() {
         <CardContent>
           {/* Calendar Grid */}
           <div className="overflow-x-auto pb-2">
-            <div className="grid grid-cols-7 gap-1 mb-4 min-w-[600px]">
+            <div className="grid grid-cols-7 gap-1 mb-4 min-w-[280px] md:min-w-[600px]">
               {/* Day headers */}
               {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-                <div key={day} className="p-2 text-center text-sm font-medium text-muted-foreground">
+                <div key={day} className="p-1 md:p-2 text-center text-xs md:text-sm font-medium text-muted-foreground">
                   {day}
                 </div>
               ))}
@@ -260,15 +260,15 @@ export function CalendarPage() {
                     key={index}
                     onClick={() => handleDayClick(date)}
                     className={`
-                    relative p-2 h-20 rounded-xl border transition-all hover:shadow-md hover:scale-105 cursor-pointer
+                    relative p-1.5 md:p-2 h-16 md:h-20 rounded-lg md:rounded-xl border transition-all hover:shadow-md hover:scale-105 cursor-pointer
                     ${isCurrentMonth ? "bg-background border-border" : "bg-muted/20 border-muted"}
-                    ${isCurrentDay ? "ring-2 ring-primary ring-offset-2" : ""}
+                    ${isCurrentDay ? "ring-1 md:ring-2 ring-primary ring-offset-1 md:ring-offset-2" : ""}
                     ${getCompletionColor(dayData.completionRate)}
                   `}
                   >
                     <div className="flex flex-col h-full">
                       <span
-                        className={`text-sm font-medium ${isCurrentMonth ? "text-foreground" : "text-muted-foreground"}`}
+                        className={`text-xs md:text-sm font-medium ${isCurrentMonth ? "text-foreground" : "text-muted-foreground"}`}
                       >
                         {format(date, "d")}
                       </span>
@@ -296,26 +296,26 @@ export function CalendarPage() {
           </div>
 
           {/* Legend */}
-          <div className="flex items-center justify-center space-x-6 text-sm text-muted-foreground">
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 rounded bg-muted/30"></div>
-              <span>No tasks</span>
+          <div className="flex flex-wrap items-center justify-center gap-2 md:gap-4 lg:gap-6 text-xs md:text-sm text-muted-foreground px-2">
+            <div className="flex items-center space-x-1.5 md:space-x-2">
+              <div className="w-2.5 h-2.5 md:w-3 md:h-3 rounded bg-muted/30"></div>
+              <span className="whitespace-nowrap">No tasks</span>
             </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 rounded bg-red-200 dark:bg-red-900/30"></div>
-              <span>Low completion</span>
+            <div className="flex items-center space-x-1.5 md:space-x-2">
+              <div className="w-2.5 h-2.5 md:w-3 md:h-3 rounded bg-red-200 dark:bg-red-900/30"></div>
+              <span className="whitespace-nowrap">Low completion</span>
             </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 rounded bg-amber-200 dark:bg-amber-900/30"></div>
-              <span>Medium completion</span>
+            <div className="flex items-center space-x-1.5 md:space-x-2">
+              <div className="w-2.5 h-2.5 md:w-3 md:h-3 rounded bg-amber-200 dark:bg-amber-900/30"></div>
+              <span className="whitespace-nowrap">Medium completion</span>
             </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 rounded bg-green-200 dark:bg-green-900/30"></div>
-              <span>High completion</span>
+            <div className="flex items-center space-x-1.5 md:space-x-2">
+              <div className="w-2.5 h-2.5 md:w-3 md:h-3 rounded bg-green-200 dark:bg-green-900/30"></div>
+              <span className="whitespace-nowrap">High completion</span>
             </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 rounded bg-primary/30"></div>
-              <span>Perfect completion</span>
+            <div className="flex items-center space-x-1.5 md:space-x-2">
+              <div className="w-2.5 h-2.5 md:w-3 md:h-3 rounded bg-primary/30"></div>
+              <span className="whitespace-nowrap">Perfect completion</span>
             </div>
           </div>
         </CardContent>
