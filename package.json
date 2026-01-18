@@ -10,6 +10,7 @@
     "check-oauth": "node scripts/check-oauth.js"
   },
   "dependencies": {
+    "@ducanh2912/next-pwa": "^10.2.9",
     "@heroui/react": "^2.8.5",
     "@heroui/spinner": "^2.2.24",
     "@hookform/resolvers": "^3.10.0",

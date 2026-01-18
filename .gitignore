@@ -29,6 +29,14 @@ next-env.d.ts
 
 .todo
 
+# PWA files
+**/public/sw.js
+**/public/workbox-*.js
+**/public/worker-*.js
+**/public/sw.js.map
+**/public/workbox-*.js.map
+**/public/worker-*.js.map
+
 # Interview preparation files (hidden from GitHub)
 INTERVIEW_QUESTIONS.md
 TODO_TASKS.md

@@ -58,8 +58,8 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Match all paths except NextAuth, _next, static files, etc.
-    "/((?!api/auth|_next/static|_next/image|favicon.ico).*)"
+    // Match all paths except NextAuth, _next, static files, PWA files, etc.
+    "/((?!api/auth|_next/static|_next/image|favicon.ico|manifest.json|sw.js|workbox-.*\\.js|.*\\.png|.*\\.jpg|.*\\.jpeg|.*\\.gif|.*\\.svg|.*\\.ico|.*\\.webp|.*\\.mp3|.*\\.wav|.*\\.md).*)"
   ]
 };
 

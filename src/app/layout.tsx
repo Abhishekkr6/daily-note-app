@@ -17,8 +17,16 @@ const poppins = Montserrat({
 export const metadata: Metadata = {
   title: "DailyNote - Daily Notes & Tasks",
   description: "A modern productivity app for daily notes and task management",
+  manifest: "/manifest.json",
+  themeColor: "#0a0a0a",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "DailyNote",
+  },
   icons: {
     icon: "/logo.png",
+    apple: "/apple-touch-icon.png",
   },
 };
 
@@ -30,8 +38,8 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        {/* Force a desktop viewport width so mobile browsers render the desktop layout */}
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        {/* PWA viewport configuration for proper mobile display */}
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes" />
         <meta name="google-site-verification" content="-ww79jU6MsojMMgBHf_mxkrcArcHBrpR6foE5AqfYDg" />
       </head>
       <body className={`${inter.variable} ${poppins.variable} antialiased`}>
