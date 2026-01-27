@@ -55,6 +55,7 @@ import {
   Pause,
   RotateCcw,
   Target,
+  Bell,
 } from "lucide-react";
 import { CalendarHeatmap } from "./calendar-heatmap";
 import { DailyReflection } from "@/components/daily-reflection";
@@ -902,23 +903,30 @@ export function TodayDashboard() {
       />
       {/* Task Reminder Notification Popup */}
       {activeNotification && (
-        <div className="fixed top-1/2 left-1/2 z-50 transform -translate-x-1/2 -translate-y-1/2 bg-white border border-primary shadow-2xl rounded-2xl px-8 py-6 flex flex-col items-center animate-fade-in">
-          <div className="flex items-center gap-3 mb-2">
-            <svg width="32" height="32" fill="none" viewBox="0 0 24 24"><path fill="#2563eb" d="M12 2a6 6 0 0 0-6 6v4.586l-.707.707A1 1 0 0 0 6 16h12a1 1 0 0 0 .707-1.707L18 12.586V8a6 6 0 0 0-6-6Zm0 20a2 2 0 0 0 2-2h-4a2 2 0 0 0 2 2Z" /></svg>
-            <span className="text-xl font-bold text-primary">Task Reminder</span>
+        <>
+          <div className="fixed inset-0 z-[49] bg-black/40 backdrop-blur-sm transition-opacity duration-200" onClick={() => {
+            dismissedNotificationsRef.current.add(`${activeNotification.id}_${activeNotification.time}`);
+            setActiveNotification(null);
+          }} />
+          <div className="fixed top-1/2 left-1/2 z-50 transform -translate-x-1/2 -translate-y-1/2 bg-popover text-popover-foreground border border-border shadow-2xl rounded-2xl px-8 py-6 flex flex-col items-center animate-fade-in min-w-[300px]">
+            <div className="flex items-center gap-3 mb-2">
+              <Bell className="w-8 h-8 text-primary animate-bounce" />
+              <span className="text-xl font-bold text-primary">Task Reminder</span>
+            </div>
+            <div className="text-lg font-semibold mb-2 text-center">{activeNotification.title}</div>
+            <div className="text-sm text-muted-foreground mb-6 text-center">It's time for your scheduled task!</div>
+            <Button
+              size="lg"
+              className="w-full font-medium shadow-md"
+              onClick={() => {
+                dismissedNotificationsRef.current.add(`${activeNotification.id}_${activeNotification.time}`);
+                setActiveNotification(null);
+              }}
+            >
+              Dismiss
+            </Button>
           </div>
-          <div className="text-lg font-semibold mb-2">{activeNotification.title}</div>
-          <div className="text-sm text-muted-foreground mb-4">It's time for your scheduled task!</div>
-          <button
-            className="mt-2 px-4 py-2 rounded bg-primary text-white font-medium shadow cursor-pointer hover:bg-primary/80 transition"
-            onClick={() => {
-              dismissedNotificationsRef.current.add(`${activeNotification.id}_${activeNotification.time}`);
-              setActiveNotification(null);
-            }}
-          >
-            Dismiss
-          </button>
-        </div>
+        </>
       )}
       {/* Alarm sound for notification */}
       <audio
