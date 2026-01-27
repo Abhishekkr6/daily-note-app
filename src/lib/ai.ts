@@ -59,39 +59,30 @@ export async function generateDailyReflection(stats: DailyStats) {
     }
   `;
 
-    console.log("AI Service: Starting generation...");
-
     // 1. Try Google Gemini
     const geminiKey = process.env.GEMINI_API_KEY;
-    console.log(`AI Service: GEMINI_API_KEY present? ${!!geminiKey}`);
-
     if (geminiKey) {
         try {
-            console.log("AI Service: Attempting Gemini...");
             const genAI = new GoogleGenerativeAI(geminiKey);
+            // Keeping the model user verified working: gemini-2.5-flash
             const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash", generationConfig: { responseMimeType: "application/json" } });
             const result = await model.generateContent(prompt);
             const response = result.response;
             const text = response.text();
-            console.log("AI Service: Gemini response received.");
 
             const parsed = JSON.parse(text);
             const validated = ReflectionSchema.safeParse(parsed);
             if (validated.success) return validated.data;
-            else console.error("AI Service: Gemini validation failed", validated.error);
         } catch (error) {
-            console.error("AI Service: Gemini Error:", error);
+            console.error("Gemini AI Error:", error);
             // Fall through to Groq
         }
     }
 
     // 2. Try Groq
     const groqKey = process.env.GROQ_API_KEY;
-    console.log(`AI Service: GROQ_API_KEY present? ${!!groqKey}`);
-
     if (groqKey) {
         try {
-            console.log("AI Service: Attempting Groq...");
             const groq = new Groq({ apiKey: groqKey });
             const chatCompletion = await groq.chat.completions.create({
                 messages: [{ role: "user", content: prompt + " Respond in JSON only." }],
@@ -100,19 +91,16 @@ export async function generateDailyReflection(stats: DailyStats) {
                 response_format: { type: "json_object" },
             });
             const content = chatCompletion.choices[0]?.message?.content || "{}";
-            console.log("AI Service: Groq response received.");
-
             const parsed = JSON.parse(content);
             const validated = ReflectionSchema.safeParse(parsed);
             if (validated.success) return validated.data;
-            else console.error("AI Service: Groq validation failed", validated.error);
         } catch (error) {
-            console.error("AI Service: Groq Error:", error);
+            console.error("Groq AI Error:", error);
             // Fall through to fallback
         }
     }
 
     // 3. Fallback
-    console.log("AI Service: Using deterministic fallback.");
+    console.log("Using deterministic fallback for daily reflection.");
     return generateFallbackReflection(stats);
 }
