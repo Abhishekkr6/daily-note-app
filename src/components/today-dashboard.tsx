@@ -1525,12 +1525,12 @@ function TaskSection({
           orderedTasks.map((task: Task) => (
             <div
               key={task._id}
-              className={`flex flex-row items-center p-2 md:p-3 rounded-xl border relative z-10 shadow-sm transition-all duration-300 w-full ${title === "Completed"
+              className={`flex flex-row items-start p-2 md:p-3 rounded-xl border relative z-10 shadow-sm transition-all duration-300 w-full ${title === "Completed"
                 ? "bg-muted/40 border border-border text-muted-foreground opacity-70"
                 : "bg-accent/30 border border-border"
                 } ${title === 'Today' && (focusTaskId === task._id ? 'focus-highlight' : focusTaskId ? 'focus-blur' : '')}`}
             >
-              <div className="flex items-center space-x-2 md:space-x-3 flex-shrink-0">
+              <div className="flex items-center space-x-2 md:space-x-3 flex-shrink-0 mt-1">
                 {completeTask && title !== "Completed" && (
                   <button
                     type="button"
@@ -1539,9 +1539,9 @@ function TaskSection({
                     title="Complete task"
                   >
                     {title === "Overdue" ? (
-                      <Clock className="w-4 h-4 md:w-5 md:h-5 text-destructive" />
+                      <Clock className="w-5 h-5 text-destructive" />
                     ) : (
-                      <Circle className="w-4 h-4 md:w-5 md:h-5 text-primary" />
+                      <Circle className="w-5 h-5 text-primary" />
                     )}
                   </button>
                 )}
@@ -1552,10 +1552,11 @@ function TaskSection({
                     onClick={() => onReopen(task._id ?? "")}
                     title="Reopen task"
                   >
-                    <CheckCircle2 className="w-4 h-4 md:w-5 md:h-5 text-primary" />
+                    <CheckCircle2 className="w-5 h-5 text-primary" />
                   </button>
                 )}
               </div>
+
               <div className="flex-1 min-w-0 pl-2 md:pl-3 overflow-hidden">
                 {editingTaskId === task._id && title !== "Completed" ? (
                   <div className="flex flex-col gap-2 items-start">
@@ -1570,7 +1571,7 @@ function TaskSection({
                       placeholder="Description"
                       className="mb-1 text-xs"
                     />
-                    <div className="flex gap-2 w-full">
+                    <div className="flex flex-wrap gap-2 w-full">
                       <Select value={editTag} onValueChange={setEditTag}>
                         <SelectTrigger className="w-24 h-8 text-xs">
                           <SelectValue placeholder="#Tag" />
@@ -1588,8 +1589,7 @@ function TaskSection({
                           setEditTag(val);
                         }}
                         placeholder="Add new #tag"
-                        className="text-xs h-8 px-2"
-                        style={{ maxWidth: 90 }}
+                        className="text-xs h-8 px-2 w-[90px]"
                       />
                       <Select value={editPriority} onValueChange={setEditPriority}>
                         <SelectTrigger className="w-20 h-8 text-xs">
@@ -1621,115 +1621,98 @@ function TaskSection({
                   </div>
                 ) : (
                   <>
-                    <div className="flex flex-row items-start gap-2 md:gap-3 min-w-0">
-                      <p
-                        className={`text-sm md:text-base font-medium break-words flex-1 min-w-0 ${title === "Completed"
-                          ? "line-through"
-                          : "text-foreground"
-                          }`}
-                        style={{ overflowWrap: 'anywhere', wordBreak: 'break-word' }}
-                      >
-                        {task.title}
-                      </p>
-                      {/* Add extra margin between title and button */}
-                      {title === "Today" && (
-                        <div className="flex ml-auto items-center gap-1 md:gap-2 flex-shrink-0">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => setShowEmailPicker(task._id ?? "")}
-                            className="flex items-center gap-1 px-1.5 md:px-2 py-1 h-6 md:h-7 cursor-pointer"
-                            title={emailTime[task._id ?? ""] ? `Notification set for ${formatTime12(emailTime[task._id ?? ""])} ` : "Notify Me"}
-                          >
-                            {emailTime[task._id ?? ""]
-                              ? <span className="text-xs font-semibold">{formatTime12(emailTime[task._id ?? ""])} </span>
-                              : <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a6 6 0 0 0-6 6v4.586l-.707.707A1 1 0 0 0 6 16h12a1 1 0 0 0 .707-1.707L18 12.586V8a6 6 0 0 0-6-6Zm0 20a2 2 0 0 0 2-2h-4a2 2 0 0 0 2 2Z" /></svg>
-                            }
-                          </Button>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className={`p-0.5 md:p-1 h-6 w-6 md:h-7 md:w-7 rounded border transition-all duration-200 cursor-pointer
-                              ${focusTaskId === task._id
-                                ? 'bg-green-700 border-green-800 text-white shadow-lg'
-                                : 'bg-white border-green-600 text-green-700 hover:bg-green-50 hover:border-green-700'}`}
-                            onClick={() => setFocusTaskId(focusTaskId === task._id ? null : task._id)}
-                            title={focusTaskId === task._id ? "Unfocus Task" : "Focus on Task"}
-                          >
-                            <Target className="w-3 h-3 md:w-4 md:h-4" />
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                    {/* Centered Popup for Time Picker, no overlay */}
-                    {/* Popup is now global, not per-task */}
+                    <p
+                      className={`text-sm md:text-base font-medium break-words leading-tight ${title === "Completed"
+                        ? "line-through"
+                        : "text-foreground"
+                        }`}
+                      style={{ overflowWrap: 'anywhere', wordBreak: 'break-word' }}
+                    >
+                      {task.title}
+                    </p>
+
                     {task.description && (
-                      <p className="text-xs md:text-sm text-muted-foreground mt-1 break-words" style={{ overflowWrap: 'anywhere', wordBreak: 'break-word' }}>
+                      <p className="text-xs md:text-sm text-muted-foreground mt-0.5 break-words line-clamp-2" style={{ overflowWrap: 'anywhere', wordBreak: 'break-word' }}>
                         {task.description}
                       </p>
                     )}
                     {task.tag && (
-                      <p className="text-xs md:text-sm text-muted-foreground break-words">
+                      <p className="text-xs text-muted-foreground mt-1 font-medium">
                         #{task.tag}
                       </p>
                     )}
                   </>
                 )}
               </div>
-              {task.priority && title !== "Completed" && (
-                <Badge variant="destructive" className="text-xs flex-shrink-0">
-                  {task.priority}
-                </Badge>
-              )}
-              {/* Three-dot menu for Overdue and Completed tasks */}
-              {deleteTask && (title === "Completed" || title === "Overdue") && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button
-                      type="button"
-                      className="focus:outline-none bg-transparent p-1 rounded hover:bg-muted cursor-pointer"
-                      title="More options"
+
+              {/* Right Side Actions Column */}
+              <div className="flex flex-col items-end gap-1.5 ml-2">
+                {/* Top Row: Notify & Focus (Today only) */}
+                {title === "Today" && editingTaskId !== task._id && (
+                  <div className="flex items-center gap-1">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setShowEmailPicker(task._id ?? "")}
+                      className={`h-7 w-7 p-0 rounded-full transition-all ${emailTime[task._id ?? ""] ? "bg-primary/10 text-primary hover:bg-primary/20" : "text-muted-foreground hover:bg-muted"}`}
+                      title={emailTime[task._id ?? ""] ? `Notification set for ${formatTime12(emailTime[task._id ?? ""])} ` : "Notify Me"}
                     >
-                      <MoreHorizontal className="w-4 h-4" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem
-                      onClick={() => deleteTask(task._id ?? "")}
-                      className="cursor-pointer"
+                      {emailTime[task._id ?? ""]
+                        ? <span className="text-[10px] font-bold">{formatTime12(emailTime[task._id ?? ""]).split(' ')[0]}</span>
+                        : <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a6 6 0 0 0-6 6v4.586l-.707.707A1 1 0 0 0 6 16h12a1 1 0 0 0 .707-1.707L18 12.586V8a6 6 0 0 0-6-6Zm0 20a2 2 0 0 0 2-2h-4a2 2 0 0 0 2 2Z" /></svg>
+                      }
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className={`h-7 w-7 p-0 rounded-full transition-all duration-200 cursor-pointer border
+                            ${focusTaskId === task._id
+                          ? 'bg-green-600 border-green-600 text-white shadow-sm'
+                          : 'bg-transparent border-transparent text-muted-foreground hover:bg-muted hover:text-foreground'}`}
+                      onClick={() => setFocusTaskId(focusTaskId === task._id ? null : task._id)}
+                      title={focusTaskId === task._id ? "Unfocus Task" : "Focus on Task"}
                     >
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
-              {startEditTask && deleteTask && title !== "Completed" && title !== "Overdue" && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button
-                      type="button"
-                      className="focus:outline-none bg-transparent p-1 rounded hover:bg-muted cursor-pointer"
-                      title="More options"
-                    >
-                      <MoreHorizontal className="w-4 h-4" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem
-                      onClick={() => startEditTask(task)}
-                      className="cursor-pointer"
-                    >
-                      Edit
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => deleteTask(task._id ?? "")}
-                      className="cursor-pointer"
-                    >
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
+                      <Target className="w-4 h-4" />
+                    </Button>
+                  </div>
+                )}
+
+                {/* Bottom Row: Priority & Menu */}
+                <div className="flex items-center gap-2">
+                  {task.priority && title !== "Completed" && (
+                    <Badge variant={task.priority === "High" ? "destructive" : task.priority === "Medium" ? "default" : "secondary"} className="text-[10px] px-1.5 py-0 h-5">
+                      {task.priority}
+                    </Badge>
+                  )}
+
+                  {/* Menu */}
+                  {(deleteTask || startEditTask) && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          type="button"
+                          className="focus:outline-none bg-transparent p-0.5 rounded hover:bg-muted cursor-pointer text-muted-foreground"
+                          title="More options"
+                        >
+                          <MoreHorizontal className="w-4 h-4" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        {startEditTask && title !== "Completed" && title !== "Overdue" && (
+                          <DropdownMenuItem onClick={() => startEditTask(task)} className="cursor-pointer">
+                            Edit
+                          </DropdownMenuItem>
+                        )}
+                        {deleteTask && (
+                          <DropdownMenuItem onClick={() => deleteTask(task._id ?? "")} className="text-destructive cursor-pointer">
+                            Delete
+                          </DropdownMenuItem>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
+                </div>
+              </div>
             </div>
           ))
         )}
