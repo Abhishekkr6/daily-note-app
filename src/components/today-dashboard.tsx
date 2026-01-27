@@ -1228,7 +1228,8 @@ export function TodayDashboard() {
         {/* Right Sidebar */}
         <div className="space-y-6">
           {/* Daily Reflection */}
-          <DailyReflection />
+          {/* Daily Reflection */}
+          <DailyReflection hasCompletedTasks={tasks.some(t => t.status === "completed" && t.completedDate === todayDate)} />
 
           {/* Notes */}
           <Card className="bg-card border-border shadow-sm">

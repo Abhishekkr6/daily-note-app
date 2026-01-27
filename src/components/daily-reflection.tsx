@@ -13,7 +13,11 @@ type ReflectionData = {
     date: string;
 };
 
-export function DailyReflection() {
+interface DailyReflectionProps {
+    hasCompletedTasks: boolean;
+}
+
+export function DailyReflection({ hasCompletedTasks }: DailyReflectionProps) {
     const [data, setData] = useState<ReflectionData | null>(null);
     const [loading, setLoading] = useState(false);
     const [generated, setGenerated] = useState(false);
@@ -22,27 +26,12 @@ export function DailyReflection() {
     useEffect(() => {
         const checkExisting = async () => {
             try {
-                const today = new Date().toISOString().slice(0, 10);
-                // We can just try to fetch. If it exists, the API returns it. 
-                // If it doesn't exist, the API generates it.
-                // To avoid auto-generating on load (saving costs), we might want a specific check or just let the user click "Generate".
-                // HOWEVER, the requirement was "Generate ... based on completed tasks... Limit to ONCE per day".
-                // A common pattern is: User clicks "Reflect on Day" -> API calls.
-                // If we want to show it automatically if it already exists, we need a way to know without triggering generation.
-                // For now, we'll assume the user triggers it manually, OR we fetch and if it returns a cached one, we show it. 
-                // But the API route logic I wrote *always* generates if not found. 
-                // That's fine for "ONCE per day" if we assume the user visits the dashboard to see it.
-                // Let's stick to a "Generate Reflection" button for the first time to make it feel special/intentional.
-
-                // Actually, to know if we should show the button or the result, we'd need to know if it exists.
-                // Let's try to fetch. If valid data comes back, we show it.
-                // Optimization: The current API will generate if missing. 
-                // Let's refine the UI: Show "Generate Daily Reflection" button. 
-                // If the user has already generated it, clicking it will just return the cached version fast.
+                // Check logic...
             } catch (e) {
                 console.error(e);
             }
         };
+        // We only check if we might show previously generated data
         checkExisting();
     }, []);
 
@@ -81,9 +70,10 @@ export function DailyReflection() {
                     </div>
                     <Button
                         onClick={handleGenerate}
-                        disabled={loading}
+                        disabled={loading || !hasCompletedTasks}
                         variant="default"
-                        className="w-full sm:w-auto shadow-sm"
+                        className={`w-full sm:w-auto shadow-sm ${!hasCompletedTasks ? 'opacity-80 cursor-not-allowed' : 'cursor-pointer'}`}
+                        title={!hasCompletedTasks ? "Complete at least one task to generate insights" : "Generate Daily Reflection"}
                     >
                         {loading ? (
                             <>
@@ -93,7 +83,7 @@ export function DailyReflection() {
                         ) : (
                             <>
                                 <Sparkles className="w-4 h-4 mr-2" />
-                                Generate Insights
+                                {hasCompletedTasks ? "Generate Insights" : "Complete a task first"}
                             </>
                         )}
                     </Button>
