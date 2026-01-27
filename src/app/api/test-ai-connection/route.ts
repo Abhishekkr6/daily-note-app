@@ -19,7 +19,7 @@ export async function GET() {
     if (process.env.GEMINI_API_KEY) {
         try {
             const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
             const result = await model.generateContent("Just say 'OK'");
             const text = result.response.text();
             report.tests.gemini = { status: "✅ Success", response: text };
@@ -36,7 +36,7 @@ export async function GET() {
             const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
             const completion = await groq.chat.completions.create({
                 messages: [{ role: "user", content: "Just say 'OK'" }],
-                model: "llama3-8b-8192",
+                model: "llama-3.1-8b-instant",
             });
             report.tests.groq = { status: "✅ Success", response: completion.choices[0]?.message?.content };
         } catch (error: any) {

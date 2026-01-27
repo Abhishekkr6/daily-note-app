@@ -69,7 +69,7 @@ export async function generateDailyReflection(stats: DailyStats) {
         try {
             console.log("AI Service: Attempting Gemini...");
             const genAI = new GoogleGenerativeAI(geminiKey);
-            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash", generationConfig: { responseMimeType: "application/json" } });
+            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest", generationConfig: { responseMimeType: "application/json" } });
             const result = await model.generateContent(prompt);
             const response = result.response;
             const text = response.text();
@@ -95,7 +95,7 @@ export async function generateDailyReflection(stats: DailyStats) {
             const groq = new Groq({ apiKey: groqKey });
             const chatCompletion = await groq.chat.completions.create({
                 messages: [{ role: "user", content: prompt + " Respond in JSON only." }],
-                model: "llama3-8b-8192",
+                model: "llama-3.1-8b-instant",
                 temperature: 0.3,
                 response_format: { type: "json_object" },
             });
