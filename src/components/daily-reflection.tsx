@@ -95,10 +95,16 @@ export function DailyReflection({ hasCompletedTasks }: DailyReflectionProps) {
     return (
         <Card className="bg-card border-border shadow-sm overflow-hidden relative">
             <CardHeader className="pb-2 border-b border-border bg-muted/10">
-                <CardTitle className="flex items-center gap-2 text-lg">
-                    <Sparkles className="w-5 h-5 text-primary" />
-                    <span>Daily Reflection</span>
-                    {data?.date && <span className="text-xs font-normal text-muted-foreground ml-auto border border-border px-2 py-0.5 rounded-full">{data.date}</span>}
+                <CardTitle className="flex flex-wrap items-center justify-between gap-y-2 gap-x-3 text-base sm:text-lg">
+                    <div className="flex items-center gap-2">
+                        <Sparkles className="w-5 h-5 text-primary shrink-0" />
+                        <span className="whitespace-nowrap">Daily Reflection</span>
+                    </div>
+                    {data?.date && (
+                        <span className="text-[10px] sm:text-xs font-normal text-muted-foreground border border-border px-2 py-0.5 rounded-full whitespace-nowrap">
+                            {data.date}
+                        </span>
+                    )}
                 </CardTitle>
             </CardHeader>
             <CardContent className="p-4 space-y-5">
@@ -106,15 +112,15 @@ export function DailyReflection({ hasCompletedTasks }: DailyReflectionProps) {
                 {/* Wins */}
                 <div className="space-y-2">
                     <div className="flex items-center gap-2 text-sm font-medium text-green-500">
-                        <Trophy className="w-4 h-4" />
+                        <Trophy className="w-4 h-4 shrink-0" />
                         <span>Today's Wins</span>
                     </div>
-                    <ul className="space-y-1">
+                    <ul className="space-y-1.5">
                         {data?.wins.length === 0 && <li className="text-sm text-muted-foreground italic">No completed tasks yet. Keep going!</li>}
                         {data?.wins?.map((win, i) => (
-                            <li key={i} className="text-sm flex items-start gap-2 text-muted-foreground">
-                                <span className="text-green-500 mt-1">•</span>
-                                <span className="">{win}</span>
+                            <li key={i} className="text-sm flex items-start gap-2 text-muted-foreground leading-snug">
+                                <span className="text-green-500 mt-1 shrink-0">•</span>
+                                <span className="break-words">{win}</span>
                             </li>
                         ))}
                     </ul>
@@ -124,14 +130,14 @@ export function DailyReflection({ hasCompletedTasks }: DailyReflectionProps) {
                 {data?.pending && data.pending.length > 0 && (
                     <div className="space-y-2">
                         <div className="flex items-center gap-2 text-sm font-medium text-orange-500">
-                            <Calendar className="w-4 h-4" />
+                            <Calendar className="w-4 h-4 shrink-0" />
                             <span>Focus For Tomorrow</span>
                         </div>
-                        <ul className="space-y-1">
+                        <ul className="space-y-1.5">
                             {data.pending.map((item, i) => (
-                                <li key={i} className="text-sm flex items-start gap-2 text-muted-foreground">
-                                    <span className="text-orange-500 mt-1">•</span>
-                                    <span className="">{item}</span>
+                                <li key={i} className="text-sm flex items-start gap-2 text-muted-foreground leading-snug">
+                                    <span className="text-orange-500 mt-1 shrink-0">•</span>
+                                    <span className="break-words">{item}</span>
                                 </li>
                             ))}
                         </ul>
@@ -142,7 +148,7 @@ export function DailyReflection({ hasCompletedTasks }: DailyReflectionProps) {
                 {data?.suggestion && (
                     <div className="bg-muted/30 p-3 rounded-lg border border-border flex gap-3 items-start">
                         <Lightbulb className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                        <p className="text-sm text-muted-foreground italic leading-relaxed">
+                        <p className="text-sm text-muted-foreground italic leading-relaxed break-words">
                             "{data.suggestion}"
                         </p>
                     </div>
