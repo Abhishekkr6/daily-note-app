@@ -65,13 +65,13 @@ export function DailyReflection() {
 
     if (!generated && !data) {
         return (
-            <Card className="bg-gradient-to-br from-indigo-50/50 to-purple-50/50 dark:from-indigo-950/10 dark:to-purple-950/10 border-indigo-100 dark:border-indigo-900/20 shadow-sm relative overflow-hidden">
-                <div className="absolute top-0 right-0 p-4 opacity-10 dark:opacity-5">
-                    <Sparkles className="w-24 h-24 text-indigo-500" />
+            <Card className="bg-card border-border shadow-sm relative overflow-hidden h-full">
+                <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
+                    <Sparkles className="w-24 h-24 text-muted-foreground/20" />
                 </div>
-                <CardContent className="p-6 flex flex-col items-center text-center space-y-4 relative z-10">
-                    <div className="p-3 bg-white dark:bg-card/50 rounded-full shadow-sm ring-1 ring-indigo-50 dark:ring-indigo-900/30">
-                        <Sparkles className="w-6 h-6 text-indigo-500 dark:text-indigo-400" />
+                <CardContent className="p-6 flex flex-col items-center text-center space-y-4 relative z-10 h-full justify-center">
+                    <div className="p-3 bg-muted/50 rounded-full shadow-sm ring-1 ring-border">
+                        <Sparkles className="w-6 h-6 text-primary" />
                     </div>
                     <div>
                         <h3 className="text-lg font-semibold text-foreground">Daily Reflection</h3>
@@ -82,7 +82,8 @@ export function DailyReflection() {
                     <Button
                         onClick={handleGenerate}
                         disabled={loading}
-                        className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white dark:bg-indigo-600 dark:hover:bg-indigo-500 shadow-md transition-all hover:scale-105 active:scale-95"
+                        variant="default"
+                        className="w-full sm:w-auto shadow-sm"
                     >
                         {loading ? (
                             <>
@@ -102,10 +103,10 @@ export function DailyReflection() {
     }
 
     return (
-        <Card className="bg-gradient-to-br from-card to-muted/30 border-border shadow-sm overflow-hidden relative">
-            <CardHeader className="pb-2 border-b border-border/50 bg-muted/20">
+        <Card className="bg-card border-border shadow-sm overflow-hidden relative h-full">
+            <CardHeader className="pb-2 border-b border-border bg-muted/10">
                 <CardTitle className="flex items-center gap-2 text-lg">
-                    <Sparkles className="w-5 h-5 text-indigo-500 dark:text-indigo-400" />
+                    <Sparkles className="w-5 h-5 text-primary" />
                     <span>Daily Reflection</span>
                     {data?.date && <span className="text-xs font-normal text-muted-foreground ml-auto border border-border px-2 py-0.5 rounded-full">{data.date}</span>}
                 </CardTitle>
@@ -114,16 +115,16 @@ export function DailyReflection() {
 
                 {/* Wins */}
                 <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-sm font-medium text-green-600 dark:text-green-400">
+                    <div className="flex items-center gap-2 text-sm font-medium text-green-500">
                         <Trophy className="w-4 h-4" />
                         <span>Today's Wins</span>
                     </div>
                     <ul className="space-y-1">
                         {data?.wins.length === 0 && <li className="text-sm text-muted-foreground italic">No completed tasks yet. Keep going!</li>}
                         {data?.wins?.map((win, i) => (
-                            <li key={i} className="text-sm flex items-start gap-2">
-                                <span className="text-green-500 dark:text-green-400 mt-1">•</span>
-                                <span className="text-foreground/90">{win}</span>
+                            <li key={i} className="text-sm flex items-start gap-2 text-muted-foreground">
+                                <span className="text-green-500 mt-1">•</span>
+                                <span className="">{win}</span>
                             </li>
                         ))}
                     </ul>
@@ -132,15 +133,15 @@ export function DailyReflection() {
                 {/* Pending */}
                 {data?.pending && data.pending.length > 0 && (
                     <div className="space-y-2">
-                        <div className="flex items-center gap-2 text-sm font-medium text-orange-600 dark:text-orange-400">
+                        <div className="flex items-center gap-2 text-sm font-medium text-orange-500">
                             <Calendar className="w-4 h-4" />
                             <span>Focus For Tomorrow</span>
                         </div>
                         <ul className="space-y-1">
                             {data.pending.map((item, i) => (
-                                <li key={i} className="text-sm flex items-start gap-2">
-                                    <span className="text-orange-400 dark:text-orange-300 mt-1">•</span>
-                                    <span className="text-foreground/90">{item}</span>
+                                <li key={i} className="text-sm flex items-start gap-2 text-muted-foreground">
+                                    <span className="text-orange-500 mt-1">•</span>
+                                    <span className="">{item}</span>
                                 </li>
                             ))}
                         </ul>
@@ -149,9 +150,9 @@ export function DailyReflection() {
 
                 {/* Suggestion */}
                 {data?.suggestion && (
-                    <div className="bg-indigo-50 dark:bg-indigo-950/20 p-3 rounded-lg border border-indigo-100 dark:border-indigo-900/50 flex gap-3 items-start">
-                        <Lightbulb className="w-5 h-5 text-indigo-500 dark:text-indigo-400 shrink-0 mt-0.5" />
-                        <p className="text-sm text-indigo-900 dark:text-indigo-200 italic leading-relaxed">
+                    <div className="bg-muted/30 p-3 rounded-lg border border-border flex gap-3 items-start">
+                        <Lightbulb className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                        <p className="text-sm text-muted-foreground italic leading-relaxed">
                             "{data.suggestion}"
                         </p>
                     </div>
