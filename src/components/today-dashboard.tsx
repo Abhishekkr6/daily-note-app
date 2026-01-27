@@ -57,6 +57,7 @@ import {
   Target,
 } from "lucide-react";
 import { CalendarHeatmap } from "./calendar-heatmap";
+import { DailyReflection } from "@/components/daily-reflection";
 import {
   Select,
   SelectTrigger,
@@ -1226,6 +1227,9 @@ export function TodayDashboard() {
 
         {/* Right Sidebar */}
         <div className="space-y-6">
+          {/* Daily Reflection */}
+          <DailyReflection />
+
           {/* Notes */}
           <Card className="bg-card border-border shadow-sm">
             <CardHeader>
