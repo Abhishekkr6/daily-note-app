@@ -69,7 +69,7 @@ export async function generateDailyReflection(stats: DailyStats) {
         try {
             console.log("AI Service: Attempting Gemini...");
             const genAI = new GoogleGenerativeAI(geminiKey);
-            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-001", generationConfig: { responseMimeType: "application/json" } });
+            const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash", generationConfig: { responseMimeType: "application/json" } });
             const result = await model.generateContent(prompt);
             const response = result.response;
             const text = response.text();
