@@ -20,6 +20,11 @@ export async function POST(req: NextRequest) {
             status: { $ne: "completed" }
         });
 
+        console.log(`[SmartSuggestion] User: ${userId}, Tasks Found: ${tasks.length}`);
+        if (tasks.length > 0) {
+            console.log(`[SmartSuggestion] First Task: ${tasks[0].title}, Status: ${tasks[0].status}, Priority: ${tasks[0].priority}`);
+        }
+
         if (!tasks || tasks.length === 0) {
             return NextResponse.json({ suggestion: null });
         }
