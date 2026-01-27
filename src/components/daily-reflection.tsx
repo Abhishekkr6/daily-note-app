@@ -65,11 +65,11 @@ export function DailyReflection() {
 
     if (!generated && !data) {
         return (
-            <Card className="bg-card border-border shadow-sm relative overflow-hidden h-full">
+            <Card className="bg-card border-border shadow-sm relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
                     <Sparkles className="w-24 h-24 text-muted-foreground/20" />
                 </div>
-                <CardContent className="p-6 flex flex-col items-center text-center space-y-4 relative z-10 h-full justify-center">
+                <CardContent className="p-6 flex flex-col items-center text-center space-y-4 relative z-10">
                     <div className="p-3 bg-muted/50 rounded-full shadow-sm ring-1 ring-border">
                         <Sparkles className="w-6 h-6 text-primary" />
                     </div>
@@ -103,7 +103,7 @@ export function DailyReflection() {
     }
 
     return (
-        <Card className="bg-card border-border shadow-sm overflow-hidden relative h-full">
+        <Card className="bg-card border-border shadow-sm overflow-hidden relative">
             <CardHeader className="pb-2 border-b border-border bg-muted/10">
                 <CardTitle className="flex items-center gap-2 text-lg">
                     <Sparkles className="w-5 h-5 text-primary" />
