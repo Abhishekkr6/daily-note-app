@@ -2,6 +2,7 @@ import { connect } from "@/dbConfig/dbConfig";
 import Task from "@/models/taskModel";
 import { getToken } from "next-auth/jwt";
 import { awardPoints } from "@/lib/leaderboardService";
+import { ClassificationEngine } from "@/lib/classification-engine";
 
 export async function GET(req) {
   await connect();
@@ -54,6 +55,30 @@ export async function POST(req) {
   const body = await req.json();
   if (body._id) delete body._id;
   body.userId = userId;
+  // Auto-Classification Logic
+  if (!body.tag || !body.priority) {
+    try {
+      const apiKey = process.env.GEMINI_API_KEY;
+      if (apiKey) {
+        const engine = new ClassificationEngine(apiKey);
+        const textToClassify = `${body.title} ${body.description || ""}`.trim();
+        const classification = await engine.classify(textToClassify);
+
+        // Only overwrite if missing in original body
+        if (!body.tag && classification.tag) {
+          body.tag = classification.tag;
+        }
+        if (!body.priority && classification.priority) {
+          body.priority = classification.priority;
+        }
+        body.classificationSource = classification.source;
+      }
+    } catch (error) {
+      console.error("Auto-classification failed:", error);
+      // Ensure we don't block task creation, just continue with defaults
+    }
+  }
+
   const newTask = await Task.create(body);
 
   // Streak logic
@@ -133,7 +158,7 @@ export async function PUT(req) {
       }
       await user.save();
     }
-    
+
     // If streak just started for today, delete all previous days' completed tasks
     if (streakJustStarted) {
       await Task.deleteMany({

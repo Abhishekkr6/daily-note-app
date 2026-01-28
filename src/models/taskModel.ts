@@ -8,13 +8,14 @@ export interface ITask extends Document {
   tag?: string;
   priority?: "High" | "Medium" | "Low";
   status: "overdue" | "today" | "completed";
+  classificationSource?: "rule" | "ai" | "manual";
   completedDate?: string;
   userId?: string;
   notificationTime?: string;
   focusSessions?: [
     {
       startedAt: { type: Date, required: true },
-      duration: { type: Number, required: true }, 
+      duration: { type: Number, required: true },
       completed: { type: Boolean, default: false },
       completedAt: { type: Date }
     }
@@ -29,6 +30,7 @@ const TaskSchema: Schema = new Schema({
   tag: { type: String },
   priority: { type: String, enum: ["High", "Medium", "Low"] },
   status: { type: String, enum: ["overdue", "today", "completed"], default: "today" },
+  classificationSource: { type: String, enum: ["rule", "ai", "manual"], default: "manual" },
   completedDate: { type: String },
   userId: { type: Schema.Types.ObjectId, ref: "User" },
   notificationTime: { type: String },
@@ -36,7 +38,7 @@ const TaskSchema: Schema = new Schema({
     type: [
       {
         startedAt: { type: Date, required: true },
-        duration: { type: Number, required: true }, 
+        duration: { type: Number, required: true },
         completed: { type: Boolean, default: false },
         completedAt: { type: Date }
       }
