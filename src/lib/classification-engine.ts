@@ -5,21 +5,21 @@ import { z } from "zod";
 // --- Configuration ---
 
 const PRIORITY_RULES = [
-    { keywords: ["urgent", "asap", "immediate", "critical", "deadline"], value: "High" },
+    { keywords: ["urgent", "asap", "immediate", "critical", "deadline", "important", "interview"], value: "High" },
     { keywords: ["later", "someday", "whenever", "low priority"], value: "Low" },
     { keywords: ["normal", "medium"], value: "Medium" },
 ] as const;
 
 const TAG_RULES = [
-    { keywords: ["call", "phone", "email", "message", "text", "reach out"], value: "Communication" },
-    { keywords: ["gym", "workout", "run", "exercise", "fitness", "yoga"], value: "Fitness" },
-    { keywords: ["buy", "purchase", "order", "groceries", "shop", "store"], value: "Shopping" },
-    { keywords: ["read", "study", "learn", "course", "book"], value: "Learning" },
-    { keywords: ["cook", "dinner", "lunch", "breakfast", "meal"], value: "Food" },
-    { keywords: ["clean", "wash", "tidy", "organize", "laundry"], value: "Chores" },
-    { keywords: ["pay", "bill", "bank", "transfer", "money"], value: "Finance" },
-    { keywords: ["doctor", "dentist", "appointment", "checkup"], value: "Health" },
-    { keywords: ["meeting", "sync", "standup", "presentation", "report"], value: "Work" },
+    { keywords: ["call", "phone", "email", "message", "text", "reach out", "zoom", "teams"], value: "Communication" },
+    { keywords: ["gym", "workout", "run", "exercise", "fitness", "yoga", "walk", "sport"], value: "Fitness" },
+    { keywords: ["buy", "purchase", "order", "groceries", "shop", "store", "amazon"], value: "Shopping" },
+    { keywords: ["read", "study", "learn", "course", "book", "research", "article"], value: "Learning" },
+    { keywords: ["cook", "dinner", "lunch", "breakfast", "meal", "food"], value: "Food" },
+    { keywords: ["clean", "wash", "tidy", "organize", "laundry", "chore", "trash"], value: "Chores" },
+    { keywords: ["pay", "bill", "bank", "transfer", "money", "finance", "tax"], value: "Finance" },
+    { keywords: ["doctor", "dentist", "appointment", "checkup", "meds", "pill"], value: "Health" },
+    { keywords: ["meeting", "sync", "standup", "presentation", "report", "interview", "job", "career", "deadline", "project", "submit", "review", "slide", "code", "deploy"], value: "Work" },
 ] as const;
 
 // Define the valid Priority type explicitly matching taskModel
