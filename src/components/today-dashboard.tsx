@@ -40,6 +40,12 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -372,13 +378,8 @@ export function TodayDashboard() {
   const [loading, setLoading] = useState(true);
   const [quickAddLoading, setQuickAddLoading] = useState(false);
   const [quickAddValue, setQuickAddValue] = useState("");
-  const [quickAddPriority, setQuickAddPriority] = useState<string>("");
   const [quickAddDescription, setQuickAddDescription] = useState("");
-  const [quickAddTag, setQuickAddTag] = useState("");
-  // Get all unique tags from tasks, ensuring only strings
-  const allTags = Array.from(
-    new Set(tasks.map((t) => t.tag).filter((tag): tag is string => typeof tag === "string"))
-  );
+
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
   const [editDescription, setEditDescription] = useState("");
@@ -522,23 +523,42 @@ export function TodayDashboard() {
   // Quick Add handler
   const handleQuickAdd = async () => {
     setQuickAddStatus('loading');
-    const title = quickAddValue.replace(/#\w+/g, "").trim();
+    // Smart Text Parsing: extracting !priority and #tag
+    const priorityMatch = quickAddValue.match(/!(high|medium|low|urgent|asap|later|someday|critical)/i);
+    let parsedPriority: "High" | "Medium" | "Low" | undefined;
+    if (priorityMatch) {
+      const p = priorityMatch[1].toLowerCase();
+      if (["high", "urgent", "asap", "critical"].includes(p)) parsedPriority = "High";
+      else if (["medium", "normal"].includes(p)) parsedPriority = "Medium";
+      else if (["low", "later", "someday"].includes(p)) parsedPriority = "Low";
+    }
+
+    const tagMatch = quickAddValue.match(/#(\w+)/);
+    const parsedTag = tagMatch ? tagMatch[1] : undefined;
+
+    // Remove parsed tokens from title
+    let cleanTitle = quickAddValue
+      .replace(/!(high|medium|low|urgent|asap|later|someday|critical)/i, "")
+      .replace(/#(\w+)/, "")
+      .trim();
+
+    // Clean up extra spaces
+    cleanTitle = cleanTitle.replace(/\s+/g, " ");
+
     const description = quickAddDescription.trim();
     if (
-      !isValidTitle(title) ||
+      !isValidTitle(cleanTitle) ||
       !isValidDescription(description)
     ) {
       setQuickAddStatus('idle');
       return;
     }
-    const tagMatch = quickAddValue.match(/#(\w+)/);
-    const tag = quickAddTag || undefined;
     const newTask = {
-      title,
+      title: cleanTitle,
       description,
       status: "today",
-      priority: quickAddPriority || undefined,
-      tag: tag || undefined,
+      priority: parsedPriority, // Undefined triggers auto-classification backend
+      tag: parsedTag,           // Undefined triggers auto-classification backend
       dueDate: todayDate,
     };
     try {
@@ -557,9 +577,8 @@ export function TodayDashboard() {
       console.error("Failed to add task", error);
     }
     setQuickAddValue("");
-    setQuickAddPriority("");
     setQuickAddDescription("");
-    setQuickAddTag("");
+
     setQuickAddStatus('added');
     setTimeout(() => setQuickAddStatus('idle'), 1200);
   };
@@ -1037,50 +1056,36 @@ export function TodayDashboard() {
               </span>
             )}
           </div>
-          <div className="flex flex-col flex-1 w-full md:min-w-[120px] md:max-w-[120px]">
-            <Select value={quickAddTag} onValueChange={setQuickAddTag}>
-              <SelectTrigger className="w-full h-10 text-xs">
-                <SelectValue placeholder="#Tag" />
-              </SelectTrigger>
-              <SelectContent>
-                {allTags.map((tag) => (
-                  <SelectItem key={tag} value={tag}>{`#${tag}`}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Input
-              value={quickAddTag ? `#${quickAddTag.replace(/^#/, "")}` : ""}
-              onChange={(e) => {
-                // Always keep # at the start, but store value without #
-                const val = e.target.value.startsWith("#") ? e.target.value.slice(1) : e.target.value;
-                setQuickAddTag(val);
-              }}
-              placeholder="Add new #tag"
-              className="text-xs mt-1 bg-background border-border focus:border-primary transition-colors placeholder:text-muted-foreground h-8 px-2"
-              onKeyDown={(e) => e.key === "Enter" && handleQuickAdd()}
-              style={{ maxWidth: '100%' }}
-            />
+          <div className="flex flex-col flex-1 items-center justify-center min-w-[120px]">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="text-[10px] text-muted-foreground bg-muted/50 px-2 py-1 rounded-full animate-pulse cursor-help">
+                    ✨ Auto-classifying
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <div className="text-xs text-center p-2">
+                    <p className="font-semibold mb-1">AI Powered ✨</p>
+                    <p className="mb-2">Tags & Priority specific automatically.</p>
+                    <div className="text-[10px] text-muted-foreground space-y-1">
+                      <p>Shortcuts:</p>
+                      <p><code className="bg-muted px-1 rounded">!high</code> <code className="bg-muted px-1 rounded">!urgent</code></p>
+                      <p><code className="bg-muted px-1 rounded">#work</code> <code className="bg-muted px-1 rounded">#gym</code></p>
+                    </div>
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
-          <Select value={quickAddPriority} onValueChange={setQuickAddPriority}>
-            <SelectTrigger className="w-full md:w-28">
-              <SelectValue placeholder="Priority" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="High">High</SelectItem>
-              <SelectItem value="Medium">Medium</SelectItem>
-              <SelectItem value="Low">Low</SelectItem>
-            </SelectContent>
-          </Select>
           <Button
             onClick={handleQuickAdd}
             disabled={
               quickAddStatus === 'loading' ||
               !isValidTitle(quickAddValue.replace(/#\w+/g, "").trim()) ||
-              !isValidDescription(quickAddDescription.trim()) ||
-              !quickAddPriority ||
-              !quickAddTag.trim()
+              !isValidDescription(quickAddDescription.trim())
             }
-            className="cursor-pointer flex items-center justify-center gap-2 w-full md:min-w-[70px] md:w-auto"
+            className="cursor-pointer flex items-center justify-center gap-2 w-full md:min-w-[70px] md:w-auto bg-gradient-to-r from-primary to-orange-600 hover:from-primary/90 hover:to-orange-700 text-primary-foreground shadow-lg hover:shadow-orange-500/20 transition-all duration-300 hover:scale-105"
           >
             {quickAddStatus === 'loading'
               ? (<span className="inline-block w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>)
