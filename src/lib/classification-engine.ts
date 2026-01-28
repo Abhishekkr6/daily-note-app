@@ -2,7 +2,7 @@
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
 import { z } from "zod";
 
-// Define the valid Priority type explicitly matching taskModel
+// Valid priorities matching the Task model
 type Priority = "High" | "Medium" | "Low";
 
 export interface ClassificationResult {
@@ -11,7 +11,6 @@ export interface ClassificationResult {
     source: "rule" | "ai" | "manual";
 }
 
-// Zod schema for AI response validation
 const AiResponseSchema = z.object({
     tag: z.string().optional(),
     priority: z.enum(["High", "Medium", "Low"]).optional(),
@@ -38,14 +37,8 @@ export class ClassificationEngine {
         });
     }
 
-    /**
-     * Main entry point to classify a task.
-     * Tries rules first, then falls back to AI.
-     */
     async classify(text: string): Promise<ClassificationResult> {
-        // User Request: "Use AI for everything"
-        // We skip local rule-based matching primarily and rely on Gemini.
-
+        // Direct AI classification for all tasks, bypassing local rules for better context awareness.
         try {
             console.log("ClassificationEngine: Sending to AI ->", text);
             const aiResult = await this.askAi(text);
@@ -56,11 +49,11 @@ export class ClassificationEngine {
 
         } catch (error) {
             console.error("ClassificationEngine AI Error:", error);
-            // Fallback default only if AI fails
+            // Fallback to defaults
             return {
                 tag: "General",
                 priority: "Medium",
-                source: "rule" // Technically 'fallback'
+                source: "rule"
             };
         }
     }

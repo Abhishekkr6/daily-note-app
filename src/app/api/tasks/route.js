@@ -52,63 +52,55 @@ export async function POST(req) {
   } catch (err) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
+
   const body = await req.json();
   if (body._id) delete body._id;
   body.userId = userId;
-  // Sanitize input: ensure empty strings are treated as undefined
+
   if (body.tag === "") delete body.tag;
   if (body.priority === "") delete body.priority;
 
-  console.log("Creating Task. Input:", JSON.stringify(body));
+  console.log("Creating Task:", body.title);
 
-  // Auto-Classification Logic
   if (!body.tag || !body.priority) {
     try {
       const apiKey = process.env.GEMINI_API_KEY;
       if (apiKey) {
         const engine = new ClassificationEngine(apiKey);
-        const textToClassify = `${body.title} ${body.description || ""}`.trim();
-        const classification = await engine.classify(textToClassify);
+        const classification = await engine.classify(`${body.title} ${body.description || ""}`.trim());
 
-        // Only overwrite if missing in original body
-        if (!body.tag && classification.tag) {
-          body.tag = classification.tag;
-        }
-        if (!body.priority && classification.priority) {
-          body.priority = classification.priority;
-        }
+        if (!body.tag && classification.tag) body.tag = classification.tag;
+        if (!body.priority && classification.priority) body.priority = classification.priority;
         body.classificationSource = classification.source;
       }
     } catch (error) {
-      console.error("Auto-classification failed:", error);
-      // Ensure we don't block task creation, just continue with defaults
+      console.warn("Auto-classification skipped:", error.message);
     }
   }
 
   const newTask = await Task.create(body);
 
-  // Streak logic
+  // Update User Streak
   const User = require("@/models/userModel").default;
   const todayStr = new Date().toISOString().slice(0, 10);
   const user = await User.findById(userId);
+
   if (user) {
-    // If lastStreakDate is yesterday or today, increment streak
     const lastDate = user.lastStreakDate;
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
     const yesterdayStr = yesterday.toISOString().slice(0, 10);
-    if (lastDate === todayStr) {
-      // Already counted today, do nothing
-    } else if (lastDate === yesterdayStr) {
-      user.currentStreak += 1;
-      if (user.currentStreak > user.longestStreak) user.longestStreak = user.currentStreak;
+
+    if (lastDate !== todayStr) {
+      if (lastDate === yesterdayStr) {
+        user.currentStreak += 1;
+        if (user.currentStreak > user.longestStreak) user.longestStreak = user.currentStreak;
+      } else {
+        user.currentStreak = 1;
+      }
       user.lastStreakDate = todayStr;
-    } else {
-      // Missed a day, reset streak
-      user.currentStreak = 1;
-      user.lastStreakDate = todayStr;
+      await user.save();
     }
-    await user.save();
   }
   return Response.json(newTask);
 }
