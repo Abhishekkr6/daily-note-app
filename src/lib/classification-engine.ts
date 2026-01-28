@@ -12,7 +12,7 @@ const PRIORITY_RULES = [
 
 const TAG_RULES = [
     { keywords: ["call", "phone", "email", "message", "text", "reach out", "zoom", "teams"], value: "Communication" },
-    { keywords: ["gym", "workout", "run", "exercise", "fitness", "yoga", "walk", "sport"], value: "Fitness" },
+    { keywords: ["gym", "workout", "run", "exercise", "fitness", "yoga", "walk", "sport", "play", "game", "match"], value: "Fitness" },
     { keywords: ["buy", "purchase", "order", "groceries", "shop", "store", "amazon"], value: "Shopping" },
     { keywords: ["read", "study", "learn", "course", "book", "research", "article"], value: "Learning" },
     { keywords: ["cook", "dinner", "lunch", "breakfast", "meal", "food"], value: "Food" },
@@ -57,64 +57,40 @@ export class ClassificationEngine {
      * Tries rules first, then falls back to AI.
      */
     async classify(text: string): Promise<ClassificationResult> {
-        const normalizedText = text.toLowerCase();
+        // User Request: "Use AI for everything"
+        // We skip local rule-based matching primarily and rely on Gemini.
 
-        // 1. Try Rule-based matching
-        const ruleResult = this.applyRules(normalizedText);
-
-        // If we have both, we're done (fast path)
-        if (ruleResult.tag && ruleResult.priority) {
-            return { ...ruleResult, source: "rule" };
-        }
-
-        // 2. Fallback to AI if missing fields
         try {
-            // Only ask AI for what's missing, or refine? 
-            // Simple strategy: If *any* rule matched, use it. If *nothing* matched, use AI.
-            // Or hybrid: Use rule for priority if found, ask AI for tag?
-            // Requirement says: "If at least one rule matches -> skip AI"
-            if (ruleResult.tag || ruleResult.priority) {
-                return { ...ruleResult, source: "rule" };
-            }
-
+            console.log("ClassificationEngine: Sending to AI ->", text);
             const aiResult = await this.askAi(text);
-            return { ...aiResult, source: "ai" };
+            return {
+                ...aiResult,
+                source: "ai"
+            };
 
         } catch (error) {
             console.error("ClassificationEngine AI Error:", error);
-            // Fallback to whatever rules we found or empty
-            return { ...ruleResult, source: "rule" };
+            // Fallback default only if AI fails
+            return {
+                tag: "General",
+                priority: "Medium",
+                source: "rule" // Technically 'fallback'
+            };
         }
     }
 
-    private applyRules(text: string): { tag?: string; priority?: Priority } {
-        let tag: string | undefined;
-        let priority: Priority | undefined;
-
-        // Check Tags
-        for (const rule of TAG_RULES) {
-            if (rule.keywords.some(k => text.includes(k))) {
-                tag = rule.value;
-                break; // First match wins for simplicity
-            }
-        }
-
-        // Check Priority
-        for (const rule of PRIORITY_RULES) {
-            if (rule.keywords.some(k => text.includes(k))) {
-                priority = rule.value as Priority;
-                break;
-            }
-        }
-
-        return { tag, priority };
-    }
+    // Rule-based matching removed in favor of AI-only approach
+    // private applyRules(text: string) { ... }
 
     private async askAi(text: string): Promise<{ tag?: string; priority?: Priority }> {
         if (!this.model) return {};
 
         const prompt = `Classify this task into a short 'tag' (1 word, capitalized) and 'priority' (High, Medium, Low).
 Task: "${text}"
+Rules:
+- Map sports (cricket, football, etc.) to 'Fitness'.
+- Map career/jobs (interview, meeting) to 'Work'.
+- Map chores to 'Chores'.
 Return strictly JSON format: { "tag": "...", "priority": "..." }`;
 
         try {
@@ -129,11 +105,11 @@ Return strictly JSON format: { "tag": "...", "priority": "..." }`;
                 return validated.data;
             } else {
                 console.warn("ClassificationEngine: Invalid AI response schema", validated.error);
-                return {};
+                return { tag: "General", priority: "Medium" };
             }
         } catch (e) {
             console.error("ClassificationEngine: AI generation failed", e);
-            return {};
+            return { tag: "General", priority: "Medium" };
         }
     }
 }
