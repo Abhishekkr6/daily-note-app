@@ -118,8 +118,8 @@ export function DailyReflection({ hasCompletedTasks }: DailyReflectionProps) {
                     <ul className="space-y-1.5">
                         {data?.wins.length === 0 && <li className="text-sm text-muted-foreground italic">No completed tasks yet. Keep going!</li>}
                         {data?.wins?.map((win, i) => (
-                            <li key={i} className="text-sm flex items-start gap-2 text-muted-foreground leading-snug">
-                                <span className="text-green-500 mt-1 shrink-0">•</span>
+                            <li key={i} className="text-sm flex items-center gap-2 text-muted-foreground leading-snug">
+                                <span className="text-green-500 shrink-0">•</span>
                                 <span className="break-words">{win}</span>
                             </li>
                         ))}
@@ -135,8 +135,8 @@ export function DailyReflection({ hasCompletedTasks }: DailyReflectionProps) {
                         </div>
                         <ul className="space-y-1.5">
                             {data.pending.map((item, i) => (
-                                <li key={i} className="text-sm flex items-start gap-2 text-muted-foreground leading-snug">
-                                    <span className="text-orange-500 mt-1 shrink-0">•</span>
+                                <li key={i} className="text-sm flex items-center gap-2 text-muted-foreground leading-snug">
+                                    <span className="text-orange-500 shrink-0">•</span>
                                     <span className="break-words">{item}</span>
                                 </li>
                             ))}
