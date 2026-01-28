@@ -22,16 +22,23 @@ export function DailyReflection({ hasCompletedTasks }: DailyReflectionProps) {
     const [loading, setLoading] = useState(false);
     const [generated, setGenerated] = useState(false);
 
-    // Check if reflection already exists for today on mount
     useEffect(() => {
         const checkExisting = async () => {
             try {
-                // Check logic...
+
+                const res = await fetch("/api/ai/daily-reflection?onlyExisting=true");
+                if (res.ok) {
+                    const existing = await res.json();
+                    if (existing && existing.wins) { // valid reflection
+                        setData(existing);
+                        setGenerated(true);
+                    }
+                }
             } catch (e) {
-                console.error(e);
+                console.error("Failed to check existing reflection:", e);
             }
         };
-        // We only check if we might show previously generated data
+
         checkExisting();
     }, []);
 

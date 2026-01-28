@@ -33,6 +33,12 @@ export async function GET(req: NextRequest) {
             return NextResponse.json(existingReflection);
         }
 
+        const onlyExisting = url.searchParams.get("onlyExisting");
+        if (onlyExisting === "true") {
+            // If explicit check, return 404 so frontend knows to show "Generate" button
+            return NextResponse.json({ error: "No reflection found" }, { status: 404 });
+        }
+
         // 4. Gather Data for AI
         // a. Completed Tasks Today
         const completedTasksDocs = await Task.find({
