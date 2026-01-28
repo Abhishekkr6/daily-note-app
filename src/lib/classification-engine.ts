@@ -1,26 +1,6 @@
 
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
 import { z } from "zod";
-
-// --- Configuration ---
-
-const PRIORITY_RULES = [
-    { keywords: ["urgent", "asap", "immediate", "critical", "deadline", "important", "interview"], value: "High" },
-    { keywords: ["later", "someday", "whenever", "low priority"], value: "Low" },
-    { keywords: ["normal", "medium"], value: "Medium" },
-] as const;
-
-const TAG_RULES = [
-    { keywords: ["call", "phone", "email", "message", "text", "reach out", "zoom", "teams"], value: "Communication" },
-    { keywords: ["gym", "workout", "run", "exercise", "fitness", "yoga", "walk", "sport", "play", "game", "match"], value: "Fitness" },
-    { keywords: ["buy", "purchase", "order", "groceries", "shop", "store", "amazon"], value: "Shopping" },
-    { keywords: ["read", "study", "learn", "course", "book", "research", "article"], value: "Learning" },
-    { keywords: ["cook", "dinner", "lunch", "breakfast", "meal", "food"], value: "Food" },
-    { keywords: ["clean", "wash", "tidy", "organize", "laundry", "chore", "trash"], value: "Chores" },
-    { keywords: ["pay", "bill", "bank", "transfer", "money", "finance", "tax"], value: "Finance" },
-    { keywords: ["doctor", "dentist", "appointment", "checkup", "meds", "pill"], value: "Health" },
-    { keywords: ["meeting", "sync", "standup", "presentation", "report", "interview", "job", "career", "deadline", "project", "submit", "review", "slide", "code", "deploy"], value: "Work" },
-] as const;
 
 // Define the valid Priority type explicitly matching taskModel
 type Priority = "High" | "Medium" | "Low";
@@ -28,7 +8,7 @@ type Priority = "High" | "Medium" | "Low";
 export interface ClassificationResult {
     tag?: string;
     priority?: Priority;
-    source: "rule" | "ai" | "manual"; // 'manual' isn't returned by auto-classify but fits the type
+    source: "rule" | "ai" | "manual";
 }
 
 // Zod schema for AI response validation
@@ -48,7 +28,13 @@ export class ClassificationEngine {
         this.genAI = new GoogleGenerativeAI(apiKey || "");
         this.model = this.genAI.getGenerativeModel({
             model: "gemini-1.5-flash",
-            generationConfig: { responseMimeType: "application/json" } // Force JSON
+            generationConfig: { responseMimeType: "application/json" },
+            safetySettings: [
+                { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+                { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
+                { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
+                { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+            ]
         });
     }
 
@@ -79,9 +65,6 @@ export class ClassificationEngine {
         }
     }
 
-    // Rule-based matching removed in favor of AI-only approach
-    // private applyRules(text: string) { ... }
-
     private async askAi(text: string): Promise<{ tag?: string; priority?: Priority }> {
         if (!this.model) return {};
 
@@ -91,6 +74,7 @@ Rules:
 - Map sports (cricket, football, etc.) to 'Fitness'.
 - Map career/jobs (interview, meeting) to 'Work'.
 - Map chores to 'Chores'.
+- Map personal/intimate activities to 'Personal' or 'Health'.
 Return strictly JSON format: { "tag": "...", "priority": "..." }`;
 
         try {
