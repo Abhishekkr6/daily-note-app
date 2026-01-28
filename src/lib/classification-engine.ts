@@ -54,11 +54,12 @@ export class ClassificationEngine {
                 source: "ai"
             };
 
-        } catch (error) {
+        } catch (error: any) {
             console.error("ClassificationEngine AI Error:", error);
             // Fallback default only if AI fails
+            const errorMsg = error.message || String(error);
             return {
-                tag: "General",
+                tag: `SysError: ${errorMsg.substring(0, 10)}`,
                 priority: "Medium",
                 source: "rule" // Technically 'fallback'
             };
@@ -79,15 +80,21 @@ Return strictly JSON format: { "tag": "...", "priority": "..." }`;
 
         try {
             const result = await this.model.generateContent(prompt);
-            let responseText = result.response.text();
-
-            // Saniitize: Remove Markdown code blocks if present
-            responseText = responseText.replace(/```json/g, "").replace(/```/g, "").trim();
+            const responseText = result.response.text();
 
             console.log("ClassificationEngine: Raw AI Response ->", responseText);
 
+            // Robust JSON Extraction: Find first '{' and last '}'
+            const start = responseText.indexOf('{');
+            const end = responseText.lastIndexOf('}');
+
+            let jsonString = responseText;
+            if (start !== -1 && end !== -1) {
+                jsonString = responseText.substring(start, end + 1);
+            }
+
             // Parse and Validate
-            const parsed = JSON.parse(responseText);
+            const parsed = JSON.parse(jsonString);
             const validated = AiResponseSchema.safeParse(parsed);
 
             if (validated.success) {
@@ -96,9 +103,14 @@ Return strictly JSON format: { "tag": "...", "priority": "..." }`;
                 console.warn("ClassificationEngine: Invalid AI response schema", validated.error);
                 return { tag: "General", priority: "Medium" };
             }
-        } catch (e) {
+        } catch (e: any) {
             console.error("ClassificationEngine: AI generation failed", e);
-            return { tag: "General", priority: "Medium" };
+            // DEBUG MODE: Return error as tag to visualize failure
+            const errorMsg = e.message || String(e);
+            return {
+                tag: `Error: ${errorMsg.substring(0, 15)}...`,
+                priority: "Medium"
+            };
         }
     }
 }
