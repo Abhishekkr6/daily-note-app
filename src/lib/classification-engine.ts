@@ -27,7 +27,7 @@ export class ClassificationEngine {
         }
         this.genAI = new GoogleGenerativeAI(apiKey || "");
         this.model = this.genAI.getGenerativeModel({
-            model: "gemini-1.5-flash",
+            model: "gemini-2.5-flash",
             generationConfig: { responseMimeType: "application/json" },
             safetySettings: [
                 { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
@@ -54,12 +54,11 @@ export class ClassificationEngine {
                 source: "ai"
             };
 
-        } catch (error: any) {
+        } catch (error) {
             console.error("ClassificationEngine AI Error:", error);
             // Fallback default only if AI fails
-            const errorMsg = error.message || String(error);
             return {
-                tag: `SysError: ${errorMsg.substring(0, 10)}`,
+                tag: "General",
                 priority: "Medium",
                 source: "rule" // Technically 'fallback'
             };
@@ -105,20 +104,7 @@ Return strictly JSON format: { "tag": "...", "priority": "..." }`;
             }
         } catch (e: any) {
             console.error("ClassificationEngine: AI generation failed", e);
-            // DEBUG MODE: Return error as tag to visualize failure
-            let errorMsg = "Unknown";
-            try {
-                if (e instanceof Error) errorMsg = e.message;
-                else if (typeof e === 'string') errorMsg = e;
-                else errorMsg = JSON.stringify(e);
-                // Clean up prefix
-                errorMsg = errorMsg.replace(/GoogleGenerativeAIError:|\[.*?\]/g, "").trim();
-            } catch { errorMsg = String(e); }
-
-            return {
-                tag: `Err: ${errorMsg.substring(0, 25)}`,
-                priority: "Medium"
-            };
+            return { tag: "General", priority: "Medium" };
         }
     }
 }
