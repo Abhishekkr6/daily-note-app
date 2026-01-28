@@ -79,7 +79,12 @@ Return strictly JSON format: { "tag": "...", "priority": "..." }`;
 
         try {
             const result = await this.model.generateContent(prompt);
-            const responseText = result.response.text();
+            let responseText = result.response.text();
+
+            // Saniitize: Remove Markdown code blocks if present
+            responseText = responseText.replace(/```json/g, "").replace(/```/g, "").trim();
+
+            console.log("ClassificationEngine: Raw AI Response ->", responseText);
 
             // Parse and Validate
             const parsed = JSON.parse(responseText);
