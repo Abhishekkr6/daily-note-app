@@ -526,8 +526,7 @@ export function TodayDashboard() {
     const description = quickAddDescription.trim();
     if (
       !isValidTitle(title) ||
-      !isValidDescription(description) ||
-      !quickAddPriority
+      !isValidDescription(description)
     ) {
       setQuickAddStatus('idle');
       return;
