@@ -106,9 +106,17 @@ Return strictly JSON format: { "tag": "...", "priority": "..." }`;
         } catch (e: any) {
             console.error("ClassificationEngine: AI generation failed", e);
             // DEBUG MODE: Return error as tag to visualize failure
-            const errorMsg = e.message || String(e);
+            let errorMsg = "Unknown";
+            try {
+                if (e instanceof Error) errorMsg = e.message;
+                else if (typeof e === 'string') errorMsg = e;
+                else errorMsg = JSON.stringify(e);
+                // Clean up prefix
+                errorMsg = errorMsg.replace(/GoogleGenerativeAIError:|\[.*?\]/g, "").trim();
+            } catch { errorMsg = String(e); }
+
             return {
-                tag: `Error: ${errorMsg.substring(0, 15)}...`,
+                tag: `Err: ${errorMsg.substring(0, 25)}`,
                 priority: "Medium"
             };
         }
