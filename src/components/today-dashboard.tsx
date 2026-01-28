@@ -537,9 +537,9 @@ export function TodayDashboard() {
       title,
       description,
       status: "today",
-      priority: quickAddPriority,
-      tag,
-      dueDate: todayDate, // Default dueDate set to today
+      priority: quickAddPriority || undefined,
+      tag: tag || undefined,
+      dueDate: todayDate,
     };
     try {
       await fetch("/api/tasks", {

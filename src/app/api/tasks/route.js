@@ -55,6 +55,12 @@ export async function POST(req) {
   const body = await req.json();
   if (body._id) delete body._id;
   body.userId = userId;
+  // Sanitize input: ensure empty strings are treated as undefined
+  if (body.tag === "") delete body.tag;
+  if (body.priority === "") delete body.priority;
+
+  console.log("Creating Task. Input:", JSON.stringify(body));
+
   // Auto-Classification Logic
   if (!body.tag || !body.priority) {
     try {
